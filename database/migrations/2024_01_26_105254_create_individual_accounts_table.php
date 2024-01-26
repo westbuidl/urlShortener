@@ -13,21 +13,18 @@ return new class extends Migration
     {
         Schema::create('individual_accounts', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
-            //$table->id('user_id');
+            $table->string('userid');
             $table->string('firstname');
             $table->string('lastname');
-            $table->string('email');
-            $table->string('phonenumber');
-            $table->string('products');
+            $table->string('phone');
+            $table->string('product');
             $table->string('address');
             $table->string('country');
-            $table->string('city');
             $table->string('state');
+            $table->string('city');
             $table->string('zipcode');
             $table->string('password');
-            $table->string('authcode');
-            //$table->timestamps();
+            $table->timestamps();
         });
     }
 
@@ -39,3 +36,15 @@ return new class extends Migration
         Schema::dropIfExists('individual_accounts');
     }
 };
+/*'userID',
+        'firstname',
+        'lastname',
+        'email',
+        'phonenumber',
+        'products',
+        'address',
+        'country',
+        'city',
+        'state',
+        'zipcode',
+        'password'*/

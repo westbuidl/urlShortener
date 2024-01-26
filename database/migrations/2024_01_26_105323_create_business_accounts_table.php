@@ -13,20 +13,20 @@ return new class extends Migration
     {
         Schema::create('business_accounts', function (Blueprint $table) {
             $table->id();
-           //$table->id('business_id');
-            $table->string('business_name');
-            $table->string('business_regnumber');
-            $table->string('business_email');
-            $table->string('business_phonenumber');
+            $table->timestamps();
+            $table->string('businessid');
+            $table->string('businessname');
+            $table->string('businessregnumber');
+            $table->string('businessemail');
+            $table->string('businessphone');
             $table->string('products');
-            $table->string('address');
+            $table->string('businessaddress');
             $table->string('country');
             $table->string('city');
             $table->string('state');
             $table->string('zipcode');
             $table->string('password');
-            $table->string('authcode');
-            $table->timestamps();
+           
         });
     }
 
@@ -38,3 +38,15 @@ return new class extends Migration
         Schema::dropIfExists('business_accounts');
     }
 };
+/*'businessID',
+        'businessname',
+        'businessregnumber',
+        'businessemail',
+        'businessphonenumber',
+        'products',
+        'businessaddress',
+        'country',
+        'city',
+        'state',
+        'zipcode',
+        'password'*/

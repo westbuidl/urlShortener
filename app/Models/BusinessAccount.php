@@ -9,3 +9,15 @@ class BusinessAccount extends Model
 {
     use HasFactory;
 }
+/*'businessID',
+        'businessname',
+        'businessregnumber',
+        'businessemail',
+        'businessphonenumber',
+        'products',
+        'businessaddress',
+        'country',
+        'city',
+        'state',
+        'zipcode',
+        'password'*/

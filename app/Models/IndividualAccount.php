@@ -9,3 +9,15 @@ class IndividualAccount extends Model
 {
     use HasFactory;
 }
+/*'userID',
+        'firstname',
+        'lastname',
+        'email',
+        'phonenumber',
+        'products',
+        'address',
+        'country',
+        'city',
+        'state',
+        'zipcode',
+        'password'*/
