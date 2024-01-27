@@ -2,20 +2,21 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\Notifiable;
 
 class BusinessAccount extends Model
 {
-    use HasFactory;
-
+    use HasFactory,HasApiTokens, Notifiable;
     protected $fillable = [
         'businessID',
         'businessname',
         'businessregnumber',
         'businessemail',
-        'businessphonenumber',
-        'product',
+        'businessphone',
+        'products',
         'businessaddress',
         'country',
         'city',
