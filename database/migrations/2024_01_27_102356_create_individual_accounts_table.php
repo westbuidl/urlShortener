@@ -13,17 +13,18 @@ return new class extends Migration
     {
         Schema::create('individual_accounts', function (Blueprint $table) {
             $table->id();
-            $table->string('userid');
+            //$table->string('userid');
             $table->string('firstname');
             $table->string('lastname');
+            $table->string('email');
             $table->string('phone');
             $table->string('product');
-            $table->string('address');
             $table->string('country');
             $table->string('state');
             $table->string('city');
             $table->string('zipcode');
             $table->string('password');
+           // $table->string('password');
             $table->timestamps();
         });
     }

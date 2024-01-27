@@ -1,7 +1,10 @@
 <?php
-use App\Http\Controllers\ProductController;
+
+use App\Http\Controllers\BusinessController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProductController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,6 +20,14 @@ Route::get('/products', [ProductController::class, 'index']);
 //Route::get('/products', function(){
  //return 'products';
 //});
+
+
+Route::get('/register', [UserController::class, 'create']);
+
+Route::post('/individual', [UserController::class, 'individual']);
+
+Route::post('/business', [BusinessController::class, 'business']);
+
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();

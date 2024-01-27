@@ -8,6 +8,21 @@ use Illuminate\Database\Eloquent\Model;
 class BusinessAccount extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'businessID',
+        'businessname',
+        'businessregnumber',
+        'businessemail',
+        'businessphonenumber',
+        'product',
+        'businessaddress',
+        'country',
+        'city',
+        'state',
+        'zipcode',
+        'password'
+    ];
 }
 /*'businessID',
         'businessname',
