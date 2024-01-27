@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    //register form
+    //function for user registration
     public function individual(Request $request){
        /* $request->validate([
             'firstname'=>'required|min:2|max:100',
@@ -67,7 +67,7 @@ class UserController extends Controller
     
     }
 
-
+//function for user login
     public function userlogin(Request $request){
         $validator = Validator::make($request->all(),[
             'email'=>'required|email',
@@ -106,7 +106,7 @@ class UserController extends Controller
 
         }
      }
-
+     //function to fetch user data with bearer tokens
         public function user(Request $request){
             return response()->json([
                 'message'=>'User successfully fetched',
@@ -114,7 +114,7 @@ class UserController extends Controller
             ],200);
         }
 
-
+    //function to logout
         public function logout(Request $request){
             $request->user()->currentAccessToken()->delete();
             return response()->json([
