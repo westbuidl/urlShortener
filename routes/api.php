@@ -37,6 +37,8 @@ Route::post('/business', [BusinessController::class, 'business']);//creating acc
 Route::post('/userlogin', [UserController::class, 'userlogin']);//individual account login
 Route::post('/businesslogin', [BusinessController::class, 'businesslogin']);//business account login
 Route::post('/change_password', [ProfileContoller::class, 'change_password'])->middleware('auth:sanctum');//change password endpoint
-Route::post('/update_profile', [ProfileContoller::class, 'update_profile'])->middleware('auth:sanctum');//profile update endpoint
+Route::post('/update_profile', [ProfileContoller::class, 'update_profile'])->middleware('auth:sanctum');//profile update endpointupdate
+Route::post('/account_setting', [ProfileContoller::class, 'account_setting'])->middleware('auth:sanctum');//profile update endpointupdate
+Route::post('/billing_address', [ProfileContoller::class, 'billing_address'])->middleware('auth:sanctum');//profile update endpointupdate
 Route::post('/user', [UserController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
 Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');//api for logout

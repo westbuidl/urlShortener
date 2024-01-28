@@ -21,7 +21,8 @@ class IndividualAccount extends Model
         'state',
         'city',
         'zipcode',
-        'password'
+        'password',
+        'profile_photo'
         //'password',
     ];
 }
