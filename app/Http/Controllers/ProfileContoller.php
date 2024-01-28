@@ -114,5 +114,30 @@ class ProfileContoller extends Controller
     //Begin update billing address function
     public function billing_address(Request $request){
 
+        $validator = Validator::make($request->all(), [
+            'country' => 'nullable|max:100',
+            'state' => 'nullable|max:100',
+            'city' => 'nullable|max:100',
+            'zipcode' => 'nullable|max:100'
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validations failed',
+                'error' => $validator->errors()
+            ], 422);
+        }
+        $user = $request->user();
+        $user->update([
+            'country'=>$request->country,
+            'state'=>$request->state,
+            'city'=>$request->city,
+            'zipcode'=>$request->zipcode
+
+        ]);
+       
+         return response()->json([
+            'message'=> 'Billing Address updated',
+         ],200);
+
     }//End update billing address function
 }
