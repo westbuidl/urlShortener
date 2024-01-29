@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('lastname');
             $table->string('email');
             $table->timestamp('email_verified_at')->nullable();
+            $table->string('verification_code')->nullable();
+            $table->integer('is_verified')->default(value:0);
             $table->string('phone');
             $table->string('product');
             $table->string('country');

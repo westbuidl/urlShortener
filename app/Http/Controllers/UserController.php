@@ -56,7 +56,8 @@ class UserController extends Controller
             'state'=>$request->state,
             'city'=>$request->city,
             'zipcode'=>$request->zipcode,
-            'password'=>Hash::make($request->password)
+            'password'=>Hash::make($request->password),
+            //'verification_code'->sha1(time());
             //'confirm_password'=>'required|same:password'
    ]);
 
