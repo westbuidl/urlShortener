@@ -79,11 +79,55 @@ class SellerProfileContoller extends Controller
          ]);
         
           return response()->json([
-             'message'=> 'Account settings updated',
+             'message'=> 'Seller Profile updated',
           ],200);
  
      }//End update account settings function
+
+
+
+       // Begin profile picture update function for seller
+    public function seller_update_profile(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'profile_photo' => 'nullable|image|mimes:jpg,png,bmp'
+
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'validations fails',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        $user = $request->user();
+        if ($request->hasFile('profile_photo')) {
+            if ($user->profile_photo) {
+                $old_path = public_path() . '/uploads/profile_images/' . $user->profile_photo;
+                if (File::exists($old_path)) {
+                    File::delete($old_path);
+                }
+            }
+            $image_name = 'profile-image-' . time() . '.' . $request->profile_photo->extension();
+            $request->profile_photo->move(public_path('/uploads/profile_images'), $image_name);
+        } else {
+            $image_name = $user->profile_photo;
+        }
+
+        $user->update([
+            'profile_photo' => $image_name
+
+        ]);
+        return response()->json([
+            'message' => 'Sellers Profile Picture successfully uploaded',
+
+        ], 200);
+    } // End profile update function
+
+
+
 }
+
+
 
 
 
