@@ -44,5 +44,7 @@ Route::post('/seller_update_profile', [SellerProfileContoller::class, 'seller_up
 Route::post('/account_setting', [ProfileContoller::class, 'account_setting'])->middleware('auth:sanctum');//profile update endpointupdate for 
 Route::post('/billing_address', [ProfileContoller::class, 'billing_address'])->middleware('auth:sanctum');//profile update endpointupdate for 
 Route::post('/seller_account_setting', [SellerProfileContoller::class, 'seller_account_setting'])->middleware('auth:sanctum');//profile update endpoint for sellers
+Route::post('/seller_account_setting', [SellerProfileContoller::class, 'seller_account_setting'])->middleware('auth:sanctum');//profile update endpoint for sellers
+Route::post('/addproduct', [ProductController::class, 'addproduct'])->middleware('auth:sanctum');//profile update endpoint for sellers
 Route::post('/user', [UserController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
 Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');//api for logout
