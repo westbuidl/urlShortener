@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('business_accounts', function (Blueprint $table) {
-            $table->string('profile_photo')->nullable();
+            //$table->string('profile_photo')->nullable();
+            //$table->timestamp('email_verified_at')->nullable();
             //
         });
     }
@@ -23,7 +24,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('business_accounts', function (Blueprint $table) {
-            $table->string('profile_photo')->nullable();
+            //$table->string('profile_photo')->nullable();
+            //$table->timestamp('email_verified_at')->nullable();
             //
         });
     }

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('firstname');
             $table->string('lastname');
             $table->string('email');
+            $table->timestamp('email_verified_at')->nullable();
             $table->string('phone');
             $table->string('product');
             $table->string('country');
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->string('city');
             $table->string('zipcode');
             $table->string('password');
+            $table->string('profile_photo')->nullable();
            // $table->string('password');
             $table->timestamps();
         });

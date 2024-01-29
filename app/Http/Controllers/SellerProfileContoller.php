@@ -48,7 +48,7 @@ class SellerProfileContoller extends Controller
      {
          $validator = Validator::make($request->all(), [
              'businessname' => 'nullable|max:100',
-             'businessregnumber' => 'nullable|max:100',
+             //'businessregnumber' => 'nullable|max:100',
              'businessphone' => 'nullable|max:100',
              'products' => 'nullable|max:100',
              'businessaddress' => 'nullable|max:100',
@@ -67,7 +67,7 @@ class SellerProfileContoller extends Controller
          $user->update([
              //'firstname'=>$request->firstname,
              'businessname' =>$request->businessname,
-             'businessregnumber'=>$request->businessregnumber,
+             //'businessregnumber'=>$request->businessregnumber,
              'businessphone' =>$request->businessphone,
              'products' =>$request->products,
              'businessaddress' =>$request->businessaddress,

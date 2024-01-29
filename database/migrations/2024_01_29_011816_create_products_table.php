@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('quantityin_stock');
             $table->string('unit');
             $table->string('product_description');
-            $table->string('product_image');
+            $table->string('product_image')->nullable();
             $table->timestamps();
         });
     }

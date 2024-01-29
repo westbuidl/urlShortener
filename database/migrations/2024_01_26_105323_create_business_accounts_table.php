@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('businessname');
             $table->string('businessregnumber');
             $table->string('businessemail');
+            $table->timestamp('email_verified_at')->nullable();
             $table->string('businessphone');
             $table->string('products');
             $table->string('businessaddress');
@@ -26,6 +27,8 @@ return new class extends Migration
             $table->string('state');
             $table->string('zipcode');
             $table->string('password');
+            $table->string('profile_photo')->nullable();
+
            
         });
     }
