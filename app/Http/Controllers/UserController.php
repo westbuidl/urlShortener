@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use App\Models\User;
+use Illuminate\Http\Request;
 use App\Models\IndividualAccount;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Controllers\MailController;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -57,9 +58,18 @@ class UserController extends Controller
             'city'=>$request->city,
             'zipcode'=>$request->zipcode,
             'password'=>Hash::make($request->password),
-            //'verification_code'->sha1(time());
+             //$user->verification_code = sha1(time());
+             //$user->verification_code= sha1(time());
             //'confirm_password'=>'required|same:password'
+
+            
    ]);
+   //send email after registration
+   if($user != null){
+    MailController::sendSignupEmail($user->name, $user->email, $user->verification_code);
+    return redirect()->back()->with(session()->flash('alert-success', 'Check email for verification link'));
+    //Mail::to($user->email)->send(new WelcomeEmail());
+    }
 
     return response()->json([
         'message'=>'Registration successful',
