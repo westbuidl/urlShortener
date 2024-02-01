@@ -12,7 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->string('user_id');
+            //$table->string('user_id');
+            //$table->string('product_image1')->nullable();
+            //$table->string('product_image2')->nullable();
+            //$table->string('product_image3')->nullable();
+            //$table->string('product_image4')->nullable();
             //
         });
     }
