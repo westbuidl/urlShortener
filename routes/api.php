@@ -46,6 +46,8 @@ Route::post('/billing_address', [ProfileContoller::class, 'billing_address'])->m
 Route::post('/seller_account_setting', [SellerProfileContoller::class, 'seller_account_setting'])->middleware('auth:sanctum');//profile update endpoint for sellers
 //Route::post('/seller_account_setting', [SellerProfileContoller::class, 'seller_account_setting'])->middleware('auth:sanctum');//profile update endpoint for sellers
 Route::post('/addproduct', [ProductController::class, 'addproduct'])->middleware('auth:sanctum');//profile update endpoint for sellers
-Route::get('/viewproduct', [ProductController::class, 'viewproduct'])->middleware('auth:sanctum');//profile update endpoint for sellers
+Route::get('/viewproduct/{product_id}', [ProductController::class, 'viewproduct'])->middleware('auth:sanctum');//view products
+Route::get('/searchproducts/{name}', [ProductController::class, 'searchproducts'])->middleware('auth:sanctum');//search products
+Route::delete('/deleteproduct/{product_id}', [ProductController::class, 'deleteproduct'])->middleware('auth:sanctum');//profile update endpoint for sellers
 Route::post('/user', [UserController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
 Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');//api for logout

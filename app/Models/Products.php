@@ -11,8 +11,10 @@ use Laravel\Sanctum\HasApiTokens;
 class Products extends Model
 {
     //use HasFactory;
+    
 
     use HasFactory,HasApiTokens, Notifiable;
+    
 
     protected $fillable = [
         'product_id',
@@ -24,8 +26,12 @@ class Products extends Model
         'quantityin_stock',
         'unit',
         'product_description',
-        'product_image'
+        'product_image',
+        'active_state'
         //'password',
+
+
+        
     ];
 
     public function individuals(){

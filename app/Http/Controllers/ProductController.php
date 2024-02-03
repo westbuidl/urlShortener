@@ -3,21 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Models\Products;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Haruncpi\LaravelIdGenerator\IdGenerator;
 
 class ProductController extends Controller
 {
+    
+
+    
     //
+
+    //public static function IdGenerator($model, $trow, $lenght = 4, $prefix){};
+
+
     //function for adding products
     public function addproduct(Request $request)
+    
     {
+       //$product_id = IdGenerator::generate(['table' => 'Products','field'=>'product_id','length' => 6, 'prefix' =>'AGN']);
+        $product_id = 'AGN-'.rand(000000, 999999);
 
         $validator = Validator::make($request->all(), [
-            'product_id' => 'required|min:2|max:100',
+            //'product_id' => 'required|min:2|max:100',
             'product_name' => 'required|min:2|max:100',
             'product_category' => 'required|min:2|max:100',
             'selling_price' => 'required|min:2|max:100',
@@ -38,7 +49,7 @@ class ProductController extends Controller
                 'error' => $validator->errors()
             ], 422);
         }
-
+ 
         $product_image = $request->file('product_image');
         $imageName='';
         foreach($product_image as $product_images){
@@ -50,9 +61,19 @@ class ProductController extends Controller
 
         //$product_imagename = time() . '.' . $request->product_image->extension();
         //$request->product_image->move(public_path('/uploads/product_images'), $product_imagename);
-
+       // $product_id = str_pad(mt_rand(1, 999999), 6, '0', STR_PAD_LEFT);
+       
+    //$product_id = IdGenerator::generate($config);
+    //$product_id = IdGenerator::generate(['products' => 'products', 'length' => 10, 'prefix' =>'AGN-']);
+   
         $product = Products::create([
-            'product_id' => $request->product_id,
+            
+            //str_rand(6 only digit)->unique;
+            //'product_id' => $request->product_id = str_rand(6 only digit)->unique;
+           
+            
+            
+            'product_id' => $product_id,
             'user_id' => $request->user()->id,
             'product_name' => $request->product_name,
             'product_category' => $request->product_category,
@@ -61,9 +82,11 @@ class ProductController extends Controller
             'quantityin_stock' => $request->quantityin_stock,
             'unit' => $request->unit,
             'product_description' => $request->product_description,
-            'product_image' => $imageName
+            'product_image' => $imageName,
+            'active_state' => 0
             //'password'=>Hash::make($request->password)
             //'confirm_password'=>'required|same:password'
+            
         ]);
 
 
@@ -74,10 +97,30 @@ class ProductController extends Controller
         ], 200);
     } // end of function for adding products
 
-
-    /*public function viewproduct(string $id)
+    //Function to view products begin
+    public function viewproduct(string $product_id)
     {
-        return Product::find($id);
-        //
-    }*/
+         return Products::find($product_id);
+        
+    }//Function to view products ends
+
+    public function searchproducts(string $product_name )
+    {
+         //return Products::find($product_id);
+        return Products::where('product_name', 'like', '%'.$product_name.'%')->get();
+        
+    }//Function to view products ends
+
+    public function deleteproduct(string $id)
+    
+    {
+
+            
+
+        Products::destroy($id);
+        return response()->json([
+            'message' => 'Product Deleted Successfully',
+            //'data' => $product
+        ], 200);
+    }
 }
