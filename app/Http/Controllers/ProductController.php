@@ -25,7 +25,7 @@ class ProductController extends Controller
     
     {
        //$product_id = IdGenerator::generate(['table' => 'Products','field'=>'product_id','length' => 6, 'prefix' =>'AGN']);
-        $product_id = 'AGN-'.rand(000000, 999999);
+        $product_id = 'AGP-'.rand(000000, 999999);
 
         $validator = Validator::make($request->all(), [
             //'product_id' => 'required|min:2|max:100',
@@ -83,7 +83,7 @@ class ProductController extends Controller
             'unit' => $request->unit,
             'product_description' => $request->product_description,
             'product_image' => $imageName,
-            'active_state' => 0
+            'active_state' => 1
             //'password'=>Hash::make($request->password)
             //'confirm_password'=>'required|same:password'
             

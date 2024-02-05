@@ -10,9 +10,9 @@ class MailController extends Controller
 {
     //
 
-    public static function sendSignupEmail($name, $email, $verification_code){
+    public static function sendEmail($first_name, $email, $verification_code){
         $data =[
-            'name' => $name,
+            'first_name' => $first_name,
             'verification_code' => $verification_code
         ];
 

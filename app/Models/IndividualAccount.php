@@ -6,12 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-class IndividualAccount extends Model
+class IndividualAccount extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory,HasApiTokens, Notifiable;
 
     protected $fillable = [
+        'userID',
         'firstname',
         'lastname',
         'email',
@@ -22,7 +25,7 @@ class IndividualAccount extends Model
         'city',
         'zipcode',
         'password',
-        'profile_photo'
-        //'password',
+        'profile_photo',
+        'verification_code'
     ];
 }

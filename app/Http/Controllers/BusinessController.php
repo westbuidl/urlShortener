@@ -15,6 +15,10 @@ class BusinessController extends Controller
 
 
     public function business(Request $request){
+
+        $businessID = 'AGB-'.rand(000, 999);
+
+        
         /* $request->validate([
              'firstname'=>'required|min:2|max:100',
              'lastname'=>'required|min:2|max:100',
@@ -29,7 +33,7 @@ class BusinessController extends Controller
              'confirm_password'=>'required|same:password'
          ]);*/
         $validator = Validator::make($request->all(),[
-             'businessID'=>'required|min:2|max:100',
+             //'businessID'=>'required|min:2|max:100',
              'businessname'=>'required|min:2|max:100',
              'businessregnumber'=>'required|unique:business_accounts',
              'businessemail'=>'required|unique:business_accounts',
@@ -52,7 +56,7 @@ class BusinessController extends Controller
      }
  
     $business=BusinessAccount::create([
-                'businessID'=>$request->businessID,
+                'businessID'=>$businessID,
                 'businessname'=>$request->businessname,
                 'businessregnumber'=>$request->businessregnumber,
                 'businessemail'=>$request->businessemail,

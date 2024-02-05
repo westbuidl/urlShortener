@@ -3,16 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use App\Models\IndividualAccount;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\MailController;
 use Illuminate\Support\Facades\Validator;
+use App\Notifications\EmailVerificationNotification;
+use App\Mail\SignupEmail;
 
 class UserController extends Controller
 {
     //function for user registration
     public function individual(Request $request){
+        $userID = 'AGU-'.rand(00000000, 99999999);
+        $verification_code = rand(000000, 999999);
        /* $request->validate([
             'firstname'=>'required|min:2|max:100',
             'lastname'=>'required|min:2|max:100',
@@ -47,7 +55,8 @@ class UserController extends Controller
         ],422);
     }
 
-   $user=IndividualAccount::create([
+   $individualuser=IndividualAccount::create([
+             'userID'=>$userID, 
             'firstname'=>$request->firstname,
             'lastname'=>$request->firstname,
             'email'=>$request->email,
@@ -58,22 +67,26 @@ class UserController extends Controller
             'city'=>$request->city,
             'zipcode'=>$request->zipcode,
             'password'=>Hash::make($request->password),
-             //$user->verification_code = sha1(time());
+             'verification_code' => $verification_code
              //$user->verification_code= sha1(time());
             //'confirm_password'=>'required|same:password'
+
+           // $individualuser->notify(new EmailVerificationNotification())
 
             
    ]);
    //send email after registration
-   if($user != null){
-    MailController::sendSignupEmail($user->name, $user->email, $user->verification_code);
+  /* if($individualuser != null){
+    MailController::sendSignupEmail($individualuser->firstname, $individualuser->email, $individualuser->verification_code);
     return redirect()->back()->with(session()->flash('alert-success', 'Check email for verification link'));
     //Mail::to($user->email)->send(new WelcomeEmail());
-    }
+    }*/
+
+    Mail::to($request->email)->send(new SignupEmail($request));
 
     return response()->json([
-        'message'=>'Registration successful',
-        'data'=>$user
+        'message'=>'Registration successful Verification Email Sent',
+        'data'=>$individualuser
     ],200);
     
     }
@@ -92,16 +105,16 @@ class UserController extends Controller
             ],422);
         }
 
-        $user=IndividualAccount::where('email',$request->email)->first();
+        $individualuser=IndividualAccount::where('email',$request->email)->first();
 
-        if($user){
-            if(Hash::check($request->password,$user->password)){
-                $token=$user->createToken('auth-token')->plainTextToken;
+        if($individualuser){
+            if(Hash::check($request->password,$individualuser->password)){
+                $token=$individualuser->createToken('auth-token')->plainTextToken;
 
                 return response()->json([
                     'message'=>'Login Successful',
                     'token'=>$token,
-                    'data'=>$user
+                    'data'=>$individualuser
                 ],200);
 
             }else{
@@ -118,23 +131,68 @@ class UserController extends Controller
         }
      }
      //function to fetch user data with bearer tokens
-        public function user(Request $request){
+        public function individualuser(Request $request){
             return response()->json([
                 'message'=>'User successfully fetched',
-                'data'=>$request->user()
+                'data'=>$request->individualuser()
             ],200);
         }
 
     //function to logout
         public function logout(Request $request){
-            $request->user()->currentAccessToken()->delete();
+            $request->individualuser()->currentAccessToken()->delete();
             return response()->json([
                 'message'=>'User logged out',
 
             ],200);
         }
+        //function for email verification
+       /* public function sendVerifyMail($email){
+            if(auth()->user()){
+                $individualuser = IndividualAccount::where('email', $email)->get();
+                if(count($individualuser) > 0){
+
+                    return $individualuser[0]['id'];
+
+                    $random = Str::random(40);
+                    $domain = URL::to('/');
+                    $url = $domain.'/'.$random;
+
+                    $data['url'] = $url;
+                    $data['email'] = $email;
+                    $data['title'] = "Email verification";
+                    $data['body'] = "Enter code to verify";
+
+                    Mail::send('verifyMail',['data'=>$data],function($message) use ($data){
+                        $message->to($data['email'])->subject($data['title']);
+
+                    });
+
+                    $individualuser = IndividualAccount::find($individualuser[0]['id']);
+                    $individualuser->remember_token = $random;
+                    $individualuser -> save();
+
+                    return response()->json(['message'=>'Mail sent successfully',],200);
+                    
 
 
+                }else{
+                    return response()->json([
+                        'message'=>'user not found',
+        
+                    ],400);
+
+                }
+
+            }
+            else{
+
+                return response()->json([
+                    'message'=>'Email not verified',
+    
+                ],400);
+            }
+        }*/
 }
 
 

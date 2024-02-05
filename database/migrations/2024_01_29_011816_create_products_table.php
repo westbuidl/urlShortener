@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('unit');
             $table->string('product_description');
             $table->string('product_image')->nullable();
+            $table->integer('active_state');
             
             $table->timestamps();
         });

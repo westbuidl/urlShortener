@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileContoller;
@@ -44,10 +45,11 @@ Route::post('/seller_update_profile', [SellerProfileContoller::class, 'seller_up
 Route::post('/account_setting', [ProfileContoller::class, 'account_setting'])->middleware('auth:sanctum');//profile update endpointupdate for 
 Route::post('/billing_address', [ProfileContoller::class, 'billing_address'])->middleware('auth:sanctum');//profile update endpointupdate for 
 Route::post('/seller_account_setting', [SellerProfileContoller::class, 'seller_account_setting'])->middleware('auth:sanctum');//profile update endpoint for sellers
-//Route::post('/seller_account_setting', [SellerProfileContoller::class, 'seller_account_setting'])->middleware('auth:sanctum');//profile update endpoint for sellers
 Route::post('/addproduct', [ProductController::class, 'addproduct'])->middleware('auth:sanctum');//profile update endpoint for sellers
 Route::get('/viewproduct/{product_id}', [ProductController::class, 'viewproduct'])->middleware('auth:sanctum');//view products
 Route::get('/searchproducts/{name}', [ProductController::class, 'searchproducts'])->middleware('auth:sanctum');//search products
 Route::delete('/deleteproduct/{product_id}', [ProductController::class, 'deleteproduct'])->middleware('auth:sanctum');//profile update endpoint for sellers
 Route::post('/user', [UserController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
 Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');//api for logout
+Route::get('/sendverifymail', [UserController::class, 'sendVerifyMail']);//send verification email
+//Auth::routes(['verify' => true]);
