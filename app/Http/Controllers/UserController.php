@@ -148,10 +148,29 @@ class UserController extends Controller
         }
 
         //function to check and verify email
-        public function verifymail(Request $request){
+        public function verifymail($verification_code){
+
+            $individualuser = IndividualAccount::where('verification_code', '=', $verification_code)->first();
+            if(!empty($individualuser))
+            {
+                $individualuser->email_verified_at = date('Y-m-d H:i:s');
+                $individualuser->is_verified = (1);
+                $individualuser->save();
+                return response()->json([
+                    'message'=>'Email verified proceed to login',
+    
+                ],200);
+            }
+            else
+            {
+                return response()->json([
+                    'message'=>'Verification code is incorrect',
+    
+                ],200);
+            }
 
             $validator = Validator::make($request->all(),[
-                'otp'=>'required',
+                'otp'=>'required'
                 //'password'=>'required',
             ]);
     
