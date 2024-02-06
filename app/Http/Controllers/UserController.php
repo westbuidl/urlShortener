@@ -82,7 +82,7 @@ class UserController extends Controller
     //Mail::to($user->email)->send(new WelcomeEmail());
     }*/
 
-    Mail::to($request->email)->send(new SignupEmail($request));
+    Mail::to($request->email)->send(new SignupEmail($individualuser));
 
     return response()->json([
         'message'=>'Registration successful Verification Email Sent',
@@ -146,6 +146,49 @@ class UserController extends Controller
 
             ],200);
         }
+
+        //function to check and verify email
+        public function verifymail(Request $request){
+
+            $validator = Validator::make($request->all(),[
+                'otp'=>'required',
+                //'password'=>'required',
+            ]);
+    
+            if ($validator->fails()) {
+                return response()->json([
+                    'message'=>'OTP is required to proceed',
+                    'error'=>$validator->errors()
+                ],422);
+            }
+
+            $emailverify=IndividualAccount::where('email',$request->email)->first();
+
+            if($emailverify){
+                if(Hash::check($request->password,$emailverify->password)){
+                    $token=$emailverify->createToken('auth-token')->plainTextToken;
+    
+                    return response()->json([
+                        'message'=>'Email Verified proceed to login',
+                        //'token'=>$token,
+                        //'data'=>$emailverify
+                    ],200);
+    
+                }else{
+                    return response()->json([
+                        'message'=>'Incorrect Credentials',
+                    ],400);
+    
+                }
+            }else{
+                return response()->json([
+                    'message'=>'Incorrect Credentials',
+                ],400);
+    
+            }
+        }
+
+
         //function for email verification
        /* public function sendVerifyMail($email){
             if(auth()->user()){
