@@ -51,5 +51,5 @@ Route::get('/searchproducts/{name}', [ProductController::class, 'searchproducts'
 Route::delete('/deleteproduct/{product_id}', [ProductController::class, 'deleteproduct'])->middleware('auth:sanctum');//profile update endpoint for sellers
 Route::post('/user', [UserController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
 Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');//api for logout
-Route::get('/verifymail', [UserController::class, 'verifymail']);//send verification email
+Route::post('/verifymail', [UserController::class, 'verifymail']);//send verification email
 //Auth::routes(['verify' => true]);

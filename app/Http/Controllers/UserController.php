@@ -68,20 +68,11 @@ class UserController extends Controller
             'zipcode'=>$request->zipcode,
             'password'=>Hash::make($request->password),
              'verification_code' => $verification_code
-             //$user->verification_code= sha1(time());
-            //'confirm_password'=>'required|same:password'
-
-           // $individualuser->notify(new EmailVerificationNotification())
+            
 
             
    ]);
-   //send email after registration
-  /* if($individualuser != null){
-    MailController::sendSignupEmail($individualuser->firstname, $individualuser->email, $individualuser->verification_code);
-    return redirect()->back()->with(session()->flash('alert-success', 'Check email for verification link'));
-    //Mail::to($user->email)->send(new WelcomeEmail());
-    }*/
-
+  
     Mail::to($request->email)->send(new SignupEmail($individualuser));
 
     return response()->json([
@@ -148,113 +139,56 @@ class UserController extends Controller
         }
 
         //function to check and verify email
-        public function verifymail($verification_code){
 
-            $individualuser = IndividualAccount::where('verification_code', '=', $verification_code)->first();
-            if(!empty($individualuser))
-            {
-                $individualuser->email_verified_at = date('Y-m-d H:i:s');
-                $individualuser->is_verified = (1);
-                $individualuser->save();
-                return response()->json([
-                    'message'=>'Email verified proceed to login',
-    
-                ],200);
-            }
-            else
-            {
-                return response()->json([
-                    'message'=>'Verification code is incorrect',
-    
-                ],200);
-            }
+       
+public function verifymail(Request $request)
+{
+    // Validate request inputs
+    $validator = Validator::make($request->all(), [
+        'email' => 'required|email',
+        'otp' => 'required'
+    ]);
 
-            $validator = Validator::make($request->all(),[
-                'otp'=>'required'
-                //'password'=>'required',
-            ]);
-    
-            if ($validator->fails()) {
-                return response()->json([
-                    'message'=>'OTP is required to proceed',
-                    'error'=>$validator->errors()
-                ],422);
-            }
+    // If validation fails, return error response
+    if ($validator->fails()) {
+        return response()->json([
+            'error' => $validator->errors()->first(),
+        ], 400);
+    }
 
-            $emailverify=IndividualAccount::where('email',$request->email)->first();
+    // Fetch email and OTP from the form
+    $email = $request->input('email');
+    $otp = $request->input('otp');
+   
+    // Find individual user with the provided email and OTP
+    $individualuser = IndividualAccount::where('email', $email) ->where('verification_code', $otp)->first();
 
-            if($emailverify){
-                if(Hash::check($request->password,$emailverify->password)){
-                    $token=$emailverify->createToken('auth-token')->plainTextToken;
-    
-                    return response()->json([
-                        'message'=>'Email Verified proceed to login',
-                        //'token'=>$token,
-                        //'data'=>$emailverify
-                    ],200);
-    
-                }else{
-                    return response()->json([
-                        'message'=>'Incorrect Credentials',
-                    ],400);
-    
-                }
-            }else{
-                return response()->json([
-                    'message'=>'Incorrect Credentials',
-                ],400);
-    
-            }
+    // If individual user is found
+    if ($individualuser) {
+        // Check if email is already verified
+        if ($individualuser->email_verified_at) {
+            return response()->json([
+                'message' => 'Email already verified.',
+            ], 400);
         }
 
+        // Mark email as verified
+        $individualuser->email_verified_at = Carbon::now();
+        $individualuser->is_verified = true;
+        $individualuser->save();
 
-        //function for email verification
-       /* public function sendVerifyMail($email){
-            if(auth()->user()){
-                $individualuser = IndividualAccount::where('email', $email)->get();
-                if(count($individualuser) > 0){
-
-                    return $individualuser[0]['id'];
-
-                    $random = Str::random(40);
-                    $domain = URL::to('/');
-                    $url = $domain.'/'.$random;
-
-                    $data['url'] = $url;
-                    $data['email'] = $email;
-                    $data['title'] = "Email verification";
-                    $data['body'] = "Enter code to verify";
-
-                    Mail::send('verifyMail',['data'=>$data],function($message) use ($data){
-                        $message->to($data['email'])->subject($data['title']);
-
-                    });
-
-                    $individualuser = IndividualAccount::find($individualuser[0]['id']);
-                    $individualuser->remember_token = $random;
-                    $individualuser -> save();
-
-                    return response()->json(['message'=>'Mail sent successfully',],200);
-                    
+        return response()->json([
+            'message' => 'Email verified. Proceed to login.',
+        ], 200);
+    } else {
+        // If individual user is not found or OTP is incorrect
+        return response()->json([
+            'message' => 'Invalid email or OTP. Please try again.',
+        ], 400);
+    }
+}
 
 
-                }else{
-                    return response()->json([
-                        'message'=>'user not found',
-        
-                    ],400);
-
-                }
-
-            }
-            else{
-
-                return response()->json([
-                    'message'=>'Email not verified',
-    
-                ],400);
-            }
-        }*/
 }
 
 
