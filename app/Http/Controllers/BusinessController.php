@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\BusinessAccount;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Carbon;
+use App\Mail\SignupEmail;
+use Illuminate\Support\Facades\Mail;
 
 
 
@@ -17,6 +20,7 @@ class BusinessController extends Controller
     public function business(Request $request){
 
         $businessID = 'AGB-'.rand(000, 999);
+        $verification_code = rand(000000, 999999);
 
         
         /* $request->validate([
@@ -68,12 +72,13 @@ class BusinessController extends Controller
                 'state'=>$request->state,
                 'zipcode'=>$request->zipcode,
                 //'password'=>'required|min:6|max:100',
-                'password'=>Hash::make($request->password)
+                'password'=>Hash::make($request->password),
+                'verification_code' => $verification_code
              //'confirm_password'=>'required|same:password'
     ]);
- 
+    Mail::to($request->businessemail)->send(new SignupEmail($business));
      return response()->json([
-         'message'=>'Registration successful',
+         'message'=>'Registration successful Check email for verification code',
          'data'=>$business
      ],200);
      
@@ -118,4 +123,54 @@ class BusinessController extends Controller
 
         }
      }
+
+
+     //Email verification function
+
+     public function verifyMailBusiness(Request $request)
+{
+    // Validate request inputs
+    $validator = Validator::make($request->all(), [
+        'email' => 'required|email',
+        'otp' => 'required'
+    ]);
+
+    // If validation fails, return error response
+    if ($validator->fails()) {
+        return response()->json([
+            'error' => $validator->errors()->first(),
+        ], 400);
+    }
+
+    // Fetch email and OTP from the form
+    $email = $request->input('email');
+    $otp = $request->input('otp');
+   
+    // Find individual user with the provided email and OTP
+    $business = BusinessAccount::where('businessemail', $email) ->where('verification_code', $otp)->first();
+
+    // If individual user is found
+    if ($business) {
+        // Check if email is already verified
+        if ($business->email_verified_at) {
+            return response()->json([
+                'message' => 'Email already verified.',
+            ], 400);
+        }
+
+        // Mark email as verified
+        $business->email_verified_at = Carbon::now();
+        $business->is_verified = true;
+        $business->save();
+
+        return response()->json([
+            'message' => 'Email verified. Proceed to login.',
+        ], 200);
+    } else {
+        // If individual user is not found or OTP is incorrect
+        return response()->json([
+            'message' => 'Invalid email or OTP. Please try again.',
+        ], 400);
+    }
+}
 }

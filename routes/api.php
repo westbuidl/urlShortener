@@ -52,4 +52,5 @@ Route::delete('/deleteproduct/{product_id}', [ProductController::class, 'deletep
 Route::post('/user', [UserController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
 Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');//api for logout
 Route::post('/verifymail', [UserController::class, 'verifymail']);//send verification email
+Route::post('/verifyMailBusiness', [BusinessController::class, 'verifyMailBusiness']);//send verification email for business account setup
 //Auth::routes(['verify' => true]);

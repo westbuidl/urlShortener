@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('businessregnumber');
             $table->string('businessemail');
             $table->timestamp('email_verified_at')->nullable();
+            $table->string('verification_code')->nullable();
+            $table->integer('is_verified')->default(value:0);
             $table->string('businessphone');
             $table->string('products');
             $table->string('businessaddress');

@@ -23,7 +23,8 @@ class BusinessAccount extends Model
         'state',
         'zipcode',
         'password',
-        'profile_photo'
+        'profile_photo',
+        'verification_code'
     ];
 }
 /*'businessID',
