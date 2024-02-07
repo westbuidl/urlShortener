@@ -99,8 +99,11 @@ class UserController extends Controller
         $individualuser=IndividualAccount::where('email',$request->email)->first();
 
         if($individualuser){
-            if(Hash::check($request->password,$individualuser->password)){
+         if ($individualuser->email_verified_at) {
+               if(Hash::check($request->password,$individualuser->password)){
                 $token=$individualuser->createToken('auth-token')->plainTextToken;
+                // Store user ID in session
+                session(['userID' => $individualuser->userID]);
 
                 return response()->json([
                     'message'=>'Login Successful',
@@ -114,6 +117,13 @@ class UserController extends Controller
                 ],400);
 
             }
+
+        } else {
+            return response()->json([
+                'message' => 'Email not verified. Please verify your email first.',
+            ], 400);
+        }
+
         }else{
             return response()->json([
                 'message'=>'Incorrect Credentials',
@@ -132,6 +142,8 @@ class UserController extends Controller
     //function to logout
         public function logout(Request $request){
             $request->individualuser()->currentAccessToken()->delete();
+            // Remove user ID from session
+             $request->session()->forget('userID');
             return response()->json([
                 'message'=>'User logged out',
 

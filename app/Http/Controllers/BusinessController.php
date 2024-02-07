@@ -101,6 +101,7 @@ class BusinessController extends Controller
         $business=BusinessAccount::where('businessemail',$request->email)->first();
 
         if($business){
+        if ($business->email_verified_at) {
             if(Hash::check($request->password,$business->password)){
                 $token=$business->createToken('auth-token')->plainTextToken;
 
@@ -116,6 +117,13 @@ class BusinessController extends Controller
                 ],400);
 
             }
+
+        } else {
+            return response()->json([
+                'message' => 'Email not verified. Please verify your email first.',
+            ], 400);
+        }
+
         }else{
             return response()->json([
                 'message'=>'Incorrect Credentials',
