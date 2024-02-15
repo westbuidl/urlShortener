@@ -157,7 +157,7 @@ public function verifymail(Request $request)
 {
     // Validate request inputs
     $validator = Validator::make($request->all(), [
-        'email' => 'required|email',
+        //'email' => 'required|email',
         'otp' => 'required'
     ]);
 
@@ -169,11 +169,11 @@ public function verifymail(Request $request)
     }
 
     // Fetch email and OTP from the form
-    $email = $request->input('email');
-    $otp = $request->input('otp');
+    //$email = $request->input('email');
+    //$otp = $request->input('otp');
    
     // Find individual user with the provided email and OTP
-    $individualuser = IndividualAccount::where('email', $email) ->where('verification_code', $otp)->first();
+    $individualuser = IndividualAccount::where('verification_code', $request->otp)->first();
 
     // If individual user is found
     if ($individualuser) {
@@ -195,7 +195,7 @@ public function verifymail(Request $request)
     } else {
         // If individual user is not found or OTP is incorrect
         return response()->json([
-            'message' => 'Invalid email or OTP. Please try again.',
+            'message' => 'Invalid OTP. Please try again.',
         ], 400);
     }
 }
