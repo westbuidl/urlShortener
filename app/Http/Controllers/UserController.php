@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Mail\SignupEmail;
 use Illuminate\Support\Str;
+use App\Mail\SignupComplete;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Models\IndividualAccount;
@@ -13,7 +15,6 @@ use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\MailController;
 use Illuminate\Support\Facades\Validator;
 use App\Notifications\EmailVerificationNotification;
-use App\Mail\SignupEmail;
 
 class UserController extends Controller
 {
@@ -179,6 +180,7 @@ public function verifymail(Request $request)
     if ($individualuser) {
         // Check if email is already verified
         if ($individualuser->email_verified_at) {
+             
             return response()->json([
                 'message' => 'Email already verified.',
             ], 400);
@@ -189,9 +191,18 @@ public function verifymail(Request $request)
         $individualuser->is_verified = true;
         $individualuser->save();
 
+        Mail::to($individualuser->email)->send(new SignupComplete($individualuser));
         return response()->json([
             'message' => 'Email verified. Proceed to login.',
         ], 200);
+        
+       
+
+        
+        
+        
+    
+
     } else {
         // If individual user is not found or OTP is incorrect
         return response()->json([
@@ -199,6 +210,43 @@ public function verifymail(Request $request)
         ], 400);
     }
 }
+
+//function to resend verification code
+public function resendVerificationCode(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'email' => 'required|email',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'message' => 'Validation failed.',
+            'error' => $validator->errors()
+        ], 422);
+    }
+
+    $individualUser = IndividualAccount::where('email', $request->email)->first();
+
+    if ($individualUser) {
+        // Generate a new verification code
+        $verificationCode = Str::random(6); // Generate a random 6-character code
+
+        // Update the user's verification code
+        $individualUser->verification_code = $verificationCode;
+        $individualUser->save();
+
+        // Send the verification code to the user's email (implement your email sending logic here)
+
+        return response()->json([
+            'message' => 'New verification code sent successfully.',
+        ], 200);
+    } else {
+        return response()->json([
+            'message' => 'User not found.',
+        ], 404);
+    }
+}
+
 
 
 }
