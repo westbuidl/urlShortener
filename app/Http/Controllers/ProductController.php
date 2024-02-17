@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Products;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Mail\ProductAddEmail;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -91,6 +92,7 @@ class ProductController extends Controller
 
 
         $product->load('individuals:user_id', 'products');
+       // Mail::to($individualuser->email)->send(new ProductAddEmail($individualuser));
         return response()->json([
             'message' => 'Product Successfully added',
             'data' => $product
@@ -111,6 +113,9 @@ class ProductController extends Controller
         
     }//Function to view products ends
 
+
+
+    //Function to delete product
     public function deleteproduct(string $id)
     
     {

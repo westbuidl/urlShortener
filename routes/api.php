@@ -55,5 +55,7 @@ Route::post('/user', [UserController::class, 'user'])->middleware('auth:sanctum'
 Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');//api for logout
 //});
 Route::post('/verifymail', [UserController::class, 'verifymail'])->name('verifymail');//send verification email
+Route::post('/resendverificationcode', [UserController::class, 'resendverificationcode'])->name('resendcode');//resend verification code
+Route::post('/resetpassword', [UserController::class, 'resetpassword'])->name('resetpassword');//resend verification code
 Route::post('/verifyMailBusiness', [BusinessController::class, 'verifyMailBusiness'])->name('verifyMailBusiness');//send verification email for business account setup
 //Auth::routes(['verify' => true]);
