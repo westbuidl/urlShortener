@@ -40,7 +40,7 @@ Route::post('/userlogin', [UserController::class, 'userlogin'])->name('userlogin
 Route::post('/businesslogin', [BusinessController::class, 'businesslogin'])->name('businesslogin');//business account login
 
    // Route::group(['middle' => ['auth.session']], function () {
-Route::post('/change_password', [ProfileContoller::class, 'change_password'])->middleware('auth:sanctum')->name('change_password');//change password endpoint
+Route::post('/change_password', [ProfileContoller::class, 'change_password'])->name('change_password');//change password endpoint
 Route::post('/seller_change_password', [SellerProfileContoller::class, 'seller_change_password'])->middleware('auth:sanctum')->name('seller_change_password');//change password endpoint for sellers
 Route::post('/update_profile', [ProfileContoller::class, 'update_profile'])->middleware('auth:sanctum')->name('update_profile');//profile image update endpoint
 Route::post('/seller_update_profile', [SellerProfileContoller::class, 'seller_update_profile'])->middleware('auth:sanctum')->name('seller_update_profile');// seller profile image update endpoint 

@@ -83,13 +83,13 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'Registration successful Verification Email Sent',
-            //'data' => $individualuser->firstname
+            'data' => $individualuser
 
-            'data' => [
+            /*'data' => [
                 'firstname' => $individualuser->firstname,
                 'lastname' => $individualuser->lastname,
                 'email' => $individualuser->email
-            ]
+            ]*/
         ], 200);
     }
 
@@ -246,7 +246,7 @@ class UserController extends Controller
 
 
     //function to resend verification code
-    public function resendverificationcode(Request $request)
+   /* public function resendverificationcode(Request $request)
     {
         $email = Session::get('email');
 
@@ -275,5 +275,5 @@ class UserController extends Controller
                 'message' => 'Registration successful Verification Email Sent'
             ], 200);
         }
-    }
+    }*/
 }
