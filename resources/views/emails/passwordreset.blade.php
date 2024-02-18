@@ -254,7 +254,7 @@
                                                                                                     <tr>
                                                                                                         <td style="padding:18px 40px 0px 0px; line-height:22px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content">
                                                                                                             <div>
-                                                                                                                <div style="font-family: inherit; text-align: inherit"><span style="color: #00634a; font-size: 24px">Hi {{$user->firstname}}</span></div><br>
+                                                                                                                <div style="font-family: inherit; text-align: inherit"><span style="color: #00634a; font-size: 24px">Hi {{$individualuser->firstname}}</span></div><br>
                                                                                                                 <div style="font-family: inherit; text-align: inherit"><span style="color: #00634a; font-size: 24px">Reset your password</span></div>
                                                                                                                 <div></div>
                                                                                                             </div>
@@ -279,7 +279,7 @@
                                                                                                                 <tbody>
                                                                                                                     <tr>
                                                                                                                         <td align="center" bgcolor="#fbca5b" class="inner-td" style="border-radius:6px; font-size:16px; text-align:left; background-color:inherit;">
-                                                                                                                            <a href="#" style="background-color:#fbca5b; border:1px solid #fbca5b; border-color:#fbca5b; border-radius:0px; border-width:1px; color:#000000; display:inline-block; font-size:14px; font-weight:normal; letter-spacing:0px; line-height:normal; padding:12px 50px 12px 50px; text-align:center; text-decoration:none; border-style:solid; font-family:inherit;">{{$user->$reset_password}}</a>
+                                                                                                                            <a href="#" style="background-color:#fbca5b; border:1px solid #fbca5b; border-color:#fbca5b; border-radius:0px; border-width:1px; color:#000000; display:inline-block; font-size:14px; font-weight:normal; letter-spacing:0px; line-height:normal; padding:12px 50px 12px 50px; text-align:center; text-decoration:none; border-style:solid; font-family:inherit;">{{$individualuser->reset_password}}</a>
                                                                                                                         </td>
                                                                                                                     </tr>
                                                                                                                 </tbody>

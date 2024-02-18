@@ -230,12 +230,16 @@ class UserController extends Controller
         $reset_password = rand(10000000, 99999999);
 
         $individualuser = IndividualAccount::where('email', $request->email)->first();
-        $individualuser->password = $reset_password;
+       // $individualuser->password = $reset_password;
+         $individualuser->update([
+                'password' => Hash::make($reset_password)
+            ]);
         $individualuser->save();
 
         Mail::to($individualuser->email)->send(new PasswordResetEmail($individualuser));
         return response()->json([
-            'message' => 'Password reser email sent.',
+            'message' => 'Password reset code sent.',
+            'password_data' => $reset_password
         ], 200);
     }
 
