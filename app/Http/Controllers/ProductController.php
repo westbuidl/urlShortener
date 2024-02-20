@@ -13,9 +13,9 @@ use Haruncpi\LaravelIdGenerator\IdGenerator;
 
 class ProductController extends Controller
 {
-    
 
-    
+
+
     //
 
     //public static function IdGenerator($model, $trow, $lenght = 4, $prefix){};
@@ -23,10 +23,10 @@ class ProductController extends Controller
 
     //function for adding products
     public function addproduct(Request $request)
-    
+
     {
-       //$product_id = IdGenerator::generate(['table' => 'Products','field'=>'product_id','length' => 6, 'prefix' =>'AGN']);
-        $product_id = 'AGP-'.rand(000000, 999999);
+        //$product_id = IdGenerator::generate(['table' => 'Products','field'=>'product_id','length' => 6, 'prefix' =>'AGN']);
+        $product_id = 'AGP' . rand(000000, 999999);
 
         $validator = Validator::make($request->all(), [
             //'product_id' => 'required|min:2|max:100',
@@ -50,30 +50,29 @@ class ProductController extends Controller
                 'error' => $validator->errors()
             ], 422);
         }
- 
-        $product_image = $request->file('product_image');
-        $imageName='';
-        foreach($product_image as $product_images){
-            $new_imageName = rand().'.'.$product_images->getClientOriginalExtension();
-            $product_images->move(public_path('/uploads/product_images'), $new_imageName);
-            $imageName=$imageName.$new_imageName.",";
 
+        $product_image = $request->file('product_image');
+        $imageName = '';
+        foreach ($product_image as $product_images) {
+            $new_imageName = rand() . '.' . $product_images->getClientOriginalExtension();
+            $product_images->move(public_path('/uploads/product_images'), $new_imageName);
+            $imageName = $imageName . $new_imageName . ",";
         }
 
         //$product_imagename = time() . '.' . $request->product_image->extension();
         //$request->product_image->move(public_path('/uploads/product_images'), $product_imagename);
-       // $product_id = str_pad(mt_rand(1, 999999), 6, '0', STR_PAD_LEFT);
-       
-    //$product_id = IdGenerator::generate($config);
-    //$product_id = IdGenerator::generate(['products' => 'products', 'length' => 10, 'prefix' =>'AGN-']);
-   
+        // $product_id = str_pad(mt_rand(1, 999999), 6, '0', STR_PAD_LEFT);
+
+        //$product_id = IdGenerator::generate($config);
+        //$product_id = IdGenerator::generate(['products' => 'products', 'length' => 10, 'prefix' =>'AGN-']);
+
         $product = Products::create([
-            
+
             //str_rand(6 only digit)->unique;
             //'product_id' => $request->product_id = str_rand(6 only digit)->unique;
-           
-            
-            
+
+
+
             'product_id' => $product_id,
             'user_id' => $request->user()->id,
             'product_name' => $request->product_name,
@@ -87,12 +86,12 @@ class ProductController extends Controller
             'active_state' => 1
             //'password'=>Hash::make($request->password)
             //'confirm_password'=>'required|same:password'
-            
+
         ]);
 
 
         $product->load('individuals:user_id', 'products');
-       // Mail::to($individualuser->email)->send(new ProductAddEmail($individualuser));
+        // Mail::to($individualuser->email)->send(new ProductAddEmail($individualuser));
         return response()->json([
             'message' => 'Product Successfully added',
             'data' => $product
@@ -102,30 +101,62 @@ class ProductController extends Controller
     //Function to view products begin
     public function viewproduct(string $product_id)
     {
-         return Products::find($product_id);
-        
-    }//Function to view products ends
+        return Products::find($product_id);
+    } //Function to view products ends
 
-    public function searchproducts(string $product_name )
+    public function searchproducts(string $product_name)
     {
-         //return Products::find($product_id);
-        return Products::where('product_name', 'like', '%'.$product_name.'%')->get();
-        
-    }//Function to view products ends
+        //return Products::find($product_id);
+        return Products::where('product_name', 'like', '%' . $product_name . '%')->get();
+    } //Function to view products ends
 
 
 
     //Function to delete product
-    public function deleteproduct(string $id)
-    
+    public function deleteproduct(string $product_id)
+
     {
+        try {
+            //find prtoduct in the database
+            $product = Products::find($product_id);
+            if (!$product) {
+                return response()->json([
+                    'message' => 'Product not found',
+                ], 404);
+            }
 
-            
 
-        Products::destroy($id);
-        return response()->json([
-            'message' => 'Product Deleted Successfully',
-            //'data' => $product
-        ], 200);
+            // Find the product in the database
+            //$product = Products::findOrFail($product_id);
+
+            //$imageFilenames = explode(',', $product->product_image);
+
+            // Check if the product has associated images
+        if (!empty($product->product_image)) {
+            // Split the comma-separated image filenames into an array
+            $imageFilenames = explode(',', $product->product_image);
+
+            // Delete associated images from the filesystem
+            foreach ($imageFilenames as $filename) {
+                // Assuming images are stored in a folder named 'product_images'
+                $imagePath = public_path('/uploads/product_images/' . $filename);
+                if (File::exists($imagePath)) {
+                    File::delete($imagePath);
+                }
+            }
+        }
+
+            Products::destroy($product_id);
+            return response()->json([
+                'message' => 'Product Deleted Successfully',
+                //'data' => $product
+            ], 200);
+        } catch (\Exception $e) {
+            // Handle any exceptions that occur during the deletion process
+            return response()->json([
+                'message' => 'Error deleting product',
+                'error' => $e->getMessage(), // Include the error message for debugging
+            ], 500);
+        }
     }
 }

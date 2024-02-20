@@ -234,12 +234,13 @@ class UserController extends Controller
          $individualuser->update([
                 'password' => Hash::make($reset_password)
             ]);
+        
         $individualuser->save();
 
-        Mail::to($individualuser->email)->send(new PasswordResetEmail($individualuser));
+        Mail::to($individualuser->email)->send(new PasswordResetEmail($individualuser,$reset_password));
         return response()->json([
             'message' => 'Password reset code sent.',
-            'password_data' => $reset_password
+            //'password_data' => $reset_password
         ], 200);
     }
 
