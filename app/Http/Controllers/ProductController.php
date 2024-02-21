@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Products;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Mail\ProductAddEmail;
+use App\Http\Controllers\Controller;
+use App\Models\IndividualAccount;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 
@@ -90,8 +92,13 @@ class ProductController extends Controller
         ]);
 
 
+
         $product->load('individuals:user_id', 'products');
-        // Mail::to($individualuser->email)->send(new ProductAddEmail($individualuser));
+        $userEmail = IndividualAccount::find($request->user()->id)->email;
+
+        // Mail::to($userEmail)->send(new ProductAddEmail($product));
+
+        Mail::to($userEmail)->send(new ProductAddEmail($product, $userEmail));
         return response()->json([
             'message' => 'Product Successfully added',
             'data' => $product
@@ -101,14 +108,48 @@ class ProductController extends Controller
     //Function to view products begin
     public function viewproduct(string $product_id)
     {
-        return Products::find($product_id);
+        // Find the product by its ID
+        $product = Products::find($product_id);
+
+        // Check if the product exists
+        if ($product) {
+            return response()->json([
+                'message' => 'Product found.',
+                'data' => $product
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'Product not found.',
+            ], 404);
+        }
     } //Function to view products ends
 
-    public function searchproducts(string $product_name)
+    public function searchproducts($search_query = null)
     {
-        //return Products::find($product_id);
-        return Products::where('product_name', 'like', '%' . $product_name . '%')->get();
-    } //Function to view products ends
+        $query = Products::query();
+        // Search for products with names containing the given substring
+        if($search_query !==null){
+            $query->where(function ($query) use ($search_query){
+                $query->where('product_id', $search_query)
+                    ->orWhere('product_name', 'like', '%'. $search_query. '%');
+            });
+        }
+        $products = $query->get();
+        //$products = Products::where('product_name', 'like', '%' . $product_name . '%')->get();
+
+        // Check if any products were found
+        if ($products->isEmpty()) {
+            return response()->json([
+                'message' => 'No products found matching the search criteria.',
+            ], 404);
+        } else {
+            return response()->json([
+                'message' => 'Products found.',
+                'data' => $products
+            ], 200);
+        }
+    }
+    //Function to view products ends
 
 
 
@@ -132,19 +173,19 @@ class ProductController extends Controller
             //$imageFilenames = explode(',', $product->product_image);
 
             // Check if the product has associated images
-        if (!empty($product->product_image)) {
-            // Split the comma-separated image filenames into an array
-            $imageFilenames = explode(',', $product->product_image);
+            if (!empty($product->product_image)) {
+                // Split the comma-separated image filenames into an array
+                $imageFilenames = explode(',', $product->product_image);
 
-            // Delete associated images from the filesystem
-            foreach ($imageFilenames as $filename) {
-                // Assuming images are stored in a folder named 'product_images'
-                $imagePath = public_path('/uploads/product_images/' . $filename);
-                if (File::exists($imagePath)) {
-                    File::delete($imagePath);
+                // Delete associated images from the filesystem
+                foreach ($imageFilenames as $filename) {
+                    // Assuming images are stored in a folder named 'product_images'
+                    $imagePath = public_path('/uploads/product_images/' . $filename);
+                    if (File::exists($imagePath)) {
+                        File::delete($imagePath);
+                    }
                 }
             }
-        }
 
             Products::destroy($product_id);
             return response()->json([

@@ -11,16 +11,20 @@ use Illuminate\Queue\SerializesModels;
 
 class ProductAddEmail extends Mailable
 {
+    
     use Queueable, SerializesModels;
+    public $individualuser;
+    public $product;
 
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($individualuser, $product)
     {
+        $this->individualuser = $individualuser;
+        $this->product = $product;
         //
     }
-
     /**
      * Get the message envelope.
      */
@@ -37,7 +41,7 @@ class ProductAddEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            view:'emails.productaddemail',
         );
     }
 

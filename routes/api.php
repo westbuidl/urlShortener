@@ -43,6 +43,7 @@ Route::post('/businesslogin', [BusinessController::class, 'businesslogin'])->nam
 Route::post('/change_password', [ProfileContoller::class, 'change_password'])->middleware('auth:sanctum')->name('change_password');//change password endpoint
 Route::post('/seller_change_password', [SellerProfileContoller::class, 'seller_change_password'])->middleware('auth:sanctum')->name('seller_change_password');//change password endpoint for sellers
 Route::post('/update_profile', [ProfileContoller::class, 'update_profile'])->middleware('auth:sanctum')->name('update_profile');//profile image update endpoint
+Route::delete('/delete_userprofilepicture/{id}', [ProfileContoller::class, 'delete_userprofilepicture'])->middleware('auth:sanctum')->name('delete_userprofilepicture');//profile image update endpoint
 Route::post('/seller_update_profile', [SellerProfileContoller::class, 'seller_update_profile'])->middleware('auth:sanctum')->name('seller_update_profile');// seller profile image update endpoint 
 Route::post('/account_setting', [ProfileContoller::class, 'account_setting'])->middleware('auth:sanctum')->name('account_setting');//profile update endpointupdate for 
 Route::post('/billing_address', [ProfileContoller::class, 'billing_address'])->middleware('auth:sanctum')->name('billing_address');//profile update endpointupdate for 

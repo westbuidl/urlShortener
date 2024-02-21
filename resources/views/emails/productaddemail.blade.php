@@ -212,7 +212,7 @@
                                                                                             <table class="wrapper" role="module" data-type="image" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="33d39ee4-da50-404a-8d62-ac83a12a2429">
                                                                                                 <tbody>
                                                                                                     <tr>
-
+                                                                                                       
                                                                                                     </tr>
                                                                                                 </tbody>
                                                                                             </table>
@@ -254,15 +254,27 @@
                                                                                                     <tr>
                                                                                                         <td style="padding:18px 40px 0px 0px; line-height:22px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content">
                                                                                                             <div>
-                                                                                                                <div style="font-family: inherit; text-align: inherit"><span style="color: #00634a; font-size: 24px">Hi {{$individualuser->firstname}}</span></div><br>
-                                                                                                                <div style="font-family: inherit; text-align: inherit"><span style="color: #00634a; font-size: 24px">Login to your account with the code below, do not forget to reset</span></div>
+                                                                                                            <div style="font-family: inherit; text-align: inherit"><span style="color: #00634a; font-size: 24px">Hi {{$individualuser->firstname}}</span></div><br>
+                                                                                                                <div style="font-family: inherit; text-align: inherit"><span style="color: #00634a; font-size: 24px">Product Addedd</span></div>
                                                                                                                 <div></div>
                                                                                                             </div>
                                                                                                         </td>
                                                                                                     </tr>
                                                                                                 </tbody>
                                                                                             </table>
-
+                                                                                            <table class="module" role="module" data-type="text" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="b16a4afb-f245-4156-968e-8080176990ea.1" data-mc-module-version="2019-10-22">
+                                                                                                <tbody>
+                                                                                                    <tr>
+                                                                                                        <td style="padding:18px 40px 10px 0px; line-height:18px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content">
+                                                                                                            <div>
+                                                                                                                <div style="font-family: inherit; text-align: inherit"><span style="color: #00634a"><strong>Product information</strong></span></div><br>
+                                                                                                                <div style="font-family: inherit; text-align: inherit"><span style="color: #00634a"><strong>Enter the six digit code below to activate your account</strong></span></div>
+                                                                                                                <div></div>
+                                                                                                            </div>
+                                                                                                        </td>
+                                                                                                    </tr>
+                                                                                                </tbody>
+                                                                                            </table>
                                                                                             <table class="module" role="module" data-type="spacer" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="c97177b8-c172-4c4b-b5bd-7604cde23e3f">
                                                                                                 <tbody>
                                                                                                     <tr>
@@ -279,7 +291,7 @@
                                                                                                                 <tbody>
                                                                                                                     <tr>
                                                                                                                         <td align="center" bgcolor="#fbca5b" class="inner-td" style="border-radius:6px; font-size:16px; text-align:left; background-color:inherit;">
-                                                                                                                            <a href="#" style="background-color:#fbca5b; border:1px solid #fbca5b; border-color:#fbca5b; border-radius:0px; border-width:1px; color:#000000; display:inline-block; font-size:14px; font-weight:normal; letter-spacing:0px; line-height:normal; padding:12px 50px 12px 50px; text-align:center; text-decoration:none; border-style:solid; font-family:inherit;">{{$reset_password}}</a>
+                                                                                                                            <a href="#" style="background-color:#fbca5b; border:1px solid #fbca5b; border-color:#fbca5b; border-radius:0px; border-width:1px; color:#000000; display:inline-block; font-size:14px; font-weight:normal; letter-spacing:0px; line-height:normal; padding:12px 50px 12px 50px; text-align:center; text-decoration:none; border-style:solid; font-family:inherit;"></a>
                                                                                                                         </td>
                                                                                                                     </tr>
                                                                                                                 </tbody>
@@ -296,7 +308,7 @@
                                                                                                     </tr>
                                                                                                 </tbody>
                                                                                             </table>
-                                                                                            <!-- <table class="module" role="module" data-type="text" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="b16a4afb-f245-4156-968e-8080176990ea.1.1" data-mc-module-version="2019-10-22">
+                                                                                           <!-- <table class="module" role="module" data-type="text" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="b16a4afb-f245-4156-968e-8080176990ea.1.1" data-mc-module-version="2019-10-22">
                                                                                                 <tbody>
                                                                                                     <tr>
                                                                                                         <td style="padding:18px 40px 10px 0px; line-height:18px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content">
@@ -353,8 +365,8 @@
                                                                     </tr>
                                                                 </tbody>
                                                             </table>
-
-
+                                                           
+                                                           
                                                         </td>
                                                     </tr>
                                                 </table>

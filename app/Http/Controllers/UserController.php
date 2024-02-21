@@ -150,6 +150,19 @@ class UserController extends Controller
     }
 
     //function to logout
+    /* public function logout(Request $request)
+{
+    $request->user()->tokens()->delete();
+
+    // Remove user ID from session if you're also using session-based authentication
+    // $request->session()->forget('user_id');
+
+    return response()->json([
+        'message' => 'User logged out successfully.',
+    ], 200);
+} */
+
+
     public function logout(Request $request)
     {
         $request->individualuser()->currentAccessToken()->delete();
@@ -240,7 +253,7 @@ class UserController extends Controller
         Mail::to($individualuser->email)->send(new PasswordResetEmail($individualuser,$reset_password));
         return response()->json([
             'message' => 'Password reset code sent.',
-            //'password_data' => $reset_password
+            'password_data' => $reset_password
         ], 200);
     }
 
