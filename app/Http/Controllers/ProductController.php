@@ -91,7 +91,9 @@ class ProductController extends Controller
 
         ]);
 
-
+        $user = IndividualAccount::find($request->user()->id);
+        $userEmail = $user->email;
+        $userName = $user->firstname.' '. $user->lastname;
 
         $product->load('individuals:user_id', 'products');
         $userEmail = IndividualAccount::find($request->user()->id)->email;
@@ -128,10 +130,10 @@ class ProductController extends Controller
     {
         $query = Products::query();
         // Search for products with names containing the given substring
-        if($search_query !==null){
-            $query->where(function ($query) use ($search_query){
+        if ($search_query !== null) {
+            $query->where(function ($query) use ($search_query) {
                 $query->where('product_id', $search_query)
-                    ->orWhere('product_name', 'like', '%'. $search_query. '%');
+                    ->orWhere('product_name', 'like', '%' . $search_query . '%');
             });
         }
         $products = $query->get();
@@ -180,7 +182,7 @@ class ProductController extends Controller
                 // Delete associated images from the filesystem
                 foreach ($imageFilenames as $filename) {
                     // Assuming images are stored in a folder named 'product_images'
-                    $imagePath = public_path('/uploads/product_images/' . $filename);
+                    $imagePath = public_path('/uploads/product_images/'.$filename);
                     if (File::exists($imagePath)) {
                         File::delete($imagePath);
                     }
