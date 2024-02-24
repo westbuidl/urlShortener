@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::table('business_accounts', function (Blueprint $table) {
             //
-           $table->string('verification_code')->nullable();
-           $table->integer('is_verified')->default(value:0);
-            $table->integer('product_status')->default(value:true);
+           //$table->string('verification_code')->nullable();
+           //$table->integer('is_verified')->default(value:0);
+            //$table->integer('product_status')->default(value:true);
         });
     }
 

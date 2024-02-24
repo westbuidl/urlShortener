@@ -9,19 +9,20 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class SignupComplete extends Mailable
+class Bpasswordreset extends Mailable
 {
     use Queueable, SerializesModels;
-    public $user;
-
+    public $business;
+    public $reset_password;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($user)
+    public function __construct($business, $reset_password)
     {
-        $this->user = $user;
         //
+        $this->business = $business;
+        $this->reset_password = $reset_password;
     }
 
     /**
@@ -30,7 +31,7 @@ class SignupComplete extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome to AgroEase',
+            subject: 'Password Reset',
         );
     }
 
@@ -40,7 +41,7 @@ class SignupComplete extends Mailable
     public function content(): Content
     {
         return new Content(
-            view:'emails.signupcomplete',
+            view: 'emails.bpasswordreset',
         );
     }
 

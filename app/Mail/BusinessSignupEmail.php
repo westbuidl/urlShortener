@@ -9,19 +9,18 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class SignupComplete extends Mailable
+class BusinessSignupEmail extends Mailable
 {
     use Queueable, SerializesModels;
-    public $user;
-
+    public $business;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($user)
+    public function __construct($business)
     {
-        $this->user = $user;
         //
+        $this->business = $business;
     }
 
     /**
@@ -30,7 +29,7 @@ class SignupComplete extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome to AgroEase',
+            subject: 'Business Signup Email',
         );
     }
 
@@ -40,7 +39,7 @@ class SignupComplete extends Mailable
     public function content(): Content
     {
         return new Content(
-            view:'emails.signupcomplete',
+            view: 'emails.Businessemailsignup',
         );
     }
 

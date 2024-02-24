@@ -24,7 +24,7 @@ class UserController extends Controller
     //function for user registration
     public function individual(Request $request)
     {
-        $userID = 'AGU-' . rand(00000000, 99999999);
+        $userID = 'AGU' . rand(00000000, 99999999);
         $verification_code = rand(000000, 999999);
         /* $request->validate([
             'firstname'=>'required|min:2|max:100',
@@ -48,7 +48,7 @@ class UserController extends Controller
             'country' => 'required|min:2|max:100',
             'state' => 'required|min:2|max:100',
             'city' => 'required|min:2|max:100',
-            'zipcode' => 'required|min:2|max:100',
+            'zipcode' => '',
             'password' => 'required|min:6|max:100',
             'confirm_password' => 'required|same:password'
 

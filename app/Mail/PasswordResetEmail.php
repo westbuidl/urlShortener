@@ -14,7 +14,7 @@ class PasswordResetEmail extends Mailable
 {
    // use Queueable, SerializesModels;
     use Queueable, SerializesModels;
-    public $product;
+    public $individualuser;
     public $reset_password;
     
 
@@ -22,9 +22,9 @@ class PasswordResetEmail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct($product, $reset_password)
+    public function __construct($individualuser, $reset_password)
     {
-        $this->product = $product;
+        $this->individualuser = $individualuser;
         $this->reset_password = $reset_password;
         //
     }
@@ -34,7 +34,7 @@ class PasswordResetEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Password Reset Email',
+            subject: 'Password Reset',
         );
     }
 

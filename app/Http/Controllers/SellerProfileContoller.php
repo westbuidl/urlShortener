@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BusinessAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
@@ -125,6 +126,50 @@ class SellerProfileContoller extends Controller
 
 
 
+         //Delete user profile picture
+   
+         public function delete_businessprofilepicture(Request $request)
+         {
+             try {
+     
+                 $business = $request->user();
+     
+                 // If validation fails, return error response
+     
+     
+                 // Find the user in the database
+                 $business = BusinessAccount::findOrFail($request->id);
+     
+                 // Check if the user has a profile picture
+                 if (!empty($business->profile_photo)) {
+                     // Delete the profile picture from the filesystem
+                     $imagePath = public_path('/uploads/profile_images/' . $business->profile_photo);
+                     if (File::exists($imagePath)) {
+                         File::delete($imagePath);
+                     }
+     
+                     // Update the user's profile picture field to null
+                     $business->profile_photo = null;
+                     $business->save();
+     
+     
+                     return response()->json([
+                         'message' => 'Profile picture deleted successfully.',
+                     ], 200);
+                 } else {
+                     return response()->json([
+                         'message' => 'no profile picture found for this user',
+                     ], 400);
+                 }
+             } catch (\Exception $e) {
+                 // Handle any exceptions that occur during the deletion process
+                 return response()->json([
+                     'message' => 'Error deleting profile picture.',
+                     'error' => $e->getMessage(), // Include the error message for debugging
+                 ], 500);
+             }
+         }
+     
 }
 
 

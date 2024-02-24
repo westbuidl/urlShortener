@@ -27,7 +27,7 @@ return new class extends Migration
             $table->string('country');
             $table->string('city');
             $table->string('state');
-            $table->string('zipcode');
+            $table->string('zipcode')->nullable();
             $table->string('password');
             $table->string('profile_photo')->nullable();
 

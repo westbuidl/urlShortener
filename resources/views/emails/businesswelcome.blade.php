@@ -30,23 +30,11 @@
                                     <td style="padding:0 35px; ">
                                         <br>
                                         <br>
-                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$firstname->firstname}}, </h1><br>
-                                        <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">We're excited to inform you that your new product has been successfully added to <strong>Agroease's</strong> inventory! ðŸš€</h1><br>
-                                        <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Product Details:</strong> <br><br>
-                                            <li>Product Name: <strong>{{$product->product_name}}</strong></li>
-                                            <li>SKU: <strong>{{$product->product_id}}</strong></li>
-                                            <li>Price: <strong>{{$product->selling_price}}</strong></li>
-                                            <li>Description: <strong>{{$product->product_description}}</strong></li>
-
-
-                                            
-                                            @if ($product->product_image)
-                                            <li><img src="{{  asset ('uploads/product_images/'.explode(',',$product->product_image)[0]) }}" alt="Product Image"></li>
-                                             @endif
-                                        </h1><br>
-                                        <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Got Questions?</strong> <br><br>If you have any questions or need assistance with anything related to your new product, feel free to reach out to our support team at <a href="mailto:contact@agroease.com" style="color: #1d988c; text-decoration: none;"><strong>contact@agroease.com</strong></a>. We're here to help you succeed!
-                                            <br><br>Thank you for entrusting us with your product addition. We can't wait to see it flourish in our marketplace.<br><br>Best regards, <br><br>The Agroease Team
-                                        </h1><br>
+                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$business->businessname}}, </h1><br>
+                                        <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">Congratulations and welcome to <strong>Agroease!</strong> ðŸŽ‰ We're thrilled to have you as a new member of our community.</h1><br>
+                                        <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Have questions or need assistance?</strong> <br><br> If you have any questions or need assistance at any point, don't hesitate to reach out to our support team at <a href="mailto:contact@agroease.com" style="color: #1d988c; text-decoration: none;"><strong>contact@agroease.com</strong></a>.
+                                            We're here to help you every step of the way.
+                                            <br><br>Once again, welcome to <strong>Agroease!</strong> We're looking forward to seeing you thrive in our community. <br><br>Best regards, <br><br>The Agroease Team</h1><br>
                                     </td>
                                 </tr>
                                 <tr>
@@ -62,12 +50,12 @@
                                 </tr>
                             </table>
                         </td>
-                    <tr>
-                        <td style="height:20px;">&nbsp;</td>
-                    </tr>
+                        <tr>
+                            <td style="height:20px;">&nbsp;</td>
+                        </tr>
                 </table>
             </td>
-        </tr>
+            </tr>
     </table>
 
 </body>

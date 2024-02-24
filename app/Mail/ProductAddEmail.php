@@ -9,19 +9,20 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
+
 class ProductAddEmail extends Mailable
 {
     
     use Queueable, SerializesModels;
-    public $individualuser;
+    public $firstname;
     public $product;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($individualuser, $product)
+    public function __construct($firstname, $product)
     {
-        $this->individualuser = $individualuser;
+        $this->firstname = $firstname;
         $this->product = $product;
         //
     }
@@ -31,7 +32,7 @@ class ProductAddEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Product Add Email',
+            subject: 'Product Added ',
         );
     }
 

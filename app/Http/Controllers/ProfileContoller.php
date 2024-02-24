@@ -95,24 +95,24 @@ class ProfileContoller extends Controller
         }
         $user = $request->user();
         $user->update([
-            'firstname'=>$request->firstname,
-            'lastname'=>$request->lastname,
-            'email'=>$request->email,
-            'phone'=>$request->phone
+            'firstname' => $request->firstname,
+            'lastname' => $request->lastname,
+            'email' => $request->email,
+            'phone' => $request->phone
 
         ]);
-       
-         return response()->json([
-            'message'=> 'Account settings updated',
-         ],200);
 
-    }//End update account settings function
+        return response()->json([
+            'message' => 'Account settings updated',
+        ], 200);
+    } //End update account settings function
 
 
 
 
     //Begin update billing address function
-    public function billing_address(Request $request){
+    public function billing_address(Request $request)
+    {
 
         $validator = Validator::make($request->all(), [
             'country' => 'nullable|max:100',
@@ -128,39 +128,33 @@ class ProfileContoller extends Controller
         }
         $user = $request->user();
         $user->update([
-            'country'=>$request->country,
-            'state'=>$request->state,
-            'city'=>$request->city,
-            'zipcode'=>$request->zipcode
+            'country' => $request->country,
+            'state' => $request->state,
+            'city' => $request->city,
+            'zipcode' => $request->zipcode
 
         ]);
-       
-         return response()->json([
-            'message'=> 'Billing Address updated',
-         ],200);
 
-    }//End update billing address function
+        return response()->json([
+            'message' => 'Billing Address updated',
+        ], 200);
+    } //End update billing address function
 
 
     //Delete user profile picture
-    public function delete_userprofilepicture(Request $request){
+
+    public function delete_userprofilepicture(Request $request)
+    {
         try {
-            // Validate request inputs
-            $validator = Validator::make($request->all(), [
-                'user_id' => 'required|exists:individual_accounts,userID',
-            ]);
-    
+
+            $user = $request->user();
+
             // If validation fails, return error response
-            if ($validator->fails()) {
-                return response()->json([
-                    'message' => 'User not found.',
-                    'error' => $validator->errors()->first(),
-                ], 400);
-            }
-    
+
+
             // Find the user in the database
             $user = IndividualAccount::findOrFail($request->id);
-    
+
             // Check if the user has a profile picture
             if (!empty($user->profile_photo)) {
                 // Delete the profile picture from the filesystem
@@ -168,12 +162,76 @@ class ProfileContoller extends Controller
                 if (File::exists($imagePath)) {
                     File::delete($imagePath);
                 }
-    
+
+                // Update the user's profile picture field to null
+                $user->profile_photo = null;
+                $user->save();
+
+
+                return response()->json([
+                    'message' => 'Profile picture deleted successfully.',
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'no profile picture found for this user',
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            // Handle any exceptions that occur during the deletion process
+            return response()->json([
+                'message' => 'Error deleting profile picture.',
+                'error' => $e->getMessage(), // Include the error message for debugging
+            ], 500);
+        }
+    }
+
+
+
+
+
+
+    /* public function delete_userprofilepicture(Request $request)
+    {
+        try {
+            // Validate request inputs
+            $validator = Validator::make($request->all(), [
+                'user_id' => 'required|exists:individual_accounts,id',
+            ]);
+
+            // If validation fails, return error response
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'User not found.',
+                    'error' => $validator->errors()->first(),
+                ], 400);
+            }
+
+            // Get the authenticated user
+            $authenticatedUser = $request->user();
+
+            // Find the user in the database by user ID
+            $user = IndividualAccount::findOrFail($request->user_id);
+
+            // Check if the authenticated user is the owner of the profile picture
+            if ($authenticatedUser->id !== $user->id) {
+                return response()->json([
+                    'message' => 'You are not authorized to delete this profile picture.',
+                ], 403);
+            }
+
+            // Check if the user has a profile picture
+            if (!empty($user->profile_photo)) {
+                // Delete the profile picture from the filesystem
+                $imagePath = public_path('/uploads/profile_images/' . $user->profile_photo);
+                if (File::exists($imagePath)) {
+                    File::delete($imagePath);
+                }
+
                 // Update the user's profile picture field to null
                 $user->profile_photo = null;
                 $user->save();
             }
-    
+
             return response()->json([
                 'message' => 'Profile picture deleted successfully.',
             ], 200);
@@ -184,7 +242,5 @@ class ProfileContoller extends Controller
                 'error' => $e->getMessage(), // Include the error message for debugging
             ], 500);
         }
-    
-
-    }
+    }*/
 }

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('individual_accounts', function (Blueprint $table) {
-            $table->string('userID');
+            //$table->string('userID');
             //
         });
     }

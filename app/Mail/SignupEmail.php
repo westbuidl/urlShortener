@@ -14,6 +14,7 @@ class SignupEmail extends Mailable
 {
     use Queueable, SerializesModels;
     public $user;
+    
 
     /**
      * Create a new message instance.
@@ -21,6 +22,7 @@ class SignupEmail extends Mailable
     public function __construct($user)
     {
         $this->user = $user;
+        //$this->business = $business;
         //
     }
 
