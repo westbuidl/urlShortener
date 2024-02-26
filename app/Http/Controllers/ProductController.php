@@ -233,75 +233,75 @@ class ProductController extends Controller
 
     //Function to edit product
     public function editproduct(Request $request, string $product_id)
-    {
-        // Find the product by its ID
-        $product = Products::find($product_id);
+{
+    // Find the product by its ID
+    $product = Products::find($product_id);
 
-        // Check if the product exists
-        if ($product) {
-            // Check if the authenticated user is the owner of the product
-            if ($request->user()->id == $product->user_id) {
-                // Validate the request data
-                $validator = Validator::make($request->all(), [
-                    'product_name' => 'required|min:2|max:100',
-                    'product_category' => 'required|min:2|max:100',
-                    'selling_price' => 'required|min:2|max:100',
-                    'cost_price' => 'required|min:2|max:100',
-                    'quantityin_stock' => 'required|min:2|max:100',
-                    'unit' => 'required|min:2|max:100',
-                    'product_description' => 'required|min:2|max:255',
-                    'product_image' => 'array|min:2|max:5',
-                    'product_image.*' => 'image|mimes:jpg,png,bmp'
-                ]);
+    // Check if the product exists
+    if ($product) {
+        // Check if the authenticated user is the owner of the product
+        if ($request->user()->id == $product->user_id) {
+            // Validate the request data
+            $validator = Validator::make($request->all(), [
+                'product_name' => 'required|min:2|max:100',
+                'product_category' => 'required|min:2|max:100',
+                'selling_price' => 'required|min:2|max:100',
+                'cost_price' => 'required|min:2|max:100',
+                'quantityin_stock' => 'required|min:2|max:100',
+                'unit' => 'required|min:2|max:100',
+                'product_description' => 'required|min:2|max:255',
+                'product_image' => 'array|min:2|max:5',
+                'product_image.*' => 'image|mimes:jpg,png,bmp'
+            ]);
 
-                // If validation fails, return error response
-                if ($validator->fails()) {
-                    return response()->json([
-                        'message' => 'Validation fails',
-                        'error' => $validator->errors()
-                    ], 422);
-                }
-
-                // Update product details
-                $product->update([
-                    'product_name' => $request->product_name,
-                    'product_category' => $request->product_category,
-                    'selling_price' => $request->selling_price,
-                    'cost_price' => $request->cost_price,
-                    'quantityin_stock' => $request->quantityin_stock,
-                    'unit' => $request->unit,
-                    'product_description' => $request->product_description
-                ]);
-
-                // Handle product image updates
-                if ($request->hasFile('product_image')) {
-                    $product_image = $request->file('product_image');
-                    $imageName = '';
-                    foreach ($product_image as $product_images) {
-                        $new_imageName = rand() . '.' . $product_images->getClientOriginalExtension();
-                        $product_images->move(public_path('/uploads/product_images'), $new_imageName);
-                        $imageName .= $new_imageName . ",";
-                    }
-                    // Update product image field
-                    $product->update(['product_image' => $imageName]);
-                }
-
-                // Return success response
+            // If validation fails, return error response
+            if ($validator->fails()) {
                 return response()->json([
-                    'message' => 'Product updated successfully',
-                    'data' => $product
-                ], 200);
-            } else {
-                // If the user is not the owner, return an error message
-                return response()->json([
-                    'message' => 'You are not authorized to edit this product.',
-                ], 403);
+                    'message' => 'Validation fails',
+                    'error' => $validator->errors()
+                ], 422);
             }
-        } else {
-            // If the product is not found, return a 404 error message
+
+            // Update product details
+            $product->update([
+                'product_name' => $request->product_name,
+                'product_category' => $request->product_category,
+                'selling_price' => $request->selling_price,
+                'cost_price' => $request->cost_price,
+                'quantityin_stock' => $request->quantityin_stock,
+                'unit' => $request->unit,
+                'product_description' => $request->product_description
+            ]);
+
+            // Handle product image updates
+            if ($request->hasFile('product_image')) {
+                $imageName = '';
+                foreach ($request->file('product_image') as $product_image) {
+                    $new_imageName = rand() . '.' . $product_image->getClientOriginalExtension();
+                    $product_image->move(public_path('/uploads/product_images'), $new_imageName);
+                    $imageName .= $new_imageName . ",";
+                }
+                // Update product image field
+                $product->update(['product_image' => $imageName]);
+            }
+
+            // Return success response
             return response()->json([
-                'message' => 'Product not found.',
-            ], 404);
+                'message' => 'Product updated successfully',
+                //'data' => $product
+            ], 200);
+        } else {
+            // If the user is not the owner, return an error message
+            return response()->json([
+                'message' => 'You are not authorized to edit this product.',
+            ], 403);
         }
+    } else {
+        // If the product is not found, return a 404 error message
+        return response()->json([
+            'message' => 'Product not found.',
+        ], 404);
     }
+}
+ //function ends for edit product
 }

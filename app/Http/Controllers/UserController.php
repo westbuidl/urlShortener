@@ -119,6 +119,8 @@ class UserController extends Controller
                     session(['userID' => $individualuser->userID]);
                     session(['email' => $individualuser->email]);
 
+                    //return Redirect::route('user.dashboard')->with('token', $token);
+
                     return response()->json([
                         'message' => 'Login Successful',
                         'token' => $token,
