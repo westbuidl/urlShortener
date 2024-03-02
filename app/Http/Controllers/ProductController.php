@@ -304,4 +304,125 @@ class ProductController extends Controller
     }
 }
  //function ends for edit product
+
+     //Function to restock product
+     public function restockproduct(Request $request, string $product_id)
+     {
+         // Find the product by its ID
+         $product = Products::find($product_id);
+     
+         // Check if the product exists
+         if ($product) {
+             // Check if the authenticated user is the owner of the product
+             if ($request->user()->id == $product->user_id) {
+                 // Validate the request data
+                 $validator = Validator::make($request->all(), [
+                     
+                    'quantityin_stock' => 'required|min:2|max:100',
+                    'selling_price' => 'required|min:2|max:100',
+                     'cost_price' => 'required|min:2|max:100',
+                     
+                     
+                 ]);
+     
+                 // If validation fails, return error response
+                 if ($validator->fails()) {
+                     return response()->json([
+                         'message' => 'Validation fails',
+                         'error' => $validator->errors()
+                     ], 422);
+                 }
+     
+                 // Update product details
+                 $product->update([
+                     
+                    'quantityin_stock' => $request->quantityin_stock, 
+                    'selling_price' => $request->selling_price,
+                     'cost_price' => $request->cost_price,
+                     
+                    
+                 ]);
+     
+                
+     
+                 // Return success response
+                 return response()->json([
+                     'message' => 'Restock successful',
+                     //'data' => $product
+                 ], 200);
+             } else {
+                 // If the user is not the owner, return an error message
+                 return response()->json([
+                     'message' => 'You are not authorized to restock this product.',
+                 ], 403);
+             }
+         } else {
+             // If the product is not found, return a 404 error message
+             return response()->json([
+                 'message' => 'Product not found.',
+             ], 404);
+         }
+     }
+      //function ends for edit product
+
+
+      //Function to restock product
+     public function productstate(Request $request, string $product_id)
+     {
+         // Find the product by its ID
+         $product = Products::find($product_id);
+     
+         // Check if the product exists
+         if ($product) {
+             // Check if the authenticated user is the owner of the product
+             if ($request->user()->id == $product->user_id) {
+                 // Validate the request data
+                 $validator = Validator::make($request->all(), [
+                     
+                    'quantityin_stock' => 'required|min:2|max:100',
+                    'selling_price' => 'required|min:2|max:100',
+                     'cost_price' => 'required|min:2|max:100',
+                     
+                     
+                 ]);
+     
+                 // If validation fails, return error response
+                 if ($validator->fails()) {
+                     return response()->json([
+                         'message' => 'Validation fails',
+                         'error' => $validator->errors()
+                     ], 422);
+                 }
+     
+                 // Update product details
+                 $product->update([
+                     
+                    'quantityin_stock' => $request->quantityin_stock, 
+                    'selling_price' => $request->selling_price,
+                     'cost_price' => $request->cost_price,
+                     
+                    
+                 ]);
+     
+                
+     
+                 // Return success response
+                 return response()->json([
+                     'message' => 'Restock successful',
+                     //'data' => $product
+                 ], 200);
+             } else {
+                 // If the user is not the owner, return an error message
+                 return response()->json([
+                     'message' => 'You are not authorized to restock this product.',
+                 ], 403);
+             }
+         } else {
+             // If the product is not found, return a 404 error message
+             return response()->json([
+                 'message' => 'Product not found.',
+             ], 404);
+         }
+     }
+      //function ends for edit product
 }

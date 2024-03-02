@@ -53,6 +53,7 @@ Route::post('/addproduct', [ProductController::class, 'addproduct'])->middleware
 Route::get('/viewproduct/{product_id}', [ProductController::class, 'viewproduct'])->middleware('auth:sanctum')->name('viewproduct');//view products
 Route::post('/editproduct/{product_id}', [ProductController::class, 'editproduct'])->middleware('auth:sanctum')->name('editproduct');//view products
 Route::post('/restockproduct/{product_id}', [ProductController::class, 'restockproduct'])->middleware('auth:sanctum')->name('restockproduct');//restock product
+Route::post('/productstate/{product_id}', [ProductController::class, 'productstate'])->middleware('auth:sanctum')->name('productstate');//make the product active/inactive
 Route::get('/searchproducts/{name}', [ProductController::class, 'searchproducts'])->middleware('auth:sanctum')->name('searchproducts');//search products
 Route::delete('/deleteproduct/{product_id}', [ProductController::class, 'deleteproduct'])->middleware('auth:sanctum');//profile update endpoint for sellers
 Route::post('/user', [UserController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
