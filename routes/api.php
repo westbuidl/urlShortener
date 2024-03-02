@@ -32,23 +32,40 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+//Begin Api routes for Individual account functions
 Route::get('/register', [UserController::class, 'create']);
-
 Route::post('/individual', [UserController::class, 'individual'])->name('individual');//creating account for individuals
-Route::post('/business', [BusinessController::class, 'business'])->name('business');//creating account for business
 Route::post('/userlogin', [UserController::class, 'userlogin'])->name('userlogin');//individual account login
-Route::post('/businesslogin', [BusinessController::class, 'businesslogin'])->name('businesslogin');//business account login
-
-   // Route::group(['middle' => ['auth.session']], function () {
 Route::post('/change_password', [ProfileContoller::class, 'change_password'])->middleware('auth:sanctum')->name('change_password');//change password endpoint
-Route::post('/seller_change_password', [SellerProfileContoller::class, 'seller_change_password'])->middleware('auth:sanctum')->name('seller_change_password');//change password endpoint for sellers
 Route::post('/update_profile', [ProfileContoller::class, 'update_profile'])->middleware('auth:sanctum')->name('update_profile');//profile image update endpoint
 Route::delete('/delete_userprofilepicture/{id}', [ProfileContoller::class, 'delete_userprofilepicture'])->middleware('auth:sanctum')->name('delete_userprofilepicture');//profile image update endpoint
-Route::delete('/delete_businessprofilepicture/{id}', [SellerProfileContoller::class, 'delete_businessprofilepicture'])->middleware('auth:sanctum')->name('delete_businessprofilepicture');//profile image update endpoint
-Route::post('/seller_update_profile', [SellerProfileContoller::class, 'seller_update_profile'])->middleware('auth:sanctum')->name('seller_update_profile');// seller profile image update endpoint 
 Route::post('/account_setting', [ProfileContoller::class, 'account_setting'])->middleware('auth:sanctum')->name('account_setting');//profile update endpointupdate for 
 Route::post('/billing_address', [ProfileContoller::class, 'billing_address'])->middleware('auth:sanctum')->name('billing_address');//profile update endpointupdate for 
+Route::post('/user', [UserController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
+Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');//api for logout//});
+Route::post('/verifymail', [UserController::class, 'verifymail'])->name('verifymail');//send verification email
+Route::post('/resendverificationcode', [UserController::class, 'resendverificationcode'])->name('resendcode');//resend verification code
+Route::post('/resetpassword', [UserController::class, 'resetpassword'])->name('resetpassword');//resend verification code
+//End Api routs for individual account
+
+
+
+
+
+//---Begin Api routes for Business account functions --//
+Route::post('/business', [BusinessController::class, 'business'])->name('business');//creating account for business
+Route::post('/businesslogin', [BusinessController::class, 'businesslogin'])->name('businesslogin');//business account login
+Route::post('/seller_change_password', [SellerProfileContoller::class, 'seller_change_password'])->middleware('auth:sanctum')->name('seller_change_password');//change password endpoint for sellers
+Route::delete('/delete_businessprofilepicture/{id}', [SellerProfileContoller::class, 'delete_businessprofilepicture'])->middleware('auth:sanctum')->name('delete_businessprofilepicture');//profile image update endpoint
+Route::post('/seller_update_profile', [SellerProfileContoller::class, 'seller_update_profile'])->middleware('auth:sanctum')->name('seller_update_profile');// seller profile image update endpoint 
 Route::post('/seller_account_setting', [SellerProfileContoller::class, 'seller_account_setting'])->middleware('auth:sanctum')->name('seller_account_setting');//profile update endpoint for sellers
+Route::post('/businessresetpassword', [BusinessController::class, 'businessresetpassword'])->name('businessresetpassword');//resend verification code
+Route::post('/verifyMailBusiness', [BusinessController::class, 'verifyMailBusiness'])->name('verifyMailBusiness');//send verification email for business account setup
+//---Begin Api routes for Business account functions --//
+
+
+
+//--Begin of Product api --//
 Route::post('/addproduct', [ProductController::class, 'addproduct'])->middleware('auth:sanctum')->name('addproduct');//profile update endpoint for sellers
 Route::get('/viewproduct/{product_id}', [ProductController::class, 'viewproduct'])->middleware('auth:sanctum')->name('viewproduct');//view products
 Route::post('/editproduct/{product_id}', [ProductController::class, 'editproduct'])->middleware('auth:sanctum')->name('editproduct');//view products
@@ -56,12 +73,4 @@ Route::post('/restockproduct/{product_id}', [ProductController::class, 'restockp
 Route::post('/productstate/{product_id}', [ProductController::class, 'productstate'])->middleware('auth:sanctum')->name('productstate');//make the product active/inactive
 Route::get('/searchproducts/{name}', [ProductController::class, 'searchproducts'])->middleware('auth:sanctum')->name('searchproducts');//search products
 Route::delete('/deleteproduct/{product_id}', [ProductController::class, 'deleteproduct'])->middleware('auth:sanctum');//profile update endpoint for sellers
-Route::post('/user', [UserController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
-Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');//api for logout
-//});
-Route::post('/verifymail', [UserController::class, 'verifymail'])->name('verifymail');//send verification email
-Route::post('/resendverificationcode', [UserController::class, 'resendverificationcode'])->name('resendcode');//resend verification code
-Route::post('/resetpassword', [UserController::class, 'resetpassword'])->name('resetpassword');//resend verification code
-Route::post('/businessresetpassword', [BusinessController::class, 'businessresetpassword'])->name('businessresetpassword');//resend verification code
-Route::post('/verifyMailBusiness', [BusinessController::class, 'verifyMailBusiness'])->name('verifyMailBusiness');//send verification email for business account setup
-//Auth::routes(['verify' => true]);
+//--End of Product api--//

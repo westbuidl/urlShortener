@@ -133,9 +133,14 @@ class ProductController extends Controller
             // Check if the authenticated user is the owner of the product
             if ($request->user()->id == $product->user_id) {
                 // If the user is the owner, return the product data
+                $imageURL = asset('uploads/product_images/' . $product->product_image);
                 return response()->json([
                     'message' => 'Product found.',
-                    'data' => $product
+                    'data' => [
+                        'product' => $product,
+                        'image_url' => $imageURL
+                    ]
+                   
                 ], 200);
             } else {
                 // If the user is not the owner, return an error message
