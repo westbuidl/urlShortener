@@ -14,6 +14,19 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+            $table->string('userID');
+            $table->string('productID');
+            $table->string('orderID');
+            $table->string('productName');
+           
+            $table->string('productDescription');
+            $table->string('amount');
+            $table->string('quantity');
+            $table->string('paymentMethod');
+            $table->string('Discount');
+            $table->string('shippingFee');
+            $table->string('status')->nullable();
+          
         });
     }
 
@@ -25,3 +38,4 @@ return new class extends Migration
         Schema::dropIfExists('orders');
     }
 };
+
