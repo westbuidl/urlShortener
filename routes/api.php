@@ -46,6 +46,7 @@ Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:sanc
 Route::post('/verifymail', [UserController::class, 'verifymail'])->name('verifymail');//send verification email
 Route::post('/resendverificationcode', [UserController::class, 'resendverificationcode'])->name('resendcode');//resend verification code
 Route::post('/resetpassword', [UserController::class, 'resetpassword'])->name('resetpassword');//resend verification code
+Route::get('/getUserProfile/{id}', [UserController::class, 'getUserProfile'])->middleware(('auth:sanctum')) ->name('getUserProfile');//api to get user profile
 //End Api routs for individual account
 
 

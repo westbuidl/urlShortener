@@ -245,14 +245,14 @@ class UserController extends Controller
         $reset_password = rand(10000000, 99999999);
 
         $individualuser = IndividualAccount::where('email', $request->email)->first();
-       // $individualuser->password = $reset_password;
-         $individualuser->update([
-                'password' => Hash::make($reset_password)
-            ]);
-        
+        // $individualuser->password = $reset_password;
+        $individualuser->update([
+            'password' => Hash::make($reset_password)
+        ]);
+
         $individualuser->save();
 
-        Mail::to($individualuser->email)->send(new PasswordResetEmail($individualuser,$reset_password));
+        Mail::to($individualuser->email)->send(new PasswordResetEmail($individualuser, $reset_password));
         return response()->json([
             'message' => 'Password reset code sent.',
             'password_data' => $reset_password
@@ -260,13 +260,45 @@ class UserController extends Controller
     }
 
 
+    //function to get user profile
+    public function getUserProfile(Request $request, $userID)
+    {
+        // Retrieve the authenticated user
+       // $user = $request->user();
+        $user = IndividualAccount::find($userID);
 
+        // Check if the user exists
+        //if ($user && $user->id == $userID) 
+        if($user)
+        {
+            // Return user information along with profile picture
+            $profile_picture = asset('uploads/profile_images/' . $user->profile_photo);
+            //$profile_picture => asset('uploads/profile_images/' . $user->profile_photo);
+            return response()->json([
+                'message' => 'User profile found.',
+                'data' => [
+                    'user' => $user,
+                    'profile_picture' => $profile_picture                    
+                ]
+            ], 200);
+        } else {
+            // If the user is not found, return an error message
+            return response()->json([
+                'message' => 'User not found.',
+            ], 404);
+        }
+    }
+
+
+
+
+    //End function to get user profile
 
 
 
 
     //function to resend verification code
-   /* public function resendverificationcode(Request $request)
+    /* public function resendverificationcode(Request $request)
     {
         $email = Session::get('email');
 
