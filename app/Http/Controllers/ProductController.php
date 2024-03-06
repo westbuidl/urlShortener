@@ -6,6 +6,7 @@ use App\Models\Products;
 use Illuminate\Http\Request;
 use App\Mail\ProductAddEmail;
 use App\Http\Controllers\Controller;
+use App\Models\Cart;
 use App\Models\IndividualAccount;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
@@ -93,7 +94,7 @@ class ProductController extends Controller
                 'unit' => $request->unit,
                 'product_description' => $request->product_description,
                 'product_image' => $imageName,
-                'active_state' => 1
+                'is_active' => 1
                 //'password'=>Hash::make($request->password)
                 //'confirm_password'=>'required|same:password'
 
@@ -122,7 +123,7 @@ class ProductController extends Controller
             ], 200);
         } // end of function for adding products
     }
-    //Function to view products begin
+    //Function to view products by id begin
     public function viewproduct(Request $request, string $product_id)
     {
         // Find the product by its ID
@@ -140,7 +141,7 @@ class ProductController extends Controller
                         'product' => $product,
                         'image_url' => $imageURL
                     ]
-                   
+
                 ], 200);
             } else {
                 // If the user is not the owner, return an error message
@@ -156,6 +157,34 @@ class ProductController extends Controller
         }
     }
     //Function to view products ends
+
+    // Function to fetch all products
+    public function allProducts()
+    {
+        // Retrieve all products from the database
+        $products = Products::all();
+        // Iterate through each product to fetch its images
+        foreach ($products as $product) {
+            // Extract image URLs for the product
+            $imageURLs = [];
+            foreach (explode(',', $product->product_image) as $image) {
+                $imageURLs[] = asset('uploads/product_images/' . $image);
+            }
+
+            // Add image URLs to the product object
+            $product->image_urls = $imageURLs;
+        }
+
+        return response()->json([
+            'message' => 'All products fetched successfully.',
+            'data' => [
+                'product' => $products,
+
+            ]
+        ], 200);
+    }
+
+
 
     public function searchproducts($search_query = null)
     {
@@ -184,6 +213,36 @@ class ProductController extends Controller
     }
     //Function to view products ends
 
+
+    // Function to add a product to the cart
+    public function addToCart(Request $request, string $product_id)
+    {
+        // Check if the user is authenticated
+        if ($request->isMethod('post')) {
+            $data = $request->input();
+
+            //Save product in carts table
+            $item->session_id = 0;
+            $item->userID = $data['user_id'];
+            $item->prouctID = $data['product_id'];
+            $item->quantity = 1;
+            $item->source = "App";
+            $item->save();
+            //$item = new Cart;
+
+
+
+
+            return response()->json([
+                'message' => 'Product added to the cart successfully.',
+            ], 200);
+        } else {
+            // If the user is not authenticated, return a 401 error message
+            return response()->json([
+                'message' => 'Unauthorized. Please log in to add products to the cart.',
+            ], 401);
+        }
+    }
 
 
     //Function to delete product
@@ -238,196 +297,172 @@ class ProductController extends Controller
 
     //Function to edit product
     public function editproduct(Request $request, string $product_id)
-{
-    // Find the product by its ID
-    $product = Products::find($product_id);
+    {
+        // Find the product by its ID
+        $product = Products::find($product_id);
 
-    // Check if the product exists
-    if ($product) {
-        // Check if the authenticated user is the owner of the product
-        if ($request->user()->id == $product->user_id) {
-            // Validate the request data
-            $validator = Validator::make($request->all(), [
-                'product_name' => 'required|min:2|max:100',
-                'product_category' => 'required|min:2|max:100',
-                'selling_price' => 'required|min:2|max:100',
-                'cost_price' => 'required|min:2|max:100',
-                'quantityin_stock' => 'required|min:2|max:100',
-                'unit' => 'required|min:2|max:100',
-                'product_description' => 'required|min:2|max:255',
-                'product_image' => 'array|min:2|max:5',
-                'product_image.*' => 'image|mimes:jpg,png,bmp'
-            ]);
+        // Check if the product exists
+        if ($product) {
+            // Check if the authenticated user is the owner of the product
+            if ($request->user()->id == $product->user_id) {
+                // Validate the request data
+                $validator = Validator::make($request->all(), [
+                    'product_name' => 'required|min:2|max:100',
+                    'product_category' => 'required|min:2|max:100',
+                    'selling_price' => 'required|min:2|max:100',
+                    'cost_price' => 'required|min:2|max:100',
+                    'quantityin_stock' => 'required|min:2|max:100',
+                    'unit' => 'required|min:2|max:100',
+                    'product_description' => 'required|min:2|max:255',
+                    'product_image' => 'array|min:2|max:5',
+                    'product_image.*' => 'image|mimes:jpg,png,bmp'
+                ]);
 
-            // If validation fails, return error response
-            if ($validator->fails()) {
-                return response()->json([
-                    'message' => 'Validation fails',
-                    'error' => $validator->errors()
-                ], 422);
-            }
-
-            // Update product details
-            $product->update([
-                'product_name' => $request->product_name,
-                'product_category' => $request->product_category,
-                'selling_price' => $request->selling_price,
-                'cost_price' => $request->cost_price,
-                'quantityin_stock' => $request->quantityin_stock,
-                'unit' => $request->unit,
-                'product_description' => $request->product_description
-            ]);
-
-            // Handle product image updates
-            if ($request->hasFile('product_image')) {
-                $imageName = '';
-                foreach ($request->file('product_image') as $product_image) {
-                    $new_imageName = rand() . '.' . $product_image->getClientOriginalExtension();
-                    $product_image->move(public_path('/uploads/product_images'), $new_imageName);
-                    $imageName .= $new_imageName . ",";
+                // If validation fails, return error response
+                if ($validator->fails()) {
+                    return response()->json([
+                        'message' => 'Validation fails',
+                        'error' => $validator->errors()
+                    ], 422);
                 }
-                // Update product image field
-                $product->update(['product_image' => $imageName]);
+
+                // Update product details
+                $product->update([
+                    'product_name' => $request->product_name,
+                    'product_category' => $request->product_category,
+                    'selling_price' => $request->selling_price,
+                    'cost_price' => $request->cost_price,
+                    'quantityin_stock' => $request->quantityin_stock,
+                    'unit' => $request->unit,
+                    'product_description' => $request->product_description
+                ]);
+
+                // Handle product image updates
+                if ($request->hasFile('product_image')) {
+                    $imageName = '';
+                    foreach ($request->file('product_image') as $product_image) {
+                        $new_imageName = rand() . '.' . $product_image->getClientOriginalExtension();
+                        $product_image->move(public_path('/uploads/product_images'), $new_imageName);
+                        $imageName .= $new_imageName . ",";
+                    }
+                    // Update product image field
+                    $product->update(['product_image' => $imageName]);
+                }
+
+                // Return success response
+                return response()->json([
+                    'message' => 'Product updated successfully',
+                    //'data' => $product
+                ], 200);
+            } else {
+                // If the user is not the owner, return an error message
+                return response()->json([
+                    'message' => 'You are not authorized to edit this product.',
+                ], 403);
             }
-
-            // Return success response
-            return response()->json([
-                'message' => 'Product updated successfully',
-                //'data' => $product
-            ], 200);
         } else {
-            // If the user is not the owner, return an error message
+            // If the product is not found, return a 404 error message
             return response()->json([
-                'message' => 'You are not authorized to edit this product.',
-            ], 403);
+                'message' => 'Product not found.',
+            ], 404);
         }
-    } else {
-        // If the product is not found, return a 404 error message
-        return response()->json([
-            'message' => 'Product not found.',
-        ], 404);
     }
-}
- //function ends for edit product
+    //function ends for edit product
 
-     //Function to restock product
-     public function restockproduct(Request $request, string $product_id)
-     {
-         // Find the product by its ID
-         $product = Products::find($product_id);
-     
-         // Check if the product exists
-         if ($product) {
-             // Check if the authenticated user is the owner of the product
-             if ($request->user()->id == $product->user_id) {
-                 // Validate the request data
-                 $validator = Validator::make($request->all(), [
-                     
+    //Function to restock product
+    public function restockproduct(Request $request, string $product_id)
+    {
+        // Find the product by its ID
+        $product = Products::find($product_id);
+
+        // Check if the product exists
+        if ($product) {
+            // Check if the authenticated user is the owner of the product
+            if ($request->user()->id == $product->user_id) {
+                // Validate the request data
+                $validator = Validator::make($request->all(), [
+
                     'quantityin_stock' => 'required|min:2|max:100',
                     'selling_price' => 'required|min:2|max:100',
-                     'cost_price' => 'required|min:2|max:100',
-                     
-                     
-                 ]);
-     
-                 // If validation fails, return error response
-                 if ($validator->fails()) {
-                     return response()->json([
-                         'message' => 'Validation fails',
-                         'error' => $validator->errors()
-                     ], 422);
-                 }
-     
-                 // Update product details
-                 $product->update([
-                     
-                    'quantityin_stock' => $request->quantityin_stock, 
-                    'selling_price' => $request->selling_price,
-                     'cost_price' => $request->cost_price,
-                     
-                    
-                 ]);
-     
-                
-     
-                 // Return success response
-                 return response()->json([
-                     'message' => 'Restock successful',
-                     //'data' => $product
-                 ], 200);
-             } else {
-                 // If the user is not the owner, return an error message
-                 return response()->json([
-                     'message' => 'You are not authorized to restock this product.',
-                 ], 403);
-             }
-         } else {
-             // If the product is not found, return a 404 error message
-             return response()->json([
-                 'message' => 'Product not found.',
-             ], 404);
-         }
-     }
-      //function ends for edit product
+                    'cost_price' => 'required|min:2|max:100',
 
 
-      //Function to restock product
-     public function productstate(Request $request, string $product_id)
-     {
-         // Find the product by its ID
-         $product = Products::find($product_id);
-     
-         // Check if the product exists
-         if ($product) {
-             // Check if the authenticated user is the owner of the product
-             if ($request->user()->id == $product->user_id) {
-                 // Validate the request data
-                 $validator = Validator::make($request->all(), [
-                     
-                    'quantityin_stock' => 'required|min:2|max:100',
-                    'selling_price' => 'required|min:2|max:100',
-                     'cost_price' => 'required|min:2|max:100',
-                     
-                     
-                 ]);
-     
-                 // If validation fails, return error response
-                 if ($validator->fails()) {
-                     return response()->json([
-                         'message' => 'Validation fails',
-                         'error' => $validator->errors()
-                     ], 422);
-                 }
-     
-                 // Update product details
-                 $product->update([
-                     
-                    'quantityin_stock' => $request->quantityin_stock, 
+                ]);
+
+                // If validation fails, return error response
+                if ($validator->fails()) {
+                    return response()->json([
+                        'message' => 'Validation fails',
+                        'error' => $validator->errors()
+                    ], 422);
+                }
+
+                // Update product details
+                $product->update([
+
+                    'quantityin_stock' => $request->quantityin_stock,
                     'selling_price' => $request->selling_price,
-                     'cost_price' => $request->cost_price,
-                     
-                    
-                 ]);
-     
-                
-     
-                 // Return success response
-                 return response()->json([
-                     'message' => 'Restock successful',
-                     //'data' => $product
-                 ], 200);
-             } else {
-                 // If the user is not the owner, return an error message
-                 return response()->json([
-                     'message' => 'You are not authorized to restock this product.',
-                 ], 403);
-             }
-         } else {
-             // If the product is not found, return a 404 error message
-             return response()->json([
-                 'message' => 'Product not found.',
-             ], 404);
-         }
-     }
-      //function ends for edit product
+                    'cost_price' => $request->cost_price,
+
+
+                ]);
+
+
+
+                // Return success response
+                return response()->json([
+                    'message' => 'Restock successful',
+                    //'data' => $product
+                ], 200);
+            } else {
+                // If the user is not the owner, return an error message
+                return response()->json([
+                    'message' => 'You are not authorized to restock this product.',
+                ], 403);
+            }
+        } else {
+            // If the product is not found, return a 404 error message
+            return response()->json([
+                'message' => 'Product not found.',
+            ], 404);
+        }
+    }
+    //function ends for edit product
+
+
+
+    // Function to toggle product state (active/inactive)
+    public function toggleProductState(Request $request, string $product_id)
+    {
+        // Find the product by its ID
+        $product = Products::find($product_id);
+
+        // Check if the product exists
+        if ($product) {
+            // Check if the authenticated user is the owner of the product
+            if ($request->user()->id == $product->user_id) {
+                // Toggle the product state
+                $product->update([
+                    'is_active' => !$product->is_active,
+                ]);
+
+                // Return success response with updated product state
+                return response()->json([
+                    'message' => 'Product state updated successfully',
+                    'is_active' => $product->is_active,
+                ], 200);
+            } else {
+                // If the user is not the owner, return an error message
+                return response()->json([
+                    'message' => 'You are not authorized to update the state of this product.',
+                ], 403);
+            }
+        } else {
+            // If the product is not found, return a 404 error message
+            return response()->json([
+                'message' => 'Product not found.',
+            ], 404);
+        }
+    }
+    //function ends for edit product
 }

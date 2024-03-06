@@ -32,7 +32,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-//Begin Api routes for Individual account functions
+//Begin Api routes for Individual account functions(Buyers and Sellers)
 Route::get('/register', [UserController::class, 'create']);
 Route::post('/individual', [UserController::class, 'individual'])->name('individual');//creating account for individuals
 Route::post('/userlogin', [UserController::class, 'userlogin'])->name('userlogin');//individual account login
@@ -67,11 +67,14 @@ Route::post('/verifyMailBusiness', [BusinessController::class, 'verifyMailBusine
 
 
 //--Begin of Product api --//
+Route::post('/addToCart', [ProductController::class, 'addToCart'])->middleware('auth:sanctum')->name('addToCart');// add to cart
 Route::post('/addproduct', [ProductController::class, 'addproduct'])->middleware('auth:sanctum')->name('addproduct');//profile update endpoint for sellers
 Route::get('/viewproduct/{product_id}', [ProductController::class, 'viewproduct'])->middleware('auth:sanctum')->name('viewproduct');//view products
+Route::get('/allProducts', [ProductController::class, 'allProducts'])->middleware('auth:sanctum')->name('allProducts');//view products
 Route::post('/editproduct/{product_id}', [ProductController::class, 'editproduct'])->middleware('auth:sanctum')->name('editproduct');//view products
 Route::post('/restockproduct/{product_id}', [ProductController::class, 'restockproduct'])->middleware('auth:sanctum')->name('restockproduct');//restock product
 Route::post('/productstate/{product_id}', [ProductController::class, 'productstate'])->middleware('auth:sanctum')->name('productstate');//make the product active/inactive
 Route::get('/searchproducts/{name}', [ProductController::class, 'searchproducts'])->middleware('auth:sanctum')->name('searchproducts');//search products
 Route::delete('/deleteproduct/{product_id}', [ProductController::class, 'deleteproduct'])->middleware('auth:sanctum');//profile update endpoint for sellers
+Route::post('/toggleProductState', [ProductController::class, 'toggleProductState'])->middleware('auth:sanctum')->name('toggleProductState');//toggle product state
 //--End of Product api--//

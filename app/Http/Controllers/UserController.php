@@ -45,6 +45,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:individual_accounts',
             'phone' => 'required|min:2|max:100|unique:individual_accounts',
             'product' => 'required|min:2|max:100',
+            'profile' => 'required|min:2|max:100',
             'country' => 'required|min:2|max:100',
             'state' => 'required|min:2|max:100',
             'city' => 'required|min:2|max:100',
@@ -67,6 +68,7 @@ class UserController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'product' => $request->product,
+            'profile' => $request->profile,
             'country' => $request->country,
             'state' => $request->state,
             'city' => $request->city,
@@ -264,13 +266,12 @@ class UserController extends Controller
     public function getUserProfile(Request $request, $userID)
     {
         // Retrieve the authenticated user
-       // $user = $request->user();
+        // $user = $request->user();
         $user = IndividualAccount::find($userID);
 
         // Check if the user exists
         //if ($user && $user->id == $userID) 
-        if($user)
-        {
+        if ($user) {
             // Return user information along with profile picture
             $profile_picture = asset('uploads/profile_images/' . $user->profile_photo);
             //$profile_picture => asset('uploads/profile_images/' . $user->profile_photo);
@@ -278,7 +279,7 @@ class UserController extends Controller
                 'message' => 'User profile found.',
                 'data' => [
                     'user' => $user,
-                    'profile_picture' => $profile_picture                    
+                    'profile_picture' => $profile_picture
                 ]
             ], 200);
         } else {
@@ -329,4 +330,3 @@ class UserController extends Controller
         }
     }*/
 }
-

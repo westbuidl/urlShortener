@@ -20,6 +20,7 @@ class IndividualAccount extends Authenticatable implements MustVerifyEmail
         'email',
         'phone',
         'product',
+        'profile',
         'country',
         'state',
         'city',
