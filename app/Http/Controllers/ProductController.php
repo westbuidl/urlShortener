@@ -6,6 +6,7 @@ use App\Models\Products;
 use Illuminate\Http\Request;
 use App\Mail\ProductAddEmail;
 use App\Http\Controllers\Controller;
+use App\Mail\Productrestockemail;
 use App\Models\Cart;
 use App\Models\IndividualAccount;
 use Illuminate\Support\Facades\File;
@@ -215,35 +216,7 @@ class ProductController extends Controller
 
 
     // Function to add a product to the cart
-    public function addToCart(Request $request, string $product_id)
-    {
-        // Check if the user is authenticated
-        if ($request->isMethod('post')) {
-            $data = $request->input();
-
-            //Save product in carts table
-            $item->session_id = 0;
-            $item->userID = $data['user_id'];
-            $item->prouctID = $data['product_id'];
-            $item->quantity = 1;
-            $item->source = "App";
-            $item->save();
-            //$item = new Cart;
-
-
-
-
-            return response()->json([
-                'message' => 'Product added to the cart successfully.',
-            ], 200);
-        } else {
-            // If the user is not authenticated, return a 401 error message
-            return response()->json([
-                'message' => 'Unauthorized. Please log in to add products to the cart.',
-            ], 401);
-        }
-    }
-
+   
 
     //Function to delete product
     public function deleteproduct(string $product_id)
@@ -374,6 +347,7 @@ class ProductController extends Controller
     {
         // Find the product by its ID
         $product = Products::find($product_id);
+       
 
         // Check if the product exists
         if ($product) {
@@ -406,6 +380,7 @@ class ProductController extends Controller
 
 
                 ]);
+                Mail::to($request->user()->email)->send(new Productrestockemail($product, $product));
 
 
 

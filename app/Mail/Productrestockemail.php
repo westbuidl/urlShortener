@@ -9,13 +9,12 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-
-class ProductAddEmail extends Mailable
+class Productrestockemail extends Mailable
 {
-    
     use Queueable, SerializesModels;
     public $user;
     public $product;
+
 
     /**
      * Create a new message instance.
@@ -26,13 +25,14 @@ class ProductAddEmail extends Mailable
         $this->product = $product;
         //
     }
+
     /**
      * Get the message envelope.
      */
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Product Added ',
+            subject: 'Product Restocked',
         );
     }
 
@@ -42,7 +42,7 @@ class ProductAddEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view:'emails.productaddemail',
+            view:'emails.productrestockemail',
         );
     }
 

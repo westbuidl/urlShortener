@@ -22,6 +22,7 @@ return new class extends Migration
             $table->integer('is_verified')->default(value:0);
             $table->string('phone');
             $table->string('product');
+            $table->string('profile');
             $table->string('country');
             $table->string('state');
             $table->string('city');

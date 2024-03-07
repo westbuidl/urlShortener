@@ -31,12 +31,13 @@
                                         <br>
                                         <br>
                                         <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$user->firstname}}, </h1><br>
-                                        <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">We're excited to inform you that your new product has been successfully added to <strong>Agroease's</strong> inventory! ðŸš€</h1><br>
+                                        <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">Product Restocked<strong>Agroease's</strong> inventory</h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Product Details:</strong> <br><br>
-                                            <li>Product Name: <strong>{{$product->product_name}}</strong></li><br>
-                                            <li>SKU: <strong>{{$product->product_id}}</strong></li><br>
-                                            <li>Price: <strong>{{$product->selling_price}}</strong></li><br>
-                                            <li>Description: <strong>{{$product->product_description}}</strong></li><br>
+                                        <li>Product name: <strong>{{$product->product_name}}</strong></li></br>    
+                                        <li>Quantity in Stock: <strong>{{$product->quantityin_stock}}</strong></li></br>
+                                            <li>Selling price: <strong>{{$product->selling_price}}</strong></li></br>
+                                            <li>Cost Price: <strong>{{$product->cost_price}}</strong></li>
+                                           
 
 
                                             
