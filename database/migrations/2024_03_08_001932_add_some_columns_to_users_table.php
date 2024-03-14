@@ -9,11 +9,12 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-  /*  public function up(): void
+ /*   public function up(): void
     {
-        Schema::create('transactions', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('categories', function (Blueprint $table) {
+            $table->timestamp('updated_at')->nullable();
+            $table->timestamp('created_at')->nullable();
+            //
         });
     }
 
@@ -22,6 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('transactions');
+        Schema::table('categories', function (Blueprint $table) {
+            //
+        });
     }
 };

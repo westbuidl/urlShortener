@@ -9,7 +9,7 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+/*    public function up(): void
     {
         Schema::table('business_accounts', function (Blueprint $table) {
             //$table->integer('product_status')->default(value:true);

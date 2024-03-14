@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Email Confirmation</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 
@@ -20,7 +21,7 @@
                                 <tr>
                                     <td style="height:100px; width : 100%; background-color:#1d988c">
 
-                                        <img src="https://agroease.com.ng/assets/img/agroease1%202.png" style="height: 80px; margin-right: 340px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <img src="https://agroease.com.ng/assets/img/agroease2.png" id="agro" style="height: 80px; margin-right: 340px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
                                         <br>
                                     </td>
                                 </tr>
@@ -29,8 +30,8 @@
                                     <td style="padding:0 35px; ">
                                         <br>
                                         <br>
-                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$user->firstname}},</h1><br>
-                                        <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">Welcome to <strong>Agroease!</strong> We're delighted you've chosen to join as a {{$user->profile}}. To finalize your registration, please use the following 6-digit verification code:</h1><br>
+                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$user->firstname}}, </h1><br>
+                                        <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">Welcome to <strong>Agroease!</strong> We're delighted you've chosen to join us. To finalize your registration, please use the following 6-digit verification code:</h1><br>
                                         <h1 style="background-color:#e0dafb; border-radius: 16px; font-weight:700; margin-top:10px;font-size:16px;font-family:'Gilroy', sans-serif;text-align:center ; line-height:2"><span style="font-weight:700; color:#1a1a1a; font-size:30px;">{{$user->verification_code}}</span> </h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Important:</strong> <br><br>
                                             <li>Please do not share this code with anyone else.</li>

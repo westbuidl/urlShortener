@@ -2,19 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cart;
+use App\Models\Category;
 use App\Models\Products;
 use Illuminate\Http\Request;
 use App\Mail\ProductAddEmail;
-use App\Http\Controllers\Controller;
 use App\Mail\Productrestockemail;
-use App\Models\Cart;
 use App\Models\IndividualAccount;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
-use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
@@ -47,7 +48,7 @@ class ProductController extends Controller
                 'selling_price' => 'required|min:2|max:100',
                 'cost_price' => 'required|min:2|max:100',
                 'quantityin_stock' => 'required|min:2|max:100',
-                'unit' => 'required|min:2|max:100',
+                'unit' => 'required|min:1|max:100',
                 'product_description' => 'required|min:2|max:255',
                 'product_image' => 'required|array|min:2|max:5',
                 'product_image.*' => 'image|mimes:jpg,png,bmp'
@@ -62,6 +63,22 @@ class ProductController extends Controller
                     'error' => $validator->errors()
                 ], 422);
             }
+
+            // Check if the category exists
+            $category = Category::where('categoryName', $request->product_category)->first();
+
+            if (!$category) {
+                // If the category does not exist, return an error response
+                return response()->json([
+                    'message' => 'Category does not exist',
+                ], 404);
+            }
+
+            // Category exists, get its ID
+            $categoryID = $category->categoryID;
+
+
+
 
             $product_image = $request->file('product_image');
             $imageName = '';
@@ -89,6 +106,7 @@ class ProductController extends Controller
                 'user_id' => $request->user()->id,
                 'product_name' => $request->product_name,
                 'product_category' => $request->product_category,
+                'categoryID' => $categoryID,
                 'selling_price' => $request->selling_price,
                 'cost_price' => $request->cost_price,
                 'quantityin_stock' => $request->quantityin_stock,
@@ -101,15 +119,6 @@ class ProductController extends Controller
 
             ]);
 
-            //$user = IndividualAccount::find($request->user()->id);
-            // $userEmail = $user->email;
-            // $userName = $user->firstname.' '. $user->lastname;
-
-            // $user = $request->user();
-
-
-            // $userName = $user->firstname . ' ' . $user->lastname;
-            //$userEmail = $user->email;
 
 
             $product->load('individuals:userID', 'products');
@@ -120,7 +129,7 @@ class ProductController extends Controller
             Mail::to($userEmail)->send(new ProductAddEmail($product, $product, $firstname));
             return response()->json([
                 'message' => 'Product Successfully added',
-                'data' => $product, $firstname
+                'data' => $product
             ], 200);
         } // end of function for adding products
     }
@@ -163,7 +172,7 @@ class ProductController extends Controller
     public function allProducts()
     {
         // Retrieve all products from the database
-        $products = Products::all();
+        $products = Products::orderByDesc('id')->get();
         // Iterate through each product to fetch its images
         foreach ($products as $product) {
             // Extract image URLs for the product
@@ -216,7 +225,7 @@ class ProductController extends Controller
 
 
     // Function to add a product to the cart
-   
+
 
     //Function to delete product
     public function deleteproduct(string $product_id)
@@ -346,13 +355,16 @@ class ProductController extends Controller
     public function restockproduct(Request $request, string $product_id)
     {
         // Find the product by its ID
+
+
         $product = Products::find($product_id);
-       
+
 
         // Check if the product exists
         if ($product) {
             // Check if the authenticated user is the owner of the product
             if ($request->user()->id == $product->user_id) {
+
                 // Validate the request data
                 $validator = Validator::make($request->all(), [
 
@@ -380,7 +392,9 @@ class ProductController extends Controller
 
 
                 ]);
-                Mail::to($request->user()->email)->send(new Productrestockemail($product, $product));
+
+
+                //Mail::to($request->user()->email)->send(new Productrestockemail($product, $product));
 
 
 
@@ -402,6 +416,9 @@ class ProductController extends Controller
             ], 404);
         }
     }
+
+
+
     //function ends for edit product
 
 
@@ -441,3 +458,48 @@ class ProductController extends Controller
     }
     //function ends for edit product
 }
+/*Categories*
+1.Fresh Fruits
+Eg: apple, pineapple,tomato 
+2.Fresh Vegetables
+Eg: greens, ugu, scent leaf
+3.Processed fruits and veggies
+Eg: juices and chopped veggies
+4.Cereals and beverages
+Eg: fruit mix cereals, Ovaltine, drinks made with cocoa
+5.Nuts and seeds
+Eg: almond, palm nut, sesame seed
+6.Proteins
+Eg: all kinds of meat, fish, poultry, ukwa
+7. Processed foods
+Eg: tin tomato, baked beans, canned corn, dried foods like fish, dried cocoyam( achicha), frozen foods 
+8.Cooking
+Eg: spices, oil
+9.Roots and tubers
+Eg: potatoes, yam, cocoyam, sugar beets,ginger
+10.Grains
+Eg: rice, wheat, oats, millet 
+11.Cosmetics and Pharmaceuticals
+Eg: herbal drugs, herbal dental care, herbal facial cleansers
+12.Rubber and textile
+Eg: latex, cotton, plastic, leather 
+13. Paper and paper products
+Eg: paper towels, paper cups, tissue paper 
+14.agro-chemicals
+Eg: fertilizers, pesticides, vaccines for animals 
+15.Snacks and pastries
+Eg: biscuits, chocolate,sweets, all things baked
+16. Wood and wood products
+Eg: plywood, mahogany, chairs,table
+17. Dairy and dairy products
+Eg: milk, yogurt,cheese, butter, custard,cream
+18. Baking ingredients 
+Eg: baking soda, vinegar and things used in baking
+19. Diabetics
+Eg: packaged products that don't contain a whole lot of sugar you know specifically for diabetics ( you know to make it easy to find)
+20. lactose intolerant
+Eg: yoghurt, foods that don't contain dairy and their products 
+21.Drinks( I'm not sure about this, I don't know if things like packaged palm wine, beer,burukutu and sauerkraut,wines can be available but anyway if you think it won't make sense then let it go)
+
+
+21 is asterisked*/

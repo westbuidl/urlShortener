@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileContoller;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\BusinessController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\SellerProfileContoller;
 
 /*
@@ -70,7 +71,7 @@ Route::post('/verifyMailBusiness', [BusinessController::class, 'verifyMailBusine
 Route::post('/addToCart', [ProductController::class, 'addToCart'])->middleware('auth:sanctum')->name('addToCart');// add to cart
 Route::post('/addproduct', [ProductController::class, 'addproduct'])->middleware('auth:sanctum')->name('addproduct');//profile update endpoint for sellers
 Route::get('/viewproduct/{product_id}', [ProductController::class, 'viewproduct'])->middleware('auth:sanctum')->name('viewproduct');//view products
-Route::get('/allProducts', [ProductController::class, 'allProducts'])->middleware('auth:sanctum')->name('allProducts');//view products
+Route::get('/allProducts', [ProductController::class, 'allProducts'])->name('allProducts');//view products
 Route::post('/editproduct/{product_id}', [ProductController::class, 'editproduct'])->middleware('auth:sanctum')->name('editproduct');//view products
 Route::post('/restockproduct/{product_id}', [ProductController::class, 'restockproduct'])->middleware('auth:sanctum')->name('restockproduct');//restock product
 Route::post('/productstate/{product_id}', [ProductController::class, 'productstate'])->middleware('auth:sanctum')->name('productstate');//make the product active/inactive
@@ -78,3 +79,14 @@ Route::get('/searchproducts/{name}', [ProductController::class, 'searchproducts'
 Route::delete('/deleteproduct/{product_id}', [ProductController::class, 'deleteproduct'])->middleware('auth:sanctum');//profile update endpoint for sellers
 Route::post('/toggleProductState/{product_id}', [ProductController::class, 'toggleProductState'])->middleware('auth:sanctum')->name('toggleProductState');//toggle product state
 //--End of Product api--//
+
+
+//--Begin of Admi api --//
+
+Route::get('/categoryDetails/{id}', [CategoryController::class, 'categoryDetails'])->name('categoryDetails');//get category details
+Route::post('/addCategory', [CategoryController::class, 'addCategory'])->name('addCategory');//add categories
+Route::delete('/deleteCategory/{id}', [CategoryController::class, 'deleteCategory'])->name('deleteCategory');//delete categories
+Route::get('/viewAllcategory', [CategoryController::class, 'viewAllcategory'])->name('viewAllcategory');//view all categories
+Route::get('/viewCategory/{categoryID}', [CategoryController::class, 'viewCategory'])->name('viewCategory');//view all categories
+
+//--End of Admin api --//

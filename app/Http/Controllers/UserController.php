@@ -169,9 +169,8 @@ class UserController extends Controller
 
     public function logout(Request $request)
     {
-        $request->individualuser()->currentAccessToken()->delete();
-        // Remove user ID from session
-        $request->session()->forget('userID');
+        $request->user()->tokens()->delete();
+
         return response()->json([
             'message' => 'User logged out',
 

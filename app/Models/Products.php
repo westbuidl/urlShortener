@@ -27,8 +27,8 @@ class Products extends Model
         'unit',
         'product_description',
         'product_image',
-        'is_active'
-        //'password',
+        'is_active',
+        'categoryID'
 
 
         

@@ -14,15 +14,17 @@ class Productrestockemail extends Mailable
     use Queueable, SerializesModels;
     public $user;
     public $product;
+    public $firstname;
 
 
     /**
      * Create a new message instance.
      */
-    public function __construct($user, $product)
+    public function __construct($user, $product,$firstname)
     {
         $this->user = $user;
         $this->product = $product;
+        $this->firstname = $firstname;
         //
     }
 
