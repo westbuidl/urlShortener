@@ -21,7 +21,7 @@
                                 <tr>
                                     <td style="height:100px; width : 100%; background-color:#1d988c">
 
-                                        <img src="https://agroease.com.ng/assets/img/agroease2.png" id="agro" style="height: 80px; margin-right: 340px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <img src="https://agroease.com.ng/assets/img/agroease1%202.png" id="agro" style="height: 80px; margin-right: 340px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
                                         <!-- <img src="party-popper 1.png" style="height: 96px; margin-left: -79px; margin-top: -5px; position: absolute;"></i> -->
                                         <br>
                                     </td>

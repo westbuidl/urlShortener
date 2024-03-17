@@ -14,6 +14,7 @@ class Cart extends Model
         'userID',
         'productID',
         'quantity',
+        'amount',
         'source'
         
     ];

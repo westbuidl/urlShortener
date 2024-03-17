@@ -25,7 +25,7 @@ class CategoryController extends Controller
 
         $validator = Validator::make($request->all(), [
             //'categoryID' => 'required|string|max:255',
-            'categoryName' => 'required|string|max:255',
+            'categoryName' => 'required|string|max:255|unique:categories',
             'categoryDescription' => 'required|string|max:255',
             'categoryImage' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             //'categoryImage.*' => 'required|array|max:255',
@@ -129,11 +129,11 @@ class CategoryController extends Controller
             $category = Category::findOrFail($categoryID);
 
             // Fetch all products in the category
-            $products = Products::where('category_id', $category->id)->get();
+            $products = Products::where('categoryID', $category->categoryID)->get();
 
             return response()->json([
                 'message' => 'Category details fetched successfully.',
-                'category name' => $category->categoryName,
+                'category_name' => $category->categoryName,
                 'products' => $products,
             ], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -147,8 +147,8 @@ class CategoryController extends Controller
             ], 500);
         }
     }
-   
-   
+
+
     //End
 
     // Method to update a category

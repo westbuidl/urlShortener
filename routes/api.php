@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileContoller;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\BusinessController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\SellerProfileContoller;
 
@@ -90,3 +91,6 @@ Route::get('/viewAllcategory', [CategoryController::class, 'viewAllcategory'])->
 Route::get('/viewCategory/{categoryID}', [CategoryController::class, 'viewCategory'])->name('viewCategory');//view all categories
 
 //--End of Admin api --//
+
+//Add to cart
+Route::post('/addToCart', [CartController::class, 'addToCart'])->name('addToCart');//adding to cart api
