@@ -33,7 +33,8 @@ class ProductController extends Controller
 
 
     {
-        $user = Auth::user();
+        // $user = Auth::user();
+        $user = $request->user();
         if ($user) {
             $firstname = $user->firstname;
             $lastname = $user->lastname;
@@ -103,7 +104,7 @@ class ProductController extends Controller
 
 
                 'product_id' => $product_id,
-                'user_id' => $request->user()->id,
+                'user_id' => $request->user()->userID,
                 'product_name' => $request->product_name,
                 'product_category' => $request->product_category,
                 'categoryID' => $categoryID,
@@ -133,35 +134,33 @@ class ProductController extends Controller
             ], 200);
         } // end of function for adding products
     }
+
     //Function to view products by id begin
     public function viewproduct(Request $request, string $product_id)
     {
         // Find the product by its ID
-        $product = Products::find($product_id);
+        $product = Products::where('product_id', $product_id)->first();
 
         // Check if the product exists
         if ($product) {
             // Check if the authenticated user is the owner of the product
-            if ($request->user()->id == $product->user_id) {
+            if ($request->user() && $request->user()->userID == $product->user_id) {
                 // If the user is the owner, return the product data
 
-                foreach ($product as $products) {
-                    // Extract image URLs for the product
-                    $imageURLs = [];
-                    foreach (explode(',', $products->product_image) as $image) {
-                        $imageURLs[] = asset('uploads/product_images/' . $image);
-                    }
-
-                    // Add image URLs to the product object
-                    $product->image_urls = $imageURLs;
+                // Extract image URLs for the product
+                $imageURLs = [];
+                foreach (explode(',', $product->product_image) as $image) {
+                    $imageURLs[] = asset('uploads/product_images/' . $image);
                 }
+
+                // Add image URLs to the product object
+                $product->image_urls = $imageURLs;
+
                 return response()->json([
                     'message' => 'Product found.',
                     'data' => [
                         'product' => $product,
-                        //'image_url' => $imageURL
                     ]
-
                 ], 200);
             } else {
                 // If the user is not the owner, return an error message
@@ -175,14 +174,13 @@ class ProductController extends Controller
                 'message' => 'Product not found.',
             ], 404);
         }
-    }
-    //Function to view products ends
+    }   //Function to view products ends
 
     // Function to fetch all products
     public function allProducts()
     {
         // Retrieve all products from the database
-        $products = Products::orderByDesc('id')->get();
+        $products = Products::orderByDesc('product_id')->get();
         // Iterate through each product to fetch its images
         foreach ($products as $product) {
             // Extract image URLs for the product
@@ -243,7 +241,8 @@ class ProductController extends Controller
     {
         try {
             //find prtoduct in the database
-            $product = Products::find($product_id);
+            //$product = Products::find($product_id);
+            $product = Products::where('product_id', $product_id);
             if (!$product) {
                 return response()->json([
                     'message' => 'Product not found',
@@ -291,21 +290,21 @@ class ProductController extends Controller
     public function editproduct(Request $request, string $product_id)
     {
         // Find the product by its ID
-        $product = Products::find($product_id);
+        $product = Products::where('product_id', $product_id)->first();
 
         // Check if the product exists
         if ($product) {
             // Check if the authenticated user is the owner of the product
-            if ($request->user()->id == $product->user_id) {
+            if ($request->user()->userID == $product->user_id) {
                 // Validate the request data
                 $validator = Validator::make($request->all(), [
-                    'product_name' => 'required|min:2|max:100',
-                    'product_category' => 'required|min:2|max:100',
-                    'selling_price' => 'required|min:2|max:100',
-                    'cost_price' => 'required|min:2|max:100',
-                    'quantityin_stock' => 'required|min:2|max:100',
-                    'unit' => 'required|min:2|max:100',
-                    'product_description' => 'required|min:2|max:255',
+                    'new_product_name' => 'required|min:2|max:100',
+                    'new_product_category' => 'required|min:2|max:100',
+                    'new_selling_price' => 'required|min:2|max:100',
+                    'new_cost_price' => 'required|min:2|max:100',
+                    'new_quantityin_stock' => 'required|min:2|max:100',
+                    'new_unit' => 'required|min:2|max:100',
+                    'new_product_description' => 'required|min:2|max:255',
                     'product_image' => 'array|min:2|max:5',
                     'product_image.*' => 'image|mimes:jpg,png,bmp'
                 ]);
@@ -318,16 +317,30 @@ class ProductController extends Controller
                     ], 422);
                 }
 
+                 // Check if the category exists
+        $category = Category::where('categoryName', $request->new_product_category)->first();
+
+        if (!$category) {
+            // If the category does not exist, return an error response
+            return response()->json([
+                'message' => 'Category does not exist',
+            ], 404);
+        }
+
+        // Category exists, get its ID
+        $categoryID = $category->categoryID;
+
                 // Update product details
-                $product->update([
-                    'product_name' => $request->product_name,
-                    'product_category' => $request->product_category,
-                    'selling_price' => $request->selling_price,
-                    'cost_price' => $request->cost_price,
-                    'quantityin_stock' => $request->quantityin_stock,
-                    'unit' => $request->unit,
-                    'product_description' => $request->product_description
-                ]);
+                $data = [
+                    'product_name' => $request->new_product_name,
+                    'product_category' => $request->new_product_category,
+                    'selling_price' => $request->new_selling_price,
+                    'categoryID' => $categoryID,
+                    'cost_price' => $request->new_cost_price,
+                    'quantityin_stock' => $request->new_quantityin_stock,
+                    'unit' => $request->new_unit,
+                    'product_description' => $request->new_product_description
+                ];
 
                 // Handle product image updates
                 if ($request->hasFile('product_image')) {
@@ -337,14 +350,15 @@ class ProductController extends Controller
                         $product_image->move(public_path('/uploads/product_images'), $new_imageName);
                         $imageName .= $new_imageName . ",";
                     }
-                    // Update product image field
-                    $product->update(['product_image' => $imageName]);
+                    $data['product_image'] = $imageName;
                 }
+
+                // Update the product
+                $product->update($data);
 
                 // Return success response
                 return response()->json([
                     'message' => 'Product updated successfully',
-                    //'data' => $product
                 ], 200);
             } else {
                 // If the user is not the owner, return an error message
@@ -358,31 +372,25 @@ class ProductController extends Controller
                 'message' => 'Product not found.',
             ], 404);
         }
-    }
-    //function ends for edit product
+    } //function ends for edit product
+
+
 
     //Function to restock product
     public function restockproduct(Request $request, string $product_id)
     {
         // Find the product by its ID
-
-
-        $product = Products::find($product_id);
-
+        $product = Products::where('product_id', $product_id)->first();
 
         // Check if the product exists
         if ($product) {
             // Check if the authenticated user is the owner of the product
-            if ($request->user()->id == $product->user_id) {
-
+            if ($request->user()->userID == $product->user_id) {
                 // Validate the request data
                 $validator = Validator::make($request->all(), [
-
-                    'quantityin_stock' => 'required|min:2|max:100',
-                    'selling_price' => 'required|min:2|max:100',
-                    'cost_price' => 'required|min:2|max:100',
-
-
+                    'new_quantityin_stock' => 'required|min:2|max:100',
+                    'new_selling_price' => 'required|min:2|max:100',
+                    'new_cost_price' => 'required|min:2|max:100',
                 ]);
 
                 // If validation fails, return error response
@@ -395,23 +403,14 @@ class ProductController extends Controller
 
                 // Update product details
                 $product->update([
-
-                    'quantityin_stock' => $request->quantityin_stock,
-                    'selling_price' => $request->selling_price,
-                    'cost_price' => $request->cost_price,
-
-
+                    'quantityin_stock' => $request->new_quantityin_stock,
+                    'selling_price' => $request->new_selling_price,
+                    'cost_price' => $request->new_cost_price,
                 ]);
-
-
-                //Mail::to($request->user()->email)->send(new Productrestockemail($product, $product));
-
-
 
                 // Return success response
                 return response()->json([
                     'message' => 'Restock successful',
-                    //'data' => $product
                 ], 200);
             } else {
                 // If the user is not the owner, return an error message
@@ -428,7 +427,6 @@ class ProductController extends Controller
     }
 
 
-
     //function ends for edit product
 
 
@@ -437,7 +435,7 @@ class ProductController extends Controller
     public function toggleProductState(Request $request, string $product_id)
     {
         // Find the product by its ID
-        $product = Products::find($product_id);
+        $product = Products::where('product_id', $product_id)->first();
 
         // Check if the product exists
         if ($product) {

@@ -96,23 +96,28 @@ class CategoryController extends Controller
     public function viewCategory(Request $request, string $categoryID)
     {
         try {
-            // Find the category by ID
-            $category = Category::findOrFail($categoryID);
+            // Find the category by the user-defined categoryID
+            $category = Category::where('categoryID', $categoryID)->first();
 
-            // Fetch image path for the category
-            if ($category->image) {
-                $category->image_path = asset('uploads/category_image/' . $category->image);
+            // Check if the category exists
+            if ($category) {
+                // Fetch image path for the category
+                if ($category->image) {
+                    $category->image_path = asset('uploads/category_image/' . $category->image);
+                }
+
+                return response()->json([
+                    'message' => 'Category fetched successfully.',
+                    'category' => $category,
+                ], 200);
+            } else {
+                // If the category is not found, return a 404 response
+                return response()->json([
+                    'message' => 'Category not found.',
+                ], 404);
             }
-
-            return response()->json([
-                'message' => 'Category fetched successfully.',
-                'category' => $category,
-            ], 200);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'message' => 'Category not found.',
-            ], 404);
         } catch (\Exception $e) {
+            // Handle any other exceptions
             return response()->json([
                 'message' => 'Error occurred while fetching the category.',
                 'error' => $e->getMessage(),
@@ -126,7 +131,7 @@ class CategoryController extends Controller
     {
         try {
             // Find the category by ID
-            $category = Category::findOrFail($categoryID);
+            $category = Category::where('categoryID', $categoryID)->first();
 
             // Fetch all products in the category
             $products = Products::where('categoryID', $category->categoryID)->get();
