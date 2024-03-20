@@ -120,7 +120,14 @@ class ProductController extends Controller
 
             ]);
 
+                // Extract image URLs for the product
+                $imageURLs = [];
+                foreach (explode(',', $product->product_image) as $image) {
+                    $imageURLs[] = asset('uploads/product_images/' . $image);
+                }
 
+                // Add image URLs to the product object
+                $product->image_urls = $imageURLs;
 
             $product->load('individuals:userID', 'products');
             //$userEmail = IndividualAccount::find($request->user()->id)->email;
@@ -181,12 +188,22 @@ class ProductController extends Controller
     {
         // Retrieve all products from the database
         $products = Products::orderByDesc('id')->get();
+
+        // Check if any products exist
+        if ($products->isEmpty()) {
+            return response()->json([
+                'message' => 'No products found.',
+            ], 404);
+        }
+
         // Iterate through each product to fetch its images
         foreach ($products as $product) {
             // Extract image URLs for the product
             $imageURLs = [];
-            foreach (explode(',', $product->product_image) as $image) {
-                $imageURLs[] = asset('uploads/product_images/' . $image);
+            if (!empty($product->product_image)) {
+                foreach (explode(',', $product->product_image) as $image) {
+                    $imageURLs[] = asset('uploads/product_images/' . $image);
+                }
             }
 
             // Add image URLs to the product object
@@ -197,38 +214,49 @@ class ProductController extends Controller
             'message' => 'All products fetched successfully.',
             'data' => [
                 'product' => $products,
-
             ]
         ], 200);
     }
 
 
 
-    public function searchproducts($search_query = null)
-    {
-        $query = Products::query();
-        // Search for products with names containing the given substring
-        if ($search_query !== null) {
-            $query->where(function ($query) use ($search_query) {
-                $query->where('product_id', $search_query)
-                    ->orWhere('product_name', 'like', '%' . $search_query . '%');
-            });
-        }
-        $products = $query->get();
-        //$products = Products::where('product_name', 'like', '%' . $product_name . '%')->get();
 
-        // Check if any products were found
-        if ($products->isEmpty()) {
-            return response()->json([
-                'message' => 'No products found matching the search criteria.',
-            ], 404);
-        } else {
-            return response()->json([
-                'message' => 'Products found.',
-                'data' => $products
-            ], 200);
-        }
+    public function searchproducts($search_query = null)
+{
+    $query = Products::query();
+    // Search for products with names containing the given substring
+    if ($search_query !== null) {
+        $query->where(function ($query) use ($search_query) {
+            $query->where('product_id', $search_query)
+                ->orWhere('product_name', 'like', '%' . $search_query . '%');
+        });
     }
+    $products = $query->get();
+
+    // Check if any products were found
+    if ($products->isEmpty()) {
+        return response()->json([
+            'message' => 'No products found matching the search criteria.',
+        ], 404);
+    } else {
+        // Iterate through each product to fetch its images
+        foreach ($products as $product) {
+            // Extract image URLs for the product
+            $imageURLs = [];
+            foreach (explode(',', $product->product_image) as $image) {
+                $imageURLs[] = asset('uploads/product_images/' . $image);
+            }
+            // Add image URLs to the product object
+            $product->image_urls = $imageURLs;
+        }
+
+        return response()->json([
+            'message' => 'Products found.',
+            'data' => $products
+        ], 200);
+    }
+}
+
     //Function to view products ends
 
 
@@ -236,24 +264,26 @@ class ProductController extends Controller
 
 
     //Function to delete product
-    public function deleteproduct(string $product_id)
 
+    public function deleteproduct(string $product_id, Request $request)
     {
         try {
-            //find prtoduct in the database
-            //$product = Products::find($product_id);
-            $product = Products::where('product_id', $product_id);
+            // Find the product in the database
+            $product = Products::where('product_id', $product_id)->first();
+
+            // Check if the product exists
             if (!$product) {
                 return response()->json([
                     'message' => 'Product not found',
                 ], 404);
             }
 
-
-            // Find the product in the database
-            //$product = Products::findOrFail($product_id);
-
-            //$imageFilenames = explode(',', $product->product_image);
+            // Check if the authenticated user is the owner of the product
+            if ($request->user()->userID != $product->user_id) {
+                return response()->json([
+                    'message' => 'You are not authorized to delete this product',
+                ], 403);
+            }
 
             // Check if the product has associated images
             if (!empty($product->product_image)) {
@@ -270,10 +300,11 @@ class ProductController extends Controller
                 }
             }
 
-            Products::destroy($product_id);
+            // Delete the product
+            $product->delete();
+
             return response()->json([
                 'message' => 'Product Deleted Successfully',
-                //'data' => $product
             ], 200);
         } catch (\Exception $e) {
             // Handle any exceptions that occur during the deletion process
@@ -286,6 +317,53 @@ class ProductController extends Controller
 
 
 
+    /*public function deleteproduct(string $product_id)
+    {
+        try {
+            // Find the product in the database
+            $product = Products::where('product_id', $product_id)->first();
+    
+            // Check if the product exists
+            if (!$product) {
+                return response()->json([
+                    'message' => 'Product not found',
+                ], 404);
+            }
+    
+            // Check if the product has associated images
+            if (!empty($product->product_image)) {
+                // Split the comma-separated image filenames into an array
+                $imageFilenames = explode(',', $product->product_image);
+    
+                // Delete associated images from the filesystem
+                foreach ($imageFilenames as $filename) {
+                    // Assuming images are stored in a folder named 'product_images'
+                    $imagePath = public_path('/uploads/product_images/' . $filename);
+                    if (File::exists($imagePath)) {
+                        File::delete($imagePath);
+                    }
+                }
+            }
+    
+            // Delete the product
+            $product->delete();
+    
+            return response()->json([
+                'message' => 'Product Deleted Successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            // Handle any exceptions that occur during the deletion process
+            return response()->json([
+                'message' => 'Error deleting product',
+                'error' => $e->getMessage(), // Include the error message for debugging
+            ], 500);
+        }
+    } 8*/
+    // End product delete method
+
+
+
+
     //Function to edit product
     public function editproduct(Request $request, string $product_id)
     {
@@ -293,86 +371,103 @@ class ProductController extends Controller
         $product = Products::where('product_id', $product_id)->first();
 
         // Check if the product exists
-        if ($product) {
-            // Check if the authenticated user is the owner of the product
-            if ($request->user()->userID == $product->user_id) {
-                // Validate the request data
-                $validator = Validator::make($request->all(), [
-                    'new_product_name' => 'required|min:2|max:100',
-                    'new_product_category' => 'required|min:2|max:100',
-                    'new_selling_price' => 'required|min:2|max:100',
-                    'new_cost_price' => 'required|min:2|max:100',
-                    'new_quantityin_stock' => 'required|min:2|max:100',
-                    'new_unit' => 'required|min:2|max:100',
-                    'new_product_description' => 'required|min:2|max:255',
-                    'product_image' => 'array|min:2|max:5',
-                    'product_image.*' => 'image|mimes:jpg,png,bmp'
-                ]);
-
-                // If validation fails, return error response
-                if ($validator->fails()) {
-                    return response()->json([
-                        'message' => 'Validation fails',
-                        'error' => $validator->errors()
-                    ], 422);
-                }
-
-                // Check if the category exists
-                $category = Category::where('categoryName', $request->new_product_category)->first();
-
-                if (!$category) {
-                    // If the category does not exist, return an error response
-                    return response()->json([
-                        'message' => 'Category does not exist',
-                    ], 404);
-                }
-
-                // Category exists, get its ID
-                $categoryID = $category->categoryID;
-
-                // Update product details
-                $data = [
-                    'product_name' => $request->new_product_name,
-                    'product_category' => $request->new_product_category,
-                    'selling_price' => $request->new_selling_price,
-                    'categoryID' => $categoryID,
-                    'cost_price' => $request->new_cost_price,
-                    'quantityin_stock' => $request->new_quantityin_stock,
-                    'unit' => $request->new_unit,
-                    'product_description' => $request->new_product_description
-                ];
-
-                // Handle product image updates
-                if ($request->hasFile('product_image')) {
-                    $imageName = '';
-                    foreach ($request->file('product_image') as $product_image) {
-                        $new_imageName = rand() . '.' . $product_image->getClientOriginalExtension();
-                        $product_image->move(public_path('/uploads/product_images'), $new_imageName);
-                        $imageName .= $new_imageName . ",";
-                    }
-                    $data['product_image'] = $imageName;
-                }
-
-                // Update the product
-                $product->update($data);
-
-                // Return success response
-                return response()->json([
-                    'message' => 'Product updated successfully',
-                ], 200);
-            } else {
-                // If the user is not the owner, return an error message
-                return response()->json([
-                    'message' => 'You are not authorized to edit this product.',
-                ], 403);
-            }
-        } else {
+        if (!$product) {
             // If the product is not found, return a 404 error message
             return response()->json([
                 'message' => 'Product not found.',
             ], 404);
         }
-    } //function ends for edit product
+
+        // Check if the authenticated user is the owner of the product
+        if ($request->user()->userID != $product->user_id) {
+            // If the user is not the owner, return an error message
+            return response()->json([
+                'message' => 'You are not authorized to edit this product.',
+            ], 403);
+        }
+
+        // Validate the request data
+        $validator = Validator::make($request->all(), [
+            'new_product_name' => 'required|min:2|max:100',
+            'new_product_category' => 'required|min:2|max:100',
+            'new_selling_price' => 'required|min:2|max:100',
+            'new_cost_price' => 'required|min:2|max:100',
+            'new_quantityin_stock' => 'required|min:2|max:100',
+            'new_unit' => 'required|min:2|max:100',
+            'new_product_description' => 'required|min:2|max:255',
+            'product_image' => 'array|min:2|max:5',
+            'product_image.*' => 'image|mimes:jpg,png,bmp'
+        ]);
+
+        // If validation fails, return error response
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation fails',
+                'error' => $validator->errors()
+            ], 422);
+        }
+
+        // Check if the category exists
+        $category = Category::where('categoryName', $request->new_product_category)->first();
+
+        if (!$category) {
+            // If the category does not exist, return an error response
+            return response()->json([
+                'message' => 'Category does not exist',
+            ], 404);
+        }
+
+        // Category exists, get its ID
+        $categoryID = $category->categoryID;
+
+        // Update product details
+        $data = [
+            'product_name' => $request->new_product_name,
+            'product_category' => $request->new_product_category,
+            'selling_price' => $request->new_selling_price,
+            'categoryID' => $categoryID,
+            'cost_price' => $request->new_cost_price,
+            'quantityin_stock' => $request->new_quantityin_stock,
+            'unit' => $request->new_unit,
+            'product_description' => $request->new_product_description
+        ];
+
+        // Handle product image updates
+        if ($request->hasFile('product_image')) {
+            $imageName = '';
+            foreach ($request->file('product_image') as $product_image) {
+                $new_imageName = rand() . '.' . $product_image->getClientOriginalExtension();
+                if ($product->product_image) {
+                    // Delete the old product image file
+                    if (file_exists(public_path('uploads/product_images/' . $product->product_image))) {
+                        unlink(public_path('uploads/product_images/' . $product->product_image));
+                    }
+                }
+                // Move and store the new product image file
+                $product_image->move(public_path('/uploads/product_images'), $new_imageName);
+                $imageName .= $new_imageName . ",";
+            }
+            $data['product_image'] = $imageName;
+        }
+
+        // Update the product
+        $product->update($data);
+
+        // Fetch the updated product with image URLs
+        $product = Products::where('product_id', $product_id)->first();
+        $imageURLs = [];
+        foreach (explode(',', $product->product_image) as $image) {
+            $imageURLs[] = asset('uploads/product_images/' . $image);
+        }
+        $product->image_urls = $imageURLs;
+
+        // Return success response with the updated product data
+        return response()->json([
+            'message' => 'Product updated successfully',
+            'data' => $product,
+        ], 200);
+    }
+    //function ends for edit product
 
 
 
