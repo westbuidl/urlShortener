@@ -93,4 +93,7 @@ Route::get('/viewCategory/{categoryID}', [CategoryController::class, 'viewCatego
 //--End of Admin api --//
 
 //Add to cart
+Route::get('/showCart', [CartController::class, 'showCart'])->name('showCart');//adding to cart api
 Route::post('/addToCart', [CartController::class, 'addToCart'])->name('addToCart');//adding to cart api
+Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout');//adding to cart api
+Route::post('/deleteCart', [CartController::class, 'deleteCart'])->name('deleteCart');//adding to cart api

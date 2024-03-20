@@ -70,6 +70,7 @@ class CategoryController extends Controller
     {
         try {
             $categories = Category::all();
+            $categories = Category::orderByDesc('id')->get();
 
             // Fetch image path for each category
             foreach ($categories as $category) {
@@ -97,6 +98,7 @@ class CategoryController extends Controller
     {
         try {
             // Find the category by the user-defined categoryID
+
             $category = Category::where('categoryID', $categoryID)->first();
 
             // Check if the category exists
@@ -134,7 +136,9 @@ class CategoryController extends Controller
             $category = Category::where('categoryID', $categoryID)->first();
 
             // Fetch all products in the category
+           
             $products = Products::where('categoryID', $category->categoryID)->get();
+            $products = Products::orderByDesc('id')->get();
 
             return response()->json([
                 'message' => 'Category details fetched successfully.',

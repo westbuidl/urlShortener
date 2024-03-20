@@ -180,7 +180,7 @@ class ProductController extends Controller
     public function allProducts()
     {
         // Retrieve all products from the database
-        $products = Products::orderByDesc('product_id')->get();
+        $products = Products::orderByDesc('id')->get();
         // Iterate through each product to fetch its images
         foreach ($products as $product) {
             // Extract image URLs for the product
@@ -317,18 +317,18 @@ class ProductController extends Controller
                     ], 422);
                 }
 
-                 // Check if the category exists
-        $category = Category::where('categoryName', $request->new_product_category)->first();
+                // Check if the category exists
+                $category = Category::where('categoryName', $request->new_product_category)->first();
 
-        if (!$category) {
-            // If the category does not exist, return an error response
-            return response()->json([
-                'message' => 'Category does not exist',
-            ], 404);
-        }
+                if (!$category) {
+                    // If the category does not exist, return an error response
+                    return response()->json([
+                        'message' => 'Category does not exist',
+                    ], 404);
+                }
 
-        // Category exists, get its ID
-        $categoryID = $category->categoryID;
+                // Category exists, get its ID
+                $categoryID = $category->categoryID;
 
                 // Update product details
                 $data = [
@@ -440,7 +440,7 @@ class ProductController extends Controller
         // Check if the product exists
         if ($product) {
             // Check if the authenticated user is the owner of the product
-            if ($request->user()->id == $product->user_id) {
+            if ($request->user()->userID == $product->user_id) {
                 // Toggle the product state
                 $product->update([
                     'is_active' => !$product->is_active,
