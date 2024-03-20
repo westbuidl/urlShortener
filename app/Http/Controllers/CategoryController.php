@@ -135,20 +135,39 @@ class CategoryController extends Controller
             // Find the category by ID
             $category = Category::where('categoryID', $categoryID)->first();
 
+
+            // Check if the category exists
+            if (!$category) {
+                return response()->json([
+                    'message' => 'Category not found.',
+                ], 404);
+            }
+
             // Fetch all products in the category
-           
+
             $products = Products::where('categoryID', $category->categoryID)->get();
-            $products = Products::orderByDesc('id')->get();
+            //$products = Products::orderByDesc('id')->get();
+
+            // Iterate over each product to fetch its images
+            foreach ($products as $product) {
+                // Extract image URLs for the product
+                $imageURLs = [];
+                foreach (explode(',', $product->product_image) as $image) {
+                    $imageURLs[] = asset('uploads/product_images/' . $image);
+                }
+
+                // Add image URLs to the product object
+                $product->image_urls = $imageURLs;
+            }
+
 
             return response()->json([
                 'message' => 'Category details fetched successfully.',
                 'category_name' => $category->categoryName,
+                'category_image' => asset('uploads/category_image/' . $category->categoryImage),
                 'products' => $products,
+
             ], 200);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'message' => 'Category not found.',
-            ], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error occurred while fetching category details.',
