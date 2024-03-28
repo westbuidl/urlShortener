@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 
@@ -237,6 +238,7 @@ class ProductController extends Controller
     if ($products->isEmpty()) {
         return response()->json([
             'message' => 'No products found matching the search criteria.',
+            
         ], 404);
     } else {
         // Iterate through each product to fetch its images
@@ -560,6 +562,40 @@ class ProductController extends Controller
         }
     }
     //function ends for edit product
+
+
+    //Adding products to cart Begin
+    public function addToCart(Request $request, $productID){
+        $product = Products::find($productID);
+        $oldCart = Session::has('cart') ? Session::get('cart') : null;
+        $cart = new Cart($oldCart);
+        $cart->add($product, $product->productID);
+        dd($request->session()->get('cart'));
+        $request->session()->put('cart', $cart);
+
+    
+    }
+
+    public function getCart() {
+        if(!Session::has('cart')) {
+            //return view('');
+        }
+        $oldCart = Session::get('cart');
+        $car =new Cart($oldCart);
+        //return view('');
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 }
 /*Categories*
 1.Fresh Fruits
