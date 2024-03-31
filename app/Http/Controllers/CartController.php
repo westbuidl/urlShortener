@@ -47,15 +47,67 @@ class CartController extends Controller
     }
 
 
-    public function addToCart(Request $request, $productID){
-        $product = Products::find($productID);
 
+    public function addToCart(Request $request, $productID)
+    {
+        try {
+            // Check if the user is authenticated
+            if (!Auth::check()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
     
+            // Validate the request data
+            $validator = Validator::make(['product_id' => $productID], [
+                'product_id' => 'required|exists:products,id',
+            ]);
+    
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+    
+            // Get the authenticated user's ID
+            $userId = auth()->id();
+    
+            // Save product in the carts table
+            $item = new Cart;
+            $item->session_id = 0; // Assuming session_id is not used
+            $item->user_id = $userId;
+            $item->product_id = $productID; // Use the $productID parameter here
+            $item->quantity = 1; // Assuming quantity is fixed for now
+            $item->save();
+    
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Product added to cart',
+                'data' => [
+                    'cart_item' => $item
+                ]
+            ], 201);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Product not found'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], $e->getCode() ?: 500);
+        }
     }
+    
 
 
 
-    public function addTo9Cart(Cart $cart, Request $request)
+
+    public function getAddToCart(Request $request, $id)
 
 
     {

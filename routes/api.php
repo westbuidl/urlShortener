@@ -73,12 +73,15 @@ Route::post('/addToCart', [ProductController::class, 'addToCart'])->middleware('
 Route::post('/addproduct', [ProductController::class, 'addproduct'])->middleware('auth:sanctum')->name('addproduct');//profile update endpoint for sellers
 Route::get('/viewproduct/{product_id}', [ProductController::class, 'viewproduct'])->middleware('auth:sanctum')->name('viewproduct');//view products
 Route::get('/allProducts', [ProductController::class, 'allProducts'])->name('allProducts');//view products
+Route::get('/productDetails/{product_id}', [ProductController::class, 'productDetails'])->name('productDetails');//productDetails
 Route::post('/editproduct/{product_id}', [ProductController::class, 'editproduct'])->middleware('auth:sanctum')->name('editproduct');//view products
 Route::post('/restockproduct/{product_id}', [ProductController::class, 'restockproduct'])->middleware('auth:sanctum')->name('restockproduct');//restock product
 Route::post('/productstate/{product_id}', [ProductController::class, 'productstate'])->middleware('auth:sanctum')->name('productstate');//make the product active/inactive
 Route::get('/searchproducts/{name}', [ProductController::class, 'searchproducts'])->middleware('auth:sanctum')->name('searchproducts');//search products
 Route::delete('/deleteproduct/{product_id}', [ProductController::class, 'deleteproduct'])->middleware('auth:sanctum');//profile update endpoint for sellers
 Route::post('/toggleProductState/{product_id}', [ProductController::class, 'toggleProductState'])->middleware('auth:sanctum')->name('toggleProductState');//toggle product state
+Route::get('/hotDeals', [ProductController::class, 'hotDeals'])->middleware('auth:sanctum')->name('hotDeals');//toggle product state
+Route::get('/popularProducts', [ProductController::class, 'popularProducts'])->name('popularProducts');//toggle product state
 //--End of Product api--//
 
 
@@ -89,12 +92,13 @@ Route::post('/addCategory', [CategoryController::class, 'addCategory'])->name('a
 Route::delete('/deleteCategory/{id}', [CategoryController::class, 'deleteCategory'])->name('deleteCategory');//delete categories
 Route::get('/viewAllcategory', [CategoryController::class, 'viewAllcategory'])->name('viewAllcategory');//view all categories
 Route::get('/viewCategory/{categoryID}', [CategoryController::class, 'viewCategory'])->name('viewCategory');//view all categories
+Route::get('/popularCategories', [CategoryController::class, 'popularCategories'])->name('popularCategories');//view all categories
 
 //--End of Admin api --//
 
 //Add to cart
 Route::post('/storeCart', [CartController::class, 'storeCart'])->name('showCart');//adding to cart api
 Route::get('/showCart', [CartController::class, 'showCart'])->name('showCart');//adding to cart api
-Route::get('/addToCart/{id}', [ProductController::class, 'addToCart'])->name('addToCart');//adding to cart api
+Route::post('/addToCart/{id}', [CartController::class, 'addToCart'])->name('addToCart');//adding to cart api
 Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout');//adding to cart api
 Route::post('/deleteCart', [CartController::class, 'deleteCart'])->name('deleteCart');//adding to cart api

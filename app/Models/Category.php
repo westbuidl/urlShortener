@@ -28,5 +28,10 @@ class Category extends Model
     {
         return $this->hasMany(Category::class);
     }
+    // Define the relationship with products
+    public function products()
+    {
+        return $this->hasMany(Products::class);
+    }
     
 }

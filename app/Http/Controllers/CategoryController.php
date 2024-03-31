@@ -228,4 +228,41 @@ class CategoryController extends Controller
             ], 404);
         }
     }
+
+
+    //popular categories
+
+    public function popularCategories(Request $request)
+    {
+        try {
+            // Query to fetch popular categories
+            $popularCategories = Category::selectRaw('categories.*, COUNT(products.product_id) as products_count')
+                ->leftJoin('products', 'categories.categoryID', '=', 'products.categoryID')
+                ->groupBy('categories.id')
+                ->orderByDesc('products_count')
+                ->limit(5) // Limit to the top 5 popular categories
+                ->get();
+
+                // Iterate over each category to append full image path
+        foreach ($popularCategories as $category) {
+            $category->full_image_path = asset('uploads/category_image/' . $category->categoryImage);
+        }
+
+    
+            // Return response with popular categories
+            return response()->json([
+                'message' => 'Popular categories fetched successfully.',
+                'popular_categories' => $popularCategories,
+            ], 200);
+        } catch (\Exception $e) {
+            // Handle any exceptions
+            return response()->json([
+                'message' => 'Error occurred while fetching popular categories.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+
 }

@@ -121,14 +121,14 @@ class ProductController extends Controller
 
             ]);
 
-                // Extract image URLs for the product
-                $imageURLs = [];
-                foreach (explode(',', $product->product_image) as $image) {
-                    $imageURLs[] = asset('uploads/product_images/' . $image);
-                }
+            // Extract image URLs for the product
+            $imageURLs = [];
+            foreach (explode(',', $product->product_image) as $image) {
+                $imageURLs[] = asset('uploads/product_images/' . $image);
+            }
 
-                // Add image URLs to the product object
-                $product->image_urls = $imageURLs;
+            // Add image URLs to the product object
+            $product->image_urls = $imageURLs;
 
             $product->load('individuals:userID', 'products');
             //$userEmail = IndividualAccount::find($request->user()->id)->email;
@@ -184,6 +184,54 @@ class ProductController extends Controller
         }
     }   //Function to view products ends
 
+
+    //view product details
+    public function productDetails(Request $request, string $product_id)
+{
+    try {
+        // Find the product by its ID
+        $product = Products::where('product_id', $product_id)->first();
+
+        // Check if the product exists
+        if ($product) {
+            // Find the category by categoryID from the product
+            $category = Category::where('categoryID', $product->categoryID)->first();
+
+            // Extract image URLs for the product
+            $imageURLs = [];
+            foreach (explode(',', $product->product_image) as $image) {
+                $imageURLs[] = asset('uploads/product_images/' . $image);
+            }
+
+            // Add image URLs and category name to the product object
+            $product->image_urls = $imageURLs;
+            $product->category_name = $category ? $category->categoryName : null;
+
+            return response()->json([
+                'message' => 'Product found.',
+                'data' => [
+                    'product' => $product,
+                ]
+            ], 200);
+        } else {
+            // If the product is not found, return a 404 error message
+            return response()->json([
+                'message' => 'Product not found.',
+            ], 404);
+        }
+    } catch (\Exception $e) {
+        // Handle any exceptions
+        return response()->json([
+            'message' => 'Error occurred while fetching product details.',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
+
+    
+
+    
+
     // Function to fetch all products
     public function allProducts()
     {
@@ -223,41 +271,41 @@ class ProductController extends Controller
 
 
     public function searchproducts($search_query = null)
-{
-    $query = Products::query();
-    // Search for products with names containing the given substring
-    if ($search_query !== null) {
-        $query->where(function ($query) use ($search_query) {
-            $query->where('product_id', $search_query)
-                ->orWhere('product_name', 'like', '%' . $search_query . '%');
-        });
-    }
-    $products = $query->get();
-
-    // Check if any products were found
-    if ($products->isEmpty()) {
-        return response()->json([
-            'message' => 'No products found matching the search criteria.',
-            
-        ], 404);
-    } else {
-        // Iterate through each product to fetch its images
-        foreach ($products as $product) {
-            // Extract image URLs for the product
-            $imageURLs = [];
-            foreach (explode(',', $product->product_image) as $image) {
-                $imageURLs[] = asset('uploads/product_images/' . $image);
-            }
-            // Add image URLs to the product object
-            $product->image_urls = $imageURLs;
+    {
+        $query = Products::query();
+        // Search for products with names containing the given substring
+        if ($search_query !== null) {
+            $query->where(function ($query) use ($search_query) {
+                $query->where('product_id', $search_query)
+                    ->orWhere('product_name', 'like', '%' . $search_query . '%');
+            });
         }
+        $products = $query->get();
 
-        return response()->json([
-            'message' => 'Products found.',
-            'data' => $products
-        ], 200);
+        // Check if any products were found
+        if ($products->isEmpty()) {
+            return response()->json([
+                'message' => 'No products found matching the search criteria.',
+
+            ], 404);
+        } else {
+            // Iterate through each product to fetch its images
+            foreach ($products as $product) {
+                // Extract image URLs for the product
+                $imageURLs = [];
+                foreach (explode(',', $product->product_image) as $image) {
+                    $imageURLs[] = asset('uploads/product_images/' . $image);
+                }
+                // Add image URLs to the product object
+                $product->image_urls = $imageURLs;
+            }
+
+            return response()->json([
+                'message' => 'Products found.',
+                'data' => $products
+            ], 200);
+        }
     }
-}
 
     //Function to view products ends
 
@@ -561,41 +609,114 @@ class ProductController extends Controller
             ], 404);
         }
     }
+
+    //Hot deals method
+    public function hotDeals(Request $request)
+    {
+        try {
+            // Calculate the timestamp for 48 hours ago
+            $fortyEightHoursAgo = now()->subHours(48);
+
+            // Query to fetch hot deals (newly added products in the last 48 hours)
+            $hotDeals = Products::where('created_at', '>=', $fortyEightHoursAgo)
+                ->orderByDesc('created_at')
+                ->limit(5) // Limit to the top 5 hot deals
+                ->get();
+
+            // Iterate over each product to append full image path
+            foreach ($hotDeals as $deal) {
+                $deal->full_image_path = asset('uploads/product_images/' . $deal->product_image);
+            }
+
+            // Return response with hot deals
+            return response()->json([
+                'message' => 'Hot deals fetched successfully.',
+                'hot_deals' => $hotDeals,
+            ], 200);
+        } catch (\Exception $e) {
+            // Handle any exceptions
+            return response()->json([
+                'message' => 'Error occurred while fetching hot deals.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    //Method for Popular products
+
+    public function popularProducts(Request $request)
+    {
+        try {
+            // Query to fetch popular products based on the number of times added to the cart
+            $popularProducts = Products::selectRaw('products.*, COUNT(carts.id) as cart_count')
+                ->leftJoin('carts', 'products.id', '=', 'carts.product_id')
+                ->groupBy('products.id')
+                ->orderByDesc('cart_count')
+                ->limit(5) // Limit to the top 5 popular products
+                ->get();
+
+            // Iterate over each product to append full image path
+            foreach ($popularProducts as $product) {
+                $product->full_image_path = asset('uploads/product_images/' . $product->product_image);
+            }
+
+            // Return response with popular products
+            return response()->json([
+                'message' => 'Popular products fetched successfully.',
+                'popular_products' => $popularProducts,
+            ], 200);
+        } catch (\Exception $e) {
+            // Handle any exceptions
+            return response()->json([
+                'message' => 'Error occurred while fetching popular products.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+//function to adding to cart
+
+public function addToCart(Request $request, $product_id)
+{
+
+    if(Auth::id())
+    {
+        $user=auth()->user();
+
+        $cart = new Cart;
+    }
+
+}
+
+
+
     //function ends for edit product
 
 
     //Adding products to cart Begin
-    public function addToCart(Request $request, $productID){
+    public function getaddToCart(Request $request, $productID)
+    {
         $product = Products::find($productID);
         $oldCart = Session::has('cart') ? Session::get('cart') : null;
         $cart = new Cart($oldCart);
         $cart->add($product, $product->productID);
-        dd($request->session()->get('cart'));
+        //($request->session()->get('cart'));
         $request->session()->put('cart', $cart);
+        //return redirect()->route('');
 
-    
+
     }
 
-    public function getCart() {
-        if(!Session::has('cart')) {
+    public function getCart()
+    {
+        if (!Session::has('cart')) {
             //return view('');
         }
         $oldCart = Session::get('cart');
-        $car =new Cart($oldCart);
+        $car = new Cart($oldCart);
         //return view('');
     }
-
-
-
-
-
-
-
-
-
-
-
-
 }
 /*Categories*
 1.Fresh Fruits
