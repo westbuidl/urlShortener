@@ -8,7 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Testing\Fakes\BusFake;
 use Laravel\Sanctum\HasApiTokens;
 
-class Products extends Model
+class Product extends Model
 {
     //use HasFactory;
     
@@ -43,14 +43,15 @@ class Products extends Model
     }
 
     public function products(){
-        return $this->belongsTo(Products::class);
+        return $this->belongsTo(Product::class);
     }
     public function images()
     {
-        return $this->hasMany(Products::class);
+        return $this->hasMany(Product::class);
     }
     public function category()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class,  'category_id', 'id');
     }
+   
 }

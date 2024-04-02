@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
-use App\Models\Products;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
@@ -145,8 +145,8 @@ class CategoryController extends Controller
 
             // Fetch all products in the category
 
-            $products = Products::where('categoryID', $category->categoryID)->get();
-            //$products = Products::orderByDesc('id')->get();
+            $products = Product::where('categoryID', $category->categoryID)->get();
+            //$products = Product::orderByDesc('id')->get();
 
             // Iterate over each product to fetch its images
             foreach ($products as $product) {

@@ -98,7 +98,8 @@ Route::get('/popularCategories', [CategoryController::class, 'popularCategories'
 
 //Add to cart
 Route::post('/storeCart', [CartController::class, 'storeCart'])->name('showCart');//adding to cart api
-Route::get('/showCart', [CartController::class, 'showCart'])->name('showCart');//adding to cart api
-Route::post('/addToCart/{id}', [CartController::class, 'addToCart'])->name('addToCart');//adding to cart api
+Route::get('/viewCart', [ProductController::class, 'viewCart'])->middleware('auth:sanctum')->name('viewCart');//adding to cart api
+Route::post('/addToCart/{product_id}', [ProductController::class, 'addToCart'])->middleware('auth:sanctum')->name('addToCart');//adding to cart api
 Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout');//adding to cart api
-Route::post('/deleteCart', [CartController::class, 'deleteCart'])->name('deleteCart');//adding to cart api
+Route::delete('/deleteCartItem/{cartItemid}', [ProductController::class, 'deleteCartItem'])->middleware('auth:sanctum')->name('deleteCartItem');//adding to cart api
+Route::post('/updatecartItem/{cartItemid}', [ProductController::class, 'updatecartItem'])->middleware('auth:sanctum')->name('updatecartItem');//adding to cart api
