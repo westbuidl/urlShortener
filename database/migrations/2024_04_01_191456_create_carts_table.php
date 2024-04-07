@@ -9,7 +9,7 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   /* public function up(): void
+  /* public function up(): void
     {
         Schema::create('carts', function (Blueprint $table) {
             $table->id();
@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('selling_price')->nullable();
             $table->string('quantity')->nullable();
             $table->string('categoryID')->nullable();
+            $table->string('cart_id')->nullable();
         });
     }
 

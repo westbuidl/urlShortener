@@ -45,8 +45,8 @@
                                             <li><img src="{{  asset ('uploads/product_images/'.explode(',',$product->product_image)[0]) }}" alt="Product Image"></li>
                                              @endif
                                         <br>
-                                        <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Got Questions?</strong> <br><br>If you have any questions or need assistance with anything related to your new product, feel free to reach out to our support team at <a href="mailto:contact@agroease.com"
-                                                style="color: #1d988c; text-decoration: none;"><strong>contact@agroease.com</strong></a>. We're here to help you succeed!
+                                        <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Got Questions?</strong> <br><br>If you have any questions or need assistance with anything related to your new product, feel free to reach out to our support team at <a href="mailto:support@agroease.ng"
+                                                style="color: #1d988c; text-decoration: none;"><strong>support@agroease.ng</strong></a> We're here to help you succeed!
                                             <br><br>Thank you for entrusting us with your product addition. We can't wait to see it flourish in our marketplace.<br><br>Best regards, <br><br>The Agroease Team</h1><br>
                                     </td>
                                 </tr>

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product restock</title>
+    <title>Product Restocked</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
@@ -34,13 +34,13 @@
                                         <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$firstname}}, </h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">We're delighted to inform you that the inventory of Mama’s Rice has been successfully restocked! </h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Product Details:</strong> <br><br>
-                                            <li>Product Name: <strong>{{$product->product_name}}</strong></li>
-                                            <li>Quantity in Stock: <strong>{{$product->quantityin_stock}}</strong></li>
-                                            <li>Price: <strong>{{$product->selling_price}}</strong></li>
-                                            <li>SKU: <strong>{{$product->product_id}}</strong></li>
+                                            <li>Product Name: <strong>{{$product->product_name}}</strong></li><br>
+                                            <li>Quantity in Stock: <strong>{{$product->quantityin_stock}}</strong></li><br>
+                                            <li>Price: <strong>{{$product->selling_price}}</strong></li><br>
+                                            <li>SKU: <strong>{{$product->product_id}}</strong></li><br>
                                         </h1><br>
-                                        <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Got Questions?</strong> <br><br>If you have any questions or need further assistance regarding the restocking of <strong>Mama’s Rice</strong>, feel free to reach out to our support team at <a href="mailto:contact@agroease.com"
-                                                style="color: #1d988c; text-decoration: none;"><strong>contact@agroease.com</strong></a>. We're here to help you succeed!
+                                        <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Got Questions?</strong> <br><br>If you have any questions or need further assistance regarding the restocking of <strong>Mama’s Rice</strong>, feel free to reach out to our support team at <a href="mailto:support@agroease.ng"
+                                                style="color: #1d988c; text-decoration: none;"><strong>support@agroease.ng</strong></a> We're here to help you succeed!
                                             <br><br>Thank you for your continued partnership and trust in Agroease.<br><br>Best regards, <br><br>The Agroease Team</h1><br>
                                     </td>
                                 </tr>

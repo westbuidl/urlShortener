@@ -9,35 +9,25 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-
-class ProductAddEmail extends Mailable
+class OrderConfirmationMail extends Mailable
 {
-    
     use Queueable, SerializesModels;
-    public $user;
-    public $product;
-    public $firstname;
-    public $product_name;
-    public $quantityin_stock;
+
     /**
      * Create a new message instance.
      */
-    public function __construct($user, $product, $firstname,$product_name,$quantityin_stock)
+    public function __construct()
     {
-        $this->user = $user;
-        $this->product = $product;
-        $this->firstname = $firstname;
-        $this->product_name = $product_name;
-        $this->quantityin_stock = $quantityin_stock;
         //
     }
+
     /**
      * Get the message envelope.
      */
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: $this->quantityin_stock . ' ' .$this->product_name. ' '  .'added to your inventory' 
+            subject: 'Order Confirmation Mail',
         );
     }
 
@@ -47,7 +37,7 @@ class ProductAddEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view:'emails.productaddemail',
+            view: 'view.name',
         );
     }
 

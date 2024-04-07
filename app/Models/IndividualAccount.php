@@ -29,6 +29,9 @@ class IndividualAccount extends Authenticatable implements MustVerifyEmail
         'profile_photo',
         'verification_code'
     ];
+
+    //protected $primaryKey = 'userID';
+
     public function orders(){
         return $this->hasMany('App\Order');
     }

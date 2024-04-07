@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Mail\ProductAddEmail;
 use App\Mail\Productrestockemail;
 use App\Models\IndividualAccount;
+use App\Mail\OrderConfirmationMail;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -136,7 +138,7 @@ class ProductController extends Controller
 
             // Mail::to($userEmail)->send(new ProductAddEmail($product));
 
-            Mail::to($userEmail)->send(new ProductAddEmail($product, $product, $firstname));
+            Mail::to($userEmail)->send(new ProductAddEmail($product, $product, $firstname,$product->product_name,$product->quantityin_stock));
             return response()->json([
                 'message' => 'Product Successfully added',
                 'data' => $product
@@ -676,139 +678,13 @@ class ProductController extends Controller
         }
     }
 
-    //function to adding to cart WORKING
 
-    /*  public function addToCart(Request $request, $product_id)
-    {
-        try {
-            // Retrieve data from the request
-            $data = $request->validate([
-                'user_id' => 'required|integer',
-                'product_name' => 'required|string',
-                'product_category' => 'required|string',
-                'selling_price' => 'required|numeric',
-                'quantity' => 'required|integer',
-                'categoryID' => 'required|integer',
-            ]);
-    
-            // Create a new Cart instance and populate it
-            $cart = new Cart;
-            $cart->user_id = $data['user_id'];
-            $cart->product_id = $product_id; // Use the product ID from the function parameter
-            $cart->product_name = $data['product_name'];
-            $cart->product_category = $data['product_category'];
-            $cart->selling_price = $data['selling_price'];
-            $cart->quantity = $data['quantity'];
-            $cart->categoryID = $data['categoryID'];
-            
-            // Save the cart
-            $cart->save();
-    
-            // Return a success response
-            return response()->json([
-                'status' => true,
-                'message' => 'Product added to cart successfully.',
-                'cart' => $cart,
-            ], 200);
-        } catch (\Exception $e) {
-            // Log the exception for debugging
-            \Log::error('Error adding product to cart: ' . $e->getMessage());
-    
-            // Return an error response
-            return response()->json([
-                'status' => false,
-                'message' => 'An error occurred while adding the product to cart.',
-            ], 500);
-        }
-    }
-
-   /* public function addToCart(Request $request, $product_id)
-{
-    try {
-        // Check if the user is authenticated
-        if (Auth::check()) {
-            // Get the authenticated user
-            $user = auth()->user();
-            
-            // Log user information for debugging
-            Log::info('User authenticated: ' . $user->name);
-
-            // Find the product by its ID
-            $product = Product::findOrFail($product_id);
-
-            // Check if the product exists
-            if (!$product) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Product not found.',
-                ], 404);
-            }
-
-            // Create a new Cart instance and populate it
-            $cart = new Cart;
-            $cart->user_id = $user->id;
-            $cart->product_id = $product->id;
-            $cart->product_name = $product->name; 
-            $cart->price = $product->price;
-            $cart->quantity = $request->quantity ?? 1; // Default quantity is 1
-
-            // Save the cart
-            $cart->save();
-
-            // Return a success response
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Product added to cart successfully.',
-                'cart' => $cart,
-            ], 200);
-        } else {
-            // Log authentication failure for debugging
-            Log::warning('User not authenticated.');
-
-            // Return an error response if the user is not authenticated
-            return response()->json([
-                'status' => 'error',
-                'message' => 'User not authenticated.',
-            ], 401);
-        }
-    } catch (\Exception $e) {
-        // Log the exception for debugging
-        Log::error('Error adding product to cart: ' . $e->getMessage());
-
-        // Return an error response
-        return response()->json([
-            'status' => 'error',
-            'message' => 'An error occurred while adding the product to cart.',
-        ], 500);
-    }
-}*/
-
-    /*    
-public function addToCart(Request $request, $product_id){
-    if($request->isMethod('post')){
-        $data = $request->input();
-
-        //Save products in carts table
-        $cart = new Cart;
-        $cart->user_id = $data['user_id'];
-        $cart->product_id = $data['product_id'];
-        $cart->product_name = $data['product_name'];
-        $cart->product_category = $data['product_category'];
-        $cart->selling_price = $data['selling_price'];
-        $cart->quantity = $data['quantity'];
-        $cart->categoryID = $data['categoryID'];
-        $cart->save();
-
-        return response()->json([
-            'status'=>true,
-            "message"=>"Product added to cart successfully"
-        ], 200);
-        
-    }
-}*/
 
     public function addToCart(Request $request, $product_id)
+
+
     {
+        $cart_id = 'CART' . rand(000000000, 999999999);
         try {
             // Retrieve the authenticated user's ID
             //$user_id = Auth::id();
@@ -827,30 +703,46 @@ public function addToCart(Request $request, $product_id){
                 'quantity' => 'required|integer',
             ]);
 
-            // Fetch the product details from the database
-            $product = Product::where('product_id', $product_id)->first();
+           
+        $product = Product::where('product_id', $product_id)->first();
 
-            // Check if the product exists
-            if (!$product) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Product not found.',
-                ], 404);
-            }
+        // Check if the product exists
+        if (!$product) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Product not found.',
+            ], 404);
+        }
+
+        // Check if the product already exists in the user's cart
+        $existingCartItem = Cart::where('user_id',  $user->userID)
+                                 ->where('product_id', $product_id)
+                                 ->first();
+
+        if ($existingCartItem) {
+            // If the product already exists in the cart, increment the quantity
+            $existingCartItem->quantity += $data['quantity'];
+            $existingCartItem->total_price += $data['quantity'] * $product->selling_price;
+            $existingCartItem->save();
+            $cart = $existingCartItem; // Return the updated cart item
+        } else {
 
             // Create a new Cart instance and populate it
             $cart = new Cart;
-            $cart->user_id = $request->user()->userID;
+            $cart->cart_id = $cart_id;
+            $cart->user_id = $user->userID;
             $cart->product_id = $product_id;
+            $cart->product_image = $product->product_image;
             $cart->product_name = $product->product_name;
             $cart->product_category = $product->product_category;
             $cart->selling_price = $product->selling_price;
             $cart->quantity = $data['quantity'];
+            $cart->total_price = $data['quantity'] * $product->selling_price;
             $cart->categoryID = $product->categoryID;
 
             // Save the cart
             $cart->save();
-
+        }
             // Return a success response
             return response()->json([
                 //'status' => true,
@@ -897,6 +789,10 @@ public function addToCart(Request $request, $product_id){
             // Calculate total price
             foreach ($cartItems as $item) {
                 $totalPrice += $item->selling_price * $item->quantity;
+                $product = Product::find($item->product_id);
+                //$item->image_url = $product->image_url;
+                $item->full_image_path = asset('uploads/product_images/' . $product->product_image);
+    
             }
 
             // Return the cart items
@@ -918,7 +814,7 @@ public function addToCart(Request $request, $product_id){
 
     //Delete cart Item
 
-    public function deleteCartItem($cartItemId)
+    public function deleteCartItem($cart_id)
     {
         try {
             // Retrieve the authenticated user
@@ -933,7 +829,8 @@ public function addToCart(Request $request, $product_id){
             }
 
             // Retrieve the cart item
-            $cartItem = Cart::find($cartItemId);
+            // $cartItem = Cart::find($cart_id);
+            $cartItem = Cart::where('cart_id', $cart_id)->first();
 
             // Check if the cart item exists
             if (!$cartItem) {
@@ -969,12 +866,12 @@ public function addToCart(Request $request, $product_id){
 
     //Update cart Item
 
-    public function updateCartItem(Request $request, $cartItemId)
+    public function updateCartItem(Request $request, $cart_id)
     {
         try {
             // Retrieve the authenticated user
             $user = Auth::user();
-
+    
             // Ensure that the user is logged in
             if (!Auth::check()) {
                 return response()->json([
@@ -982,10 +879,10 @@ public function addToCart(Request $request, $product_id){
                     'message' => 'User not authenticated.',
                 ], 401);
             }
-
+    
             // Retrieve the cart item
-            $cartItem = Cart::find($cartItemId);
-
+            $cartItem = Cart::where('cart_id', $cart_id)->first();
+    
             // Check if the cart item exists
             if (!$cartItem) {
                 return response()->json([
@@ -993,7 +890,7 @@ public function addToCart(Request $request, $product_id){
                     'message' => 'Cart item not found.',
                 ], 404);
             }
-
+    
             // Ensure that the cart item belongs to the authenticated user
             if ($cartItem->user_id !== $user->userID) {
                 return response()->json([
@@ -1001,16 +898,28 @@ public function addToCart(Request $request, $product_id){
                     'message' => 'Unauthorized.',
                 ], 403);
             }
-
+    
             // Validate the request data
             $request->validate([
-                'quantity' => 'required|integer|min:1', // Minimum quantity is 1
+                'new_quantity' => 'required|integer|min:1', // Minimum quantity is 1
             ]);
-
+    
+            // Fetch the product details using the cart item's product_id
+            $product = Product::where('product_id', $cartItem->product_id)->first();
+    
+            // Check if the product exists
+            if (!$product) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Product not found.',
+                ], 404);
+            }
+    
             // Update the quantity of the cart item
-            $cartItem->quantity = $request->quantity;
+            $cartItem->quantity = $request->new_quantity;
+            $cartItem->total_price = $request->new_quantity * $product->selling_price;
             $cartItem->save();
-
+    
             return response()->json([
                 'status' => true,
                 'message' => 'Cart item quantity updated successfully.',
@@ -1024,34 +933,81 @@ public function addToCart(Request $request, $product_id){
             ], 500);
         }
     }
+    
 
 
 
-    //function ends for edit product
-
-
-    //Adding products to cart Begin
-    public function getaddToCart(Request $request, $productID)
+    //Check out Function
+    public function checkout(Request $request, $user_id)
     {
-        $product = Product::find($productID);
-        $oldCart = Session::has('cart') ? Session::get('cart') : null;
-        $cart = new Cart($oldCart);
-        $cart->add($product, $product->productID);
-        //($request->session()->get('cart'));
-        $request->session()->put('cart', $cart);
-        //return redirect()->route('');
+        try {
+            // Retrieve the authenticated user's ID
+            //$user_id = Auth::id();
 
+           $user_id = Auth::user()->userID;
+            
+            // Ensure that the user is logged in
+            if (!$user_id) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User not authenticated.',
+                ], 401);
+            }
+            // Retrieve the cart items for the authenticated user
+            $cartItems = Cart::where('user_id', $user_id)->get();
 
-    }
+            // Check if the cart is empty
+            if ($cartItems->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Cart is empty. Please add items to the cart first.',
+                    'userid'=> $user_id
+                ], 400);
+            }
 
-    public function getCart()
-    {
-        if (!Session::has('cart')) {
-            //return view('');
+            // Calculate the total price of the items in the cart
+            $totalPrice = 0;
+            foreach ($cartItems as $cartItem) {
+                $totalPrice += $cartItem->selling_price * $cartItem->quantity;
+            }
+
+            // Proceed with the payment (This part depends on your payment gateway integration)
+
+            // Assuming the payment is successful
+            // Add the transaction to the Order database
+            $order = new Order;
+            $order->userID = $user_id;
+            $order->productID = $product_id;
+            $order->orderID = $order_id;
+            $order->productName = $product->product_name;
+            $order->productDescription = $product->product_description;
+            $order->amount = $amount;
+            $order->quantity = $product->categoryID;
+            $order->paymentMethod = $product->categoryID;
+            $order->Discount = $product->categoryID;
+            $order->shippingFee = $product->categoryID;
+            $order->status = $product->categoryID;
+            $order->total_price = $totalPrice;
+            $order->save();
+
+            // Clear the cart after successful checkout
+            Cart::where('user_id', $user_id)->delete();
+
+            // Notify the user via email about the successful payment
+            Mail::to(Auth::user()->email)->send(new OrderConfirmationMail($order));
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Checkout successful. Your order has been placed.',
+                'order' => $order,
+            ], 200);
+        } catch (\Exception $e) {
+            // Return the error message in the response
+            return response()->json([
+                'status' => false,
+                'message' => 'An error occurred during checkout: ' . $e->getMessage(),
+            ], 500);
         }
-        $oldCart = Session::get('cart');
-        $car = new Cart($oldCart);
-        //return view('');
     }
 }
 /*Categories*

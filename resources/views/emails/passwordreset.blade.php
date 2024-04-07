@@ -40,7 +40,7 @@
                                             <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Important:</strong> <br><br>
                                                 <li>Please do not share this code with anyone else.</li>
                                                 <li>If you didn 't attempt to register for Agroease, please disregard this email.</li> <br><br>If you encounter any difficulties or have any questions, don't hesitate to reach out to our support team at
-                                                <a href="mailto:contact@agroease.com" style="color: #1d988c; text-decoration: none;"><strong>contact@agroease.com</strong></a>.
+                                                <a href="mailto:support@agroease.ng" style="color: #1d988c; text-decoration: none;"><strong>support@agroease.ng</strong></a>
                                                 <br><br>Thank you for choosing <strong>Agroease!</strong> We look forward to serving you. <br><br>Best regards, <br><br>The Agroease Team</h1><br>
                                     </td>
                                 </tr>

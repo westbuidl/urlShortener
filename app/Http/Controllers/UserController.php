@@ -44,7 +44,7 @@ class UserController extends Controller
             'lastname' => 'required|min:2|max:100',
             'email' => 'required|email|unique:individual_accounts',
             'phone' => 'required|min:2|max:100|unique:individual_accounts',
-            'product' => 'required|min:2|max:100',
+            'product' => 'min:2|max:100',
             'profile' => 'required|min:2|max:100',
             'country' => 'required|min:2|max:100',
             'state' => 'required|min:2|max:100',

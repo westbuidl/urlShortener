@@ -15,16 +15,19 @@ class Productrestockemail extends Mailable
     public $user;
     public $product;
     public $firstname;
-
+    public $product_name;
+    public $quantityin_stock;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($user, $product,$firstname)
+    public function __construct($user, $product, $firstname,$product_name,$quantityin_stock)
     {
         $this->user = $user;
         $this->product = $product;
         $this->firstname = $firstname;
+        $this->product_name = $product_name;
+        $this->quantityin_stock = $quantityin_stock;
         //
     }
 
@@ -34,7 +37,7 @@ class Productrestockemail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Product Restocked',
+            subject: $this->quantityin_stock . ' ' .$this->product_name. ' '  .'added to your inventory' 
         );
     }
 
