@@ -6,13 +6,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use App\Models\IndividualAccount;
+use App\Models\Buyer;
 
-class ProfileContoller extends Controller
+class BuyerProfileController extends Controller
 {
     //Begin function to change password
 
-    public function change_password(Request $request)
+    public function changeBuyerPassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'old_password' => 'required|min:6|max:100',
@@ -25,9 +25,9 @@ class ProfileContoller extends Controller
                 'error' => $validator->errors()
             ], 422);
         }
-        $user = $request->user();
-        if (Hash::check($request->old_password, $user->password)) {
-            $user->update([
+        $buyer = $request->user();
+        if (Hash::check($request->old_password, $buyer->password)) {
+            $buyer->update([
                 'password' => Hash::make($request->password)
             ]);
             return response()->json([
@@ -41,10 +41,10 @@ class ProfileContoller extends Controller
     } // End function to change password
 
     // Begin profile picture update function
-    public function update_profile(Request $request)
+    public function updateBuyerProfilePicture(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'profile_photo' => 'nullable|image|mimes:jpg,png,bmp'
+            'profile_photo' => 'required|image|mimes:jpg,png,bmp'
 
         ]);
         if ($validator->fails()) {
@@ -53,10 +53,10 @@ class ProfileContoller extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-        $user = $request->user();
+        $buyer = $request->user();
         if ($request->hasFile('profile_photo')) {
-            if ($user->profile_photo) {
-                $old_path = public_path() . '/uploads/profile_images/' . $user->profile_photo;
+            if ($buyer->profile_photo) {
+                $old_path = public_path() . '/uploads/profile_images/' . $buyer->profile_photo;
                 if (File::exists($old_path)) {
                     File::delete($old_path);
                 }
@@ -64,10 +64,10 @@ class ProfileContoller extends Controller
             $image_name = 'profile-image-' . time() . '.' . $request->profile_photo->extension();
             $request->profile_photo->move(public_path('/uploads/profile_images'), $image_name);
         } else {
-            $image_name = $user->profile_photo;
+            $image_name = $buyer->profile_photo;
         }
 
-        $user->update([
+        $buyer->update([
             'profile_photo' => $image_name
 
         ]);
@@ -79,7 +79,7 @@ class ProfileContoller extends Controller
 
 
     //Begin update account settings function
-    public function account_setting(Request $request)
+    public function updateBuyerAccountDetails(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'firstname' => 'nullable|max:100',
@@ -93,8 +93,8 @@ class ProfileContoller extends Controller
                 'error' => $validator->errors()
             ], 422);
         }
-        $user = $request->user();
-        $user->update([
+        $buyer = $request->user();
+        $buyer->update([
             'firstname' => $request->firstname,
             'lastname' => $request->lastname,
             'email' => $request->email,
@@ -103,7 +103,7 @@ class ProfileContoller extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Account settings updated',
+            'message' => 'Buyer Contact information Changed',
         ], 200);
     } //End update account settings function
 
@@ -111,7 +111,7 @@ class ProfileContoller extends Controller
 
 
     //Begin update billing address function
-    public function billing_address(Request $request)
+    public function updateBuyerBillingAddress(Request $request)
     {
 
         $validator = Validator::make($request->all(), [
@@ -126,8 +126,8 @@ class ProfileContoller extends Controller
                 'error' => $validator->errors()
             ], 422);
         }
-        $user = $request->user();
-        $user->update([
+        $buyer = $request->user();
+        $buyer->update([
             'country' => $request->country,
             'state' => $request->state,
             'city' => $request->city,
@@ -136,36 +136,36 @@ class ProfileContoller extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Billing Address updated',
+            'message' => 'Buyer Billing Address updated',
         ], 200);
     } //End update billing address function
 
 
-    //Delete user profile picture
+    //Delete buyer profile picture
 
-    public function delete_userprofilepicture(Request $request)
+    public function deleteBuyerProfilePicture(Request $request)
     {
         try {
 
-            $user = $request->user();
+            $buyer = $request->user();
 
             // If validation fails, return error response
 
 
-            // Find the user in the database
-            $user = IndividualAccount::findOrFail($request->id);
+            // Find the buyer in the database
+            $buyer = Buyer::findOrFail($request->buyerId);
 
-            // Check if the user has a profile picture
-            if (!empty($user->profile_photo)) {
+            // Check if the buyer has a profile picture
+            if (!empty($buyer->profile_photo)) {
                 // Delete the profile picture from the filesystem
-                $imagePath = public_path('/uploads/profile_images/' . $user->profile_photo);
+                $imagePath = public_path('/uploads/profile_images/' . $buyer->profile_photo);
                 if (File::exists($imagePath)) {
                     File::delete($imagePath);
                 }
 
-                // Update the user's profile picture field to null
-                $user->profile_photo = null;
-                $user->save();
+                // Update the buyer's profile picture field to null
+                $buyer->profile_photo = null;
+                $buyer->save();
 
 
                 return response()->json([
@@ -173,7 +173,7 @@ class ProfileContoller extends Controller
                 ], 200);
             } else {
                 return response()->json([
-                    'message' => 'no profile picture found for this user',
+                    'message' => 'no profile picture found for this buyer',
                 ], 400);
             }
         } catch (\Exception $e) {
@@ -190,46 +190,46 @@ class ProfileContoller extends Controller
 
 
 
-    /* public function delete_userprofilepicture(Request $request)
+    /* public function delete_buyerprofilepicture(Request $request)
     {
         try {
             // Validate request inputs
             $validator = Validator::make($request->all(), [
-                'user_id' => 'required|exists:individual_accounts,id',
+                'buyer_id' => 'required|exists:individual_accounts,id',
             ]);
 
             // If validation fails, return error response
             if ($validator->fails()) {
                 return response()->json([
-                    'message' => 'User not found.',
+                    'message' => 'buyer not found.',
                     'error' => $validator->errors()->first(),
                 ], 400);
             }
 
-            // Get the authenticated user
-            $authenticatedUser = $request->user();
+            // Get the authenticated buyer
+            $authenticatedbuyer = $request->user();
 
-            // Find the user in the database by user ID
-            $user = IndividualAccount::findOrFail($request->user_id);
+            // Find the buyer in the database by buyer ID
+            $buyer = Buyer::findOrFail($request->buyer_id);
 
-            // Check if the authenticated user is the owner of the profile picture
-            if ($authenticatedUser->id !== $user->id) {
+            // Check if the authenticated buyer is the owner of the profile picture
+            if ($authenticatedbuyer->id !== $buyer->id) {
                 return response()->json([
                     'message' => 'You are not authorized to delete this profile picture.',
                 ], 403);
             }
 
-            // Check if the user has a profile picture
-            if (!empty($user->profile_photo)) {
+            // Check if the buyer has a profile picture
+            if (!empty($buyer->profile_photo)) {
                 // Delete the profile picture from the filesystem
-                $imagePath = public_path('/uploads/profile_images/' . $user->profile_photo);
+                $imagePath = public_path('/uploads/profile_images/' . $buyer->profile_photo);
                 if (File::exists($imagePath)) {
                     File::delete($imagePath);
                 }
 
-                // Update the user's profile picture field to null
-                $user->profile_photo = null;
-                $user->save();
+                // Update the buyer's profile picture field to null
+                $buyer->profile_photo = null;
+                $buyer->save();
             }
 
             return response()->json([

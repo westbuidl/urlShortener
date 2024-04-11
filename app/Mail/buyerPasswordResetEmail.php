@@ -10,22 +10,24 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 
-class PasswordResetEmail extends Mailable
+class buyerPasswordResetEmail extends Mailable
 {
    // use Queueable, SerializesModels;
     use Queueable, SerializesModels;
-    public $individualuser;
+    public $buyer;
     public $reset_password;
+    public $firstname;
     
 
 
     /**
      * Create a new message instance.
      */
-    public function __construct($individualuser, $reset_password)
+    public function __construct($buyer, $reset_password, $firstname)
     {
-        $this->individualuser = $individualuser;
+        $this->buyer = $buyer;
         $this->reset_password = $reset_password;
+        $this->firstname = $firstname;
         //
     }
     /**
@@ -33,8 +35,10 @@ class PasswordResetEmail extends Mailable
      */
     public function envelope(): Envelope
     {
+       
+
         return new Envelope(
-            subject: 'Password Reset',
+            subject: $this->firstname . ' '  .' Your Password Reset Code' 
         );
     }
 
@@ -44,8 +48,9 @@ class PasswordResetEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.passwordreset',
+            view: 'emails.buyerPasswordReset',
         );
+        
     }
 
     /**

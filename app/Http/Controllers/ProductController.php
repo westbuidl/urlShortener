@@ -138,7 +138,7 @@ class ProductController extends Controller
 
             // Mail::to($userEmail)->send(new ProductAddEmail($product));
 
-            Mail::to($userEmail)->send(new ProductAddEmail($product, $product, $firstname,$product->product_name,$product->quantityin_stock));
+            Mail::to($userEmail)->send(new ProductAddEmail($product, $product, $firstname, $product->product_name, $product->quantityin_stock));
             return response()->json([
                 'message' => 'Product Successfully added',
                 'data' => $product
@@ -703,46 +703,46 @@ class ProductController extends Controller
                 'quantity' => 'required|integer',
             ]);
 
-           
-        $product = Product::where('product_id', $product_id)->first();
 
-        // Check if the product exists
-        if (!$product) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Product not found.',
-            ], 404);
-        }
+            $product = Product::where('product_id', $product_id)->first();
 
-        // Check if the product already exists in the user's cart
-        $existingCartItem = Cart::where('user_id',  $user->userID)
-                                 ->where('product_id', $product_id)
-                                 ->first();
+            // Check if the product exists
+            if (!$product) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Product not found.',
+                ], 404);
+            }
 
-        if ($existingCartItem) {
-            // If the product already exists in the cart, increment the quantity
-            $existingCartItem->quantity += $data['quantity'];
-            $existingCartItem->total_price += $data['quantity'] * $product->selling_price;
-            $existingCartItem->save();
-            $cart = $existingCartItem; // Return the updated cart item
-        } else {
+            // Check if the product already exists in the user's cart
+            $existingCartItem = Cart::where('user_id',  $user->userID)
+                ->where('product_id', $product_id)
+                ->first();
 
-            // Create a new Cart instance and populate it
-            $cart = new Cart;
-            $cart->cart_id = $cart_id;
-            $cart->user_id = $user->userID;
-            $cart->product_id = $product_id;
-            $cart->product_image = $product->product_image;
-            $cart->product_name = $product->product_name;
-            $cart->product_category = $product->product_category;
-            $cart->selling_price = $product->selling_price;
-            $cart->quantity = $data['quantity'];
-            $cart->total_price = $data['quantity'] * $product->selling_price;
-            $cart->categoryID = $product->categoryID;
+            if ($existingCartItem) {
+                // If the product already exists in the cart, increment the quantity
+                $existingCartItem->quantity += $data['quantity'];
+                $existingCartItem->total_price += $data['quantity'] * $product->selling_price;
+                $existingCartItem->save();
+                $cart = $existingCartItem; // Return the updated cart item
+            } else {
 
-            // Save the cart
-            $cart->save();
-        }
+                // Create a new Cart instance and populate it
+                $cart = new Cart;
+                $cart->cart_id = $cart_id;
+                $cart->user_id = $user->userID;
+                $cart->product_id = $product_id;
+                $cart->product_image = $product->product_image;
+                $cart->product_name = $product->product_name;
+                $cart->product_category = $product->product_category;
+                $cart->selling_price = $product->selling_price;
+                $cart->quantity = $data['quantity'];
+                $cart->total_price = $data['quantity'] * $product->selling_price;
+                $cart->categoryID = $product->categoryID;
+
+                // Save the cart
+                $cart->save();
+            }
             // Return a success response
             return response()->json([
                 //'status' => true,
@@ -782,26 +782,34 @@ class ProductController extends Controller
                 ->get();
             // ->get();
 
-            $count = Cart::where('user_id', $user->userID)->count();
+            $products_in_cart_count = Cart::where('user_id', $user->userID)->count();
+            //$product_quantity__in_cart = Cart::where('user_id', $user->quantity)->count();
 
             $totalPrice = 0; // Initialize total price variable
+            $totalQuantity = 0;
+
+            // Add image URLs to the product object
 
             // Calculate total price
             foreach ($cartItems as $item) {
+                $totalQuantity += $item->quantity;
                 $totalPrice += $item->selling_price * $item->quantity;
                 $product = Product::find($item->product_id);
-                //$item->image_url = $product->image_url;
-                $item->full_image_path = asset('uploads/product_images/' . $product->product_image);
-    
+                $item->product_image_url = asset('uploads/product_images/' . $item->product_image);
+                
             }
+
+
+
 
             // Return the cart items
             return response()->json([
                 'status' => true,
                 'message' => 'Cart items retrieved successfully.',
                 'cart_items' => $cartItems,
-                'products_in_cart' => $count,
+                'products_in_cart' => $products_in_cart_count,
                 'total_Price' => $totalPrice,
+                'total_Quantity' => $totalQuantity
             ], 200);
         } catch (\Exception $e) {
             // Return the error message in the response
@@ -871,7 +879,7 @@ class ProductController extends Controller
         try {
             // Retrieve the authenticated user
             $user = Auth::user();
-    
+
             // Ensure that the user is logged in
             if (!Auth::check()) {
                 return response()->json([
@@ -879,10 +887,10 @@ class ProductController extends Controller
                     'message' => 'User not authenticated.',
                 ], 401);
             }
-    
+
             // Retrieve the cart item
             $cartItem = Cart::where('cart_id', $cart_id)->first();
-    
+
             // Check if the cart item exists
             if (!$cartItem) {
                 return response()->json([
@@ -890,7 +898,7 @@ class ProductController extends Controller
                     'message' => 'Cart item not found.',
                 ], 404);
             }
-    
+
             // Ensure that the cart item belongs to the authenticated user
             if ($cartItem->user_id !== $user->userID) {
                 return response()->json([
@@ -898,15 +906,15 @@ class ProductController extends Controller
                     'message' => 'Unauthorized.',
                 ], 403);
             }
-    
+
             // Validate the request data
             $request->validate([
                 'new_quantity' => 'required|integer|min:1', // Minimum quantity is 1
             ]);
-    
+
             // Fetch the product details using the cart item's product_id
             $product = Product::where('product_id', $cartItem->product_id)->first();
-    
+
             // Check if the product exists
             if (!$product) {
                 return response()->json([
@@ -914,12 +922,12 @@ class ProductController extends Controller
                     'message' => 'Product not found.',
                 ], 404);
             }
-    
+
             // Update the quantity of the cart item
             $cartItem->quantity = $request->new_quantity;
             $cartItem->total_price = $request->new_quantity * $product->selling_price;
             $cartItem->save();
-    
+
             return response()->json([
                 'status' => true,
                 'message' => 'Cart item quantity updated successfully.',
@@ -933,7 +941,7 @@ class ProductController extends Controller
             ], 500);
         }
     }
-    
+
 
 
 
@@ -944,8 +952,8 @@ class ProductController extends Controller
             // Retrieve the authenticated user's ID
             //$user_id = Auth::id();
 
-           $user_id = Auth::user()->userID;
-            
+            $user_id = Auth::user()->userID;
+
             // Ensure that the user is logged in
             if (!$user_id) {
                 return response()->json([
@@ -961,7 +969,7 @@ class ProductController extends Controller
                 return response()->json([
                     'status' => false,
                     'message' => 'Cart is empty. Please add items to the cart first.',
-                    'userid'=> $user_id
+                    'userid' => $user_id
                 ], 400);
             }
 

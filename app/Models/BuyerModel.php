@@ -9,7 +9,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-class IndividualAccount extends Authenticatable implements MustVerifyEmail
+class BuyerModel extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory,HasApiTokens, Notifiable;
 

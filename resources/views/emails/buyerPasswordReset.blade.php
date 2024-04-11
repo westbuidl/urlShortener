@@ -30,7 +30,7 @@
                                     <td style="padding:0 35px; ">
                                         <br>
                                         <br>
-                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear  {{$individualuser->firstname}}, </h1><br>
+                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear  {{$buyer->firstname}}, </h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">We've received a request to reset the password for your <strong>Agroease</strong> account. To proceed with the password reset, please use the following verification code:</h1><br>
                                         <h1 style="background-color:#7e66ef; cursor:pointer; border-radius: 100px; height: 52px; padding:17px, 141px, 17px, 141px; margin-top:10px;"><span style="font-weight:600; color:#fff; font-size:26px;">{{$reset_password}}</span></h1><br>
 

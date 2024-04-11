@@ -3,12 +3,13 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\BuyerController;
 use App\Http\Controllers\ProfileContoller;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\BusinessController;
-use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\BuyerProfileController;
 use App\Http\Controllers\SellerProfileContoller;
 
 /*
@@ -34,22 +35,22 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-//Begin Api routes for Individual account functions(Buyers and Sellers)
-Route::get('/register', [UserController::class, 'create']);
-Route::post('/individual', [UserController::class, 'individual'])->name('individual');//creating account for individuals
-Route::post('/userlogin', [UserController::class, 'userlogin'])->name('userlogin');//individual account login
-Route::post('/change_password', [ProfileContoller::class, 'change_password'])->middleware('auth:sanctum')->name('change_password');//change password endpoint
-Route::post('/update_profile', [ProfileContoller::class, 'update_profile'])->middleware('auth:sanctum')->name('update_profile');//profile image update endpoint
-Route::delete('/delete_userprofilepicture/{id}', [ProfileContoller::class, 'delete_userprofilepicture'])->middleware('auth:sanctum')->name('delete_userprofilepicture');//profile image update endpoint
-Route::post('/account_setting', [ProfileContoller::class, 'account_setting'])->middleware('auth:sanctum')->name('account_setting');//profile update endpointupdate for 
-Route::post('/billing_address', [ProfileContoller::class, 'billing_address'])->middleware('auth:sanctum')->name('billing_address');//profile update endpointupdate for 
-Route::post('/user', [UserController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
-Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');//api for logout//});
-Route::post('/verifymail', [UserController::class, 'verifymail'])->name('verifymail');//send verification email
-Route::post('/resendverificationcode', [UserController::class, 'resendverificationcode'])->name('resendcode');//resend verification code
-Route::post('/resetpassword', [UserController::class, 'resetpassword'])->name('resetpassword');//resend verification code
-Route::get('/getUserProfile/{id}', [UserController::class, 'getUserProfile'])->middleware(('auth:sanctum')) ->name('getUserProfile');//api to get user profile
-//End Api routs for individual account
+//Begin Api routes for buyer account functions(Buyers and Sellers)
+Route::get('/register', [BuyerController::class, 'create']);
+Route::post('/signup', [BuyerController::class, 'signup'])->name('signup');//creating account for buyer
+Route::post('/loginBuyer', [BuyerController::class, 'loginBuyer'])->name('loginBuyer');//buyer account login
+Route::post('/changeBuyerPassword', [BuyerProfileController::class, 'changeBuyerPassword'])->middleware('auth:sanctum')->name('changeBuyerPassword');//change password endpoint
+Route::post('/updateBuyerProfilePicture', [BuyerProfileController::class, 'updateBuyerProfilePicture'])->middleware('auth:sanctum')->name('updateBuyerProfilePicture');//profile image update endpoint
+Route::delete('/deleteBuyerProfilePicture/{buyerId}', [BuyerProfileController::class, 'deleteBuyerProfilePicture'])->middleware('auth:sanctum')->name('deleteBuyerProfilePicture');//profile image update endpoint
+Route::post('/updateBuyerAccountDetails', [BuyerProfileController::class, 'updateBuyerAccountDetails'])->middleware('auth:sanctum')->name('updateBuyerAccountDetails');//profile update endpointupdate for 
+Route::post('/updateBuyerBillingAddress', [BuyerProfileController::class, 'updateBuyerBillingAddress'])->middleware('auth:sanctum')->name('updateBuyerBillingAddress');//profile update endpointupdate for 
+Route::post('/buyer', [BuyerController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
+Route::post('/logout', [BuyerController::class, 'logout'])->middleware('auth:sanctum');//api for logout//});
+Route::post('/verifyBuyerEmail', [BuyerController::class, 'verifyBuyerEmail'])->name('verifyBuyerEmail');//send verification email
+Route::post('/resendverificationcode', [BuyerController::class, 'resendverificationcode'])->name('resendcode');//resend verification code
+Route::post('/buyerPasswordReset', [BuyerController::class, 'buyerPasswordReset'])->name('buyerPasswordReset');//reset buyer password
+Route::get('/getBuyerProfile/{buyerId}', [BuyerController::class, 'getBuyerProfile'])->middleware(('auth:sanctum')) ->name('getBuyerProfile');//api to get user profile
+//End Api routes for Buyer account
 
 
 

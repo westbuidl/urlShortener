@@ -3,28 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Buyer;
 use App\Mail\SignupEmail;
 use Illuminate\Support\Str;
 use App\Mail\SignupComplete;
-use App\Mail\PasswordResetEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use App\Models\IndividualAccount;
+use App\Mail\PasswordResetEmail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\buyerPasswordResetEmail;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\MailController;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Validator;
 use App\Notifications\EmailVerificationNotification;
 
-class UserController extends Controller
+class BuyerController extends Controller
 {
     //function for user registration
-    public function individual(Request $request)
+    public function signup(Request $request)
     {
-        $userID = 'AGU' . rand(00000000, 99999999);
+        $buyerId = 'AGB' . rand(00000000, 99999999);
         $verification_code = rand(000000, 999999);
         /* $request->validate([
             'firstname'=>'required|min:2|max:100',
@@ -42,10 +43,10 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), [
             'firstname' => 'required|min:2|max:100',
             'lastname' => 'required|min:2|max:100',
-            'email' => 'required|email|unique:individual_accounts',
-            'phone' => 'required|min:2|max:100|unique:individual_accounts',
-            'product' => 'min:2|max:100',
-            'profile' => 'required|min:2|max:100',
+            'email' => 'required|email|unique:buyers',
+            'phone' => 'required|min:2|max:100|unique:buyers',
+            //'product' => 'min:2|max:100',
+            //'profile' => 'required|min:2|max:100',
             'country' => 'required|min:2|max:100',
             'state' => 'required|min:2|max:100',
             'city' => 'required|min:2|max:100',
@@ -61,14 +62,14 @@ class UserController extends Controller
             ], 422);
         }
 
-        $individualuser = IndividualAccount::create([
-            'userID' => $userID,
+        $buyer = Buyer::create([
+            'buyerId' => $buyerId,
             'firstname' => $request->firstname,
-            'lastname' => $request->firstname,
+            'lastname' => $request->lastname,
             'email' => $request->email,
             'phone' => $request->phone,
-            'product' => $request->product,
-            'profile' => $request->profile,
+            //'product' => $request->product,
+            //'profile' => $request->profile,
             'country' => $request->country,
             'state' => $request->state,
             'city' => $request->city,
@@ -80,24 +81,24 @@ class UserController extends Controller
 
         ]);
 
-        Mail::to($request->email)->send(new SignupEmail($individualuser));
+        Mail::to($request->email)->send(new SignupEmail($buyer));
 
 
         return response()->json([
             'message' => 'Registration successful Verification Email Sent',
-            'data' => $individualuser
+            'data' => $buyer
 
             /*'data' => [
-                'firstname' => $individualuser->firstname,
-                'lastname' => $individualuser->lastname,
-                'email' => $individualuser->email
+                'firstname' => $buyer->firstname,
+                'lastname' => $buyer->lastname,
+                'email' => $buyer->email
             ]*/
         ], 200);
     }
 
 
-    //function for user login
-    public function userlogin(Request $request)
+    //function for buyer login
+    public function loginBuyer(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
@@ -111,22 +112,22 @@ class UserController extends Controller
             ], 422);
         }
 
-        $individualuser = IndividualAccount::where('email', $request->email)->first();
+        $buyer = Buyer::where('email', $request->email)->first();
 
-        if ($individualuser) {
-            if ($individualuser->email_verified_at) {
-                if (Hash::check($request->password, $individualuser->password)) {
-                    $token = $individualuser->createToken('auth-token')->plainTextToken;
+        if ($buyer) {
+            if ($buyer->email_verified_at) {
+                if (Hash::check($request->password, $buyer->password)) {
+                    $token = $buyer->createToken('auth-token')->plainTextToken;
                     // Store user ID in session
-                    session(['userID' => $individualuser->userID]);
-                    session(['email' => $individualuser->email]);
+                    session(['buyerId' => $buyer->buyerId]);
+                    session(['email' => $buyer->email]);
 
                     //return Redirect::route('user.dashboard')->with('token', $token);
 
                     return response()->json([
                         'message' => 'Login Successful',
                         'token' => $token,
-                        'data' => $individualuser
+                        'data' => $buyer
                     ], 200);
                 } else {
                     return response()->json([
@@ -145,11 +146,11 @@ class UserController extends Controller
         }
     }
     //function to fetch user data with bearer tokens
-    public function individualuser(Request $request)
+    public function buyer(Request $request)
     {
         return response()->json([
             'message' => 'User successfully fetched',
-            'data' => $request->individualuser()
+            'data' => $request->user()
         ], 200);
     }
 
@@ -180,7 +181,7 @@ class UserController extends Controller
     //function to check and verify email
 
 
-    public function verifymail(Request $request)
+    public function verifyBuyerEmail(Request $request)
     {
         // Validate request inputs
         $validator = Validator::make($request->all(), [
@@ -200,12 +201,12 @@ class UserController extends Controller
         //$otp = $request->input('otp');
 
         // Find individual user with the provided email and OTP
-        $individualuser = IndividualAccount::where('verification_code', $request->otp)->first();
+        $buyer = Buyer::where('verification_code', $request->otp)->first();
 
         // If individual user is found
-        if ($individualuser) {
+        if ($buyer) {
             // Check if email is already verified
-            if ($individualuser->email_verified_at) {
+            if ($buyer->email_verified_at) {
 
                 return response()->json([
                     'message' => 'Email already verified.',
@@ -213,11 +214,11 @@ class UserController extends Controller
             }
 
             // Mark email as verified
-            $individualuser->email_verified_at = Carbon::now();
-            $individualuser->is_verified = true;
-            $individualuser->save();
+            $buyer->email_verified_at = Carbon::now();
+            $buyer->is_verified = true;
+            $buyer->save();
 
-            Mail::to($individualuser->email)->send(new SignupComplete($individualuser));
+            Mail::to($buyer->email)->send(new SignupComplete($buyer));
             return response()->json([
                 'message' => 'Email verified. Proceed to login.',
             ], 200);
@@ -229,11 +230,11 @@ class UserController extends Controller
         }
     }
     //function to reset password
-    public function resetpassword(Request $request)
+    public function buyerPasswordReset(Request $request)
     {
 
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email|exists:individual_accounts,email',
+            'email' => 'required|email|exists:buyers,email',
         ]);
 
         if ($validator->fails()) {
@@ -245,15 +246,15 @@ class UserController extends Controller
         //Generate new code for password
         $reset_password = rand(10000000, 99999999);
 
-        $individualuser = IndividualAccount::where('email', $request->email)->first();
-        // $individualuser->password = $reset_password;
-        $individualuser->update([
+        $buyer = Buyer::where('email', $request->email)->first();
+        // $buyer->password = $reset_password;
+        $buyer->update([
             'password' => Hash::make($reset_password)
         ]);
 
-        $individualuser->save();
+        $buyer->save();
 
-        Mail::to($individualuser->email)->send(new PasswordResetEmail($individualuser, $reset_password));
+        Mail::to($buyer->email)->send(new buyerPasswordResetEmail($buyer, $reset_password,$buyer->firstname));
         return response()->json([
             'message' => 'Password reset code sent.',
             'password_data' => $reset_password
@@ -262,29 +263,29 @@ class UserController extends Controller
 
 
     //function to get user profile
-    public function getUserProfile(Request $request, $userID)
+    public function getBuyerProfile(Request $request, $buyerId)
     {
         // Retrieve the authenticated user
         // $user = $request->user();
-        $user = IndividualAccount::find($userID);
+        $buyer = Buyer::find($buyerId);
 
         // Check if the user exists
         //if ($user && $user->id == $userID) 
-        if ($user) {
+        if ($buyer) {
             // Return user information along with profile picture
-            $profile_picture = asset('uploads/profile_images/' . $user->profile_photo);
+            $profile_picture = asset('uploads/profile_images/' . $buyer->profile_photo);
             //$profile_picture => asset('uploads/profile_images/' . $user->profile_photo);
             return response()->json([
-                'message' => 'User profile found.',
+                'message' => 'Buyer profile found.',
                 'data' => [
-                    'user' => $user,
+                    'buyer' => $buyer,
                     'profile_picture' => $profile_picture
                 ]
             ], 200);
         } else {
             // If the user is not found, return an error message
             return response()->json([
-                'message' => 'User not found.',
+                'message' => 'Buyer not found.',
             ], 404);
         }
     }
@@ -307,20 +308,20 @@ class UserController extends Controller
                 'message' => 'Email not found.',
             ], 400);
 
-            $individualuser = IndividualAccount::where('email', $email)->first();
+            $buyer = Buyer::where('email', $email)->first();
 
-            if (!$individualuser) {
+            if (!$buyer) {
                 return response()->json([
                     'message' => 'user not found.',
                 ], 400);
             }
             $verification_code = rand(000000, 999999);
 
-            $individualuser->verification_code = $verification_code;
-            //$individualuser->is_verified = true;
-            $individualuser->save();
+            $buyer->verification_code = $verification_code;
+            //$buyer->is_verified = true;
+            $buyer->save();
 
-            Mail::to($request->email)->send(new SignupEmail($individualuser));
+            Mail::to($request->email)->send(new SignupEmail($buyer));
 
 
             return response()->json([
