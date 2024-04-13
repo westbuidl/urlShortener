@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Buyer;
-use App\Mail\SignupEmail;
+use App\Mail\buyerSignupEmail;
 use Illuminate\Support\Str;
-use App\Mail\SignupComplete;
+use App\Mail\buyerEmailVerified;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Mail\PasswordResetEmail;
@@ -81,7 +81,7 @@ class BuyerController extends Controller
 
         ]);
 
-        Mail::to($request->email)->send(new SignupEmail($buyer));
+        Mail::to($request->email)->send(new buyerSignupEmail($buyer));
 
 
         return response()->json([
@@ -218,7 +218,7 @@ class BuyerController extends Controller
             $buyer->is_verified = true;
             $buyer->save();
 
-            Mail::to($buyer->email)->send(new SignupComplete($buyer));
+            Mail::to($buyer->email)->send(new buyerEmailVerified($buyer));
             return response()->json([
                 'message' => 'Email verified. Proceed to login.',
             ], 200);
@@ -321,7 +321,7 @@ class BuyerController extends Controller
             //$buyer->is_verified = true;
             $buyer->save();
 
-            Mail::to($request->email)->send(new SignupEmail($buyer));
+            Mail::to($request->email)->send(new buyerSignupEmail($buyer));
 
 
             return response()->json([
