@@ -12,32 +12,38 @@ use Illuminate\Queue\SerializesModels;
 class sellerPasswordResetEmail extends Mailable
 {
     use Queueable, SerializesModels;
+    public $seller;
+    public $reset_password;
+    public $firstname;
+    
+
 
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($seller, $reset_password, $firstname)
     {
+        $this->seller = $seller;
+        $this->reset_password = $reset_password;
+        $this->firstname = $firstname;
         //
     }
-
     /**
      * Get the message envelope.
      */
     public function envelope(): Envelope
     {
+       
+
         return new Envelope(
-            subject: 'Seller Password Reset Email',
+            subject: $this->firstname . ' '  .' Your Password Reset Code' 
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            view: 'emails.sellerPasswordResetEmail',
         );
     }
 

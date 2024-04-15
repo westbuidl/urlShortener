@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Confirmation</title>
+    <title>Registration Confirmation</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
@@ -22,6 +22,7 @@
                                     <td style="height:100px; width : 100%; background-color:#1d988c">
 
                                         <img src="https://agroease.com.ng/assets/img/agroease1%202.png" id="agro" style="height: 80px; margin-right: 340px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <!-- <img src="party-popper 1.png" id="par" style="height: 96px; margin-left: -79px; margin-top: -5px;"></i> -->
                                         <br>
                                     </td>
                                 </tr>
@@ -30,14 +31,11 @@
                                     <td style="padding:0 35px; ">
                                         <br>
                                         <br>
-                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$user->firstname}}, </h1><br>
-                                        <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">Welcome to <strong>Agroease!</strong> We're delighted you've chosen to join us. To finalize your registration, please use the following 6-digit verification code:</h1><br>
-                                        <h1 style="background-color:#e0dafb; border-radius: 16px; font-weight:700; margin-top:10px;font-size:16px;font-family:'Gilroy', sans-serif;text-align:center ; line-height:2"><span style="font-weight:700; color:#1a1a1a; font-size:30px;">{{$user->verification_code}}</span> </h1><br>
-                                        <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Important:</strong> <br><br>
-                                            <li>Please do not share this code with anyone else.</li>
-                                            <li>If you didn 't attempt to register for Agroease, please disregard this email.</li> <br><br>If you encounter any difficulties or have any questions, don't hesitate to reach out to our support team at <a href="mailto:support@agroease.ng"
-                                                style="color: #1d988c; text-decoration: none;"><strong>support@agroease.ng</strong></a>
-                                            <br><br>Thank you for choosing <strong>Agroease!</strong> We look forward to serving you. <br><br>Best regards, <br><br>The Agroease Team</h1><br>
+                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$firstname}}, </h1><br>
+                                        <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">Congratulations and welcome to <strong>Agroease!</strong> We're thrilled to have you as a new member of our community.</h1><br>
+                                        <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Have questions or need assistance?</strong> <br><br> If you have any questions or need assistance at any point, don't hesitate to reach out to our support team at <a href="mailto:support@agroease.ng" style="color: #1d988c; text-decoration: none;"><strong>support@agroease.ng</strong></a>
+                                            We're here to help you every step of the way.
+                                            <br><br>Once again, welcome to <strong>Agroease!</strong> We're looking forward to seeing you thrive in our community. <br><br>Best regards, <br><br>The Agroease Team</h1><br>
                                     </td>
                                 </tr>
                                 <tr>

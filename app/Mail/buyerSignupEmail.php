@@ -13,15 +13,17 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 class buyerSignupEmail extends Mailable
 {
     use Queueable, SerializesModels;
-    public $user;
+    public $buyer;
+    public $firstname;
     
 
     /**
      * Create a new message instance.
      */
-    public function __construct($user)
+    public function __construct($buyer, $firstname)
     {
-        $this->user = $user;
+        $this->buyer = $buyer;
+        $this->firstname = $firstname;
         //$this->business = $business;
         //
     }
@@ -31,8 +33,9 @@ class buyerSignupEmail extends Mailable
      */
     public function envelope(): Envelope
     {
+       
         return new Envelope(
-            subject: 'Account setup email verification',
+            subject: $this->firstname . '  '  .'verify your email' 
         );
     }
 
@@ -42,7 +45,7 @@ class buyerSignupEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view:'emails.registeremail',
+            view:'emails.buyerSignupEmail',
         );
     }
 

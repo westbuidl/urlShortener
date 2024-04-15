@@ -13,21 +13,27 @@ class sellerSignupEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $seller;
+    public $firstname;
+    
+
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($seller, $firstname)
     {
+        $this->seller = $seller;
+        $this->firstname = $firstname;
+        //$this->business = $business;
         //
     }
-
     /**
      * Get the message envelope.
      */
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Seller Signup Email',
+            subject: $this->firstname . '  '  .'verify your email' 
         );
     }
 
@@ -37,7 +43,7 @@ class sellerSignupEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            view: 'emails.sellerSignupEmail',
         );
     }
 

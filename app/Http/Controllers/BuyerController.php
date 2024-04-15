@@ -27,19 +27,7 @@ class BuyerController extends Controller
     {
         $buyerId = 'AGB' . rand(00000000, 99999999);
         $verification_code = rand(000000, 999999);
-        /* $request->validate([
-            'firstname'=>'required|min:2|max:100',
-            'lastname'=>'required|min:2|max:100',
-            'email'=>'required|email|unique:users',
-            'phone'=>'required|min:2|max:100',
-            'product'=>'required|min:2|max:100',
-            'country'=>'required|min:2|max:100',
-            'state'=>'required|min:2|max:100',
-            'city'=>'required|min:2|max:100',
-            'zipcode'=>'required|min:2|max:100',
-            'password'=>'required|min:6|max:100',
-            'confirm_password'=>'required|same:password'
-        ]);*/
+       
         $validator = Validator::make($request->all(), [
             'firstname' => 'required|min:2|max:100',
             'lastname' => 'required|min:2|max:100',
@@ -81,7 +69,7 @@ class BuyerController extends Controller
 
         ]);
 
-        Mail::to($request->email)->send(new buyerSignupEmail($buyer));
+        Mail::to($request->email)->send(new buyerSignupEmail($buyer,$buyer->firstname));
 
 
         return response()->json([
@@ -218,7 +206,7 @@ class BuyerController extends Controller
             $buyer->is_verified = true;
             $buyer->save();
 
-            Mail::to($buyer->email)->send(new buyerEmailVerified($buyer));
+            Mail::to($buyer->email)->send(new buyerEmailVerified($buyer, $buyer->firstname));
             return response()->json([
                 'message' => 'Email verified. Proceed to login.',
             ], 200);

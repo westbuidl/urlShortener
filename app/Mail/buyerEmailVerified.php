@@ -2,35 +2,41 @@
 
 namespace App\Mail;
 
+use view;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
 class buyerEmailVerified extends Mailable
 {
     use Queueable, SerializesModels;
-    public $user;
-
+    public $buyer;
+    public $firstname;
+    
 
     /**
      * Create a new message instance.
      */
-    public function __construct($user)
+    public function __construct($buyer, $firstname)
     {
-        $this->user = $user;
+        $this->buyer = $buyer;
+        $this->firstname = $firstname;
+        //$this->business = $business;
         //
     }
+
 
     /**
      * Get the message envelope.
      */
     public function envelope(): Envelope
     {
+       
         return new Envelope(
-            subject: 'Welcome to AgroEase',
+            subject: 'Welcome to AgroEase'.'  '.$this->firstname . '  '  .'your email is verified.' 
         );
     }
 
@@ -40,8 +46,10 @@ class buyerEmailVerified extends Mailable
     public function content(): Content
     {
         return new Content(
-            view:'emails.signupcomplete',
+            view:'emails.buyerEmailVerified',
         );
+
+        
     }
 
     /**

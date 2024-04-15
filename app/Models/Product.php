@@ -34,8 +34,8 @@ class Product extends Model
         
     ];
 
-    public function individuals(){
-        return $this->belongsTo(IndividualAccount::class);
+    public function buyers(){
+        return $this->belongsTo(BuyerModel::class);
     }
 
     public function business(){

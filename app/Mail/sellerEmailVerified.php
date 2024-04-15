@@ -12,22 +12,29 @@ use Illuminate\Queue\SerializesModels;
 class sellerEmailVerified extends Mailable
 {
     use Queueable, SerializesModels;
+    public $seller;
+    public $firstname;
 
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($seller, $firstname)
     {
+        $this->seller = $seller;
+        $this->firstname = $firstname;
+        //$this->business = $business;
         //
     }
+
 
     /**
      * Get the message envelope.
      */
     public function envelope(): Envelope
     {
+       
         return new Envelope(
-            subject: 'Seller Email Verified',
+            subject: 'Welcome to AgroEase'.'  '.$this->firstname . '  '  .'your seller account is verified.' 
         );
     }
 
@@ -37,8 +44,10 @@ class sellerEmailVerified extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            view:'emails.sellerEmailVerified',
         );
+
+        
     }
 
     /**
