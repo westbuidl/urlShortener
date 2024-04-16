@@ -9,29 +9,26 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   /* public function up(): void
+    public function up(): void
     {
-        Schema::create('business_accounts', function (Blueprint $table) {
+        Schema::create('sellers', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->string('businessid');
-            $table->string('businessname');
-            $table->string('businessregnumber');
-            $table->string('businessemail');
+            $table->string('sellerId');
+            $table->string('firstname');
+            $table->string('lastname');
+            $table->string('email');
+            $table->string('product');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('verification_code')->nullable();
             $table->integer('is_verified')->default(value:0);
-            $table->string('businessphone');
-            $table->string('products');
-            $table->string('businessaddress');
+            $table->string('phone');
             $table->string('country');
-            $table->string('city');
             $table->string('state');
+            $table->string('city');
             $table->string('zipcode')->nullable();
             $table->string('password');
             $table->string('profile_photo')->nullable();
-
-           
         });
     }
 
@@ -40,22 +37,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-       // Schema::dropIfExists('business_accounts');
+        Schema::dropIfExists('sellers');
     }
 };
-/*'businessID',
-        'businessname',
-        'businessregnumber',
-        'businessemail',
-        'businessphonenumber',
-        'products',
-        'businessaddress',
-        'country',
-        'city',
-        'state',
-        'zipcode',
-        'password'*/
-
-
-
-        

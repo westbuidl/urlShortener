@@ -143,7 +143,7 @@ class BuyerProfileController extends Controller
 
     //Delete buyer profile picture
 
-    public function deleteBuyerProfilePicture(Request $request)
+    public function deleteBuyerProfilePicture(Request $request, $buyerId)
     {
         try {
 
@@ -153,7 +153,8 @@ class BuyerProfileController extends Controller
 
 
             // Find the buyer in the database
-            $buyer = Buyer::findOrFail($request->buyerId);
+            //$buyer = Buyer::findOrFail($request->buyerId);
+            $buyer = Buyer::where('buyerId', $buyerId)->first();
 
             // Check if the buyer has a profile picture
             if (!empty($buyer->profile_photo)) {

@@ -103,7 +103,7 @@ class SellerProfileController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Buyer Contact information Changed',
+            'message' => 'Seller Contact information Changed',
         ], 200);
     } //End update account settings function
 
@@ -136,14 +136,14 @@ class SellerProfileController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Buyer Billing Address updated',
+            'message' => 'Seller Address updated',
         ], 200);
     } //End update billing address function
 
 
     //Delete buyer profile picture
 
-    public function deleteSellerProfilePicture(Request $request)
+    public function deleteSellerProfilePicture(Request $request, $sellerId)
     {
         try {
 
@@ -153,7 +153,8 @@ class SellerProfileController extends Controller
 
 
             // Find the buyer in the database
-            $seller = Seller::findOrFail($request->sellerId);
+            //$seller = Seller::findOrFail($request->sellerId);
+            $seller = Seller::where('sellerId', $sellerId)->first();
 
             // Check if the buyer has a profile picture
             if (!empty($seller->profile_photo)) {
@@ -173,7 +174,7 @@ class SellerProfileController extends Controller
                 ], 200);
             } else {
                 return response()->json([
-                    'message' => 'no profile picture found for this buyer',
+                    'message' => 'no profile picture found for this Seller',
                 ], 400);
             }
         } catch (\Exception $e) {
@@ -185,6 +186,37 @@ class SellerProfileController extends Controller
         }
     }
 
+    public function getSellerProfile(Request $request, $sellerId)
+    {
+        try {
+            // Retrieve the seller by ID
+            //$seller = Seller::findOrFail($sellerId);
+            $seller = Seller::where('sellerId', $sellerId)->first();
+    
+            // Return seller information along with profile picture
+            $profile_picture = asset('uploads/profile_images/' . $seller->profile_photo);
+    
+            return response()->json([
+                'message' => 'Seller profile found.',
+                'data' => [
+                    'seller' => $seller,
+                    'profile_picture' => $profile_picture
+                ]
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Handle the case when the seller is not found
+            return response()->json([
+                'message' => 'Error: Seller not found with ID ' . $sellerId,
+            ], 404);
+        } catch (\Exception $e) {
+            // Handle any other exceptions that may occur
+            return response()->json([
+                'message' => 'Error: Something went wrong.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
 
 
 
@@ -244,8 +276,3 @@ class SellerProfileController extends Controller
         }
     }*/
 }
-
-
-
-
-

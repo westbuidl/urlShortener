@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     */
+     *//*
    public function up(): void
     {
         Schema::create('categories', function (Blueprint $table) {
@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('categoryImage');
             $table->string('quantity_instock')->nullable();
             $table->string('quantity_sold')->nullable();
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
             
         });
     }
@@ -28,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        //Schema::dropIfExists('categories');
     }
 };

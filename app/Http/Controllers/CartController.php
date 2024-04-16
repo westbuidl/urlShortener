@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cart;
 use App\Models\Product;
-use App\Models\BuyerModel;
+use App\Models\Buyer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -14,11 +14,11 @@ class CartController extends Controller
 {
     //
 
-    public function addToCart(Request $request, $product_id)
+    public function addToCart(Request $request, $productId)
 
 
     {
-        $cart_id = 'CART' . rand(000000000, 999999999);
+        $cartId = 'CART' . rand(000000000, 999999999);
         try {
             // Retrieve the authenticated user's ID
             //$user_id = Auth::id();
@@ -38,7 +38,7 @@ class CartController extends Controller
             ]);
 
 
-            $product = Product::where('product_id', $product_id)->first();
+            $product = Product::where('productId', $productId)->first();
 
             // Check if the product exists
             if (!$product) {
@@ -50,7 +50,7 @@ class CartController extends Controller
 
             // Check if the product already exists in the user's cart
             $existingCartItem = Cart::where('buyerId',  $buyer->buyerId)
-                ->where('product_id', $product_id)
+                ->where('productId', $productId)
                 ->first();
 
             if ($existingCartItem) {
@@ -63,9 +63,9 @@ class CartController extends Controller
 
                 // Create a new Cart instance and populate it
                 $cart = new Cart;
-                $cart->cart_id = $cart_id;
+                $cart->cartId = $cartId;
                 $cart->buyerId = $buyer->buyerId;
-                $cart->product_id = $product_id;
+                $cart->productId = $productId;
                 $cart->product_image = $product->product_image;
                 $cart->product_name = $product->product_name;
                 $cart->product_category = $product->product_category;
@@ -128,7 +128,7 @@ class CartController extends Controller
             foreach ($cartItems as $item) {
                 $totalQuantity += $item->quantity;
                 $totalPrice += $item->selling_price * $item->quantity;
-                $product = Product::find($item->product_id);
+                $product = Product::find($item->productId);
                 $item->product_image_url = asset('uploads/product_images/' . $item->product_image);
             }
 
@@ -155,11 +155,11 @@ class CartController extends Controller
 
     //Delete cart Item
 
-    public function deleteCartItem($cart_id)
+    public function deleteCartItem($cartId)
     {
         try {
             // Retrieve the authenticated user
-            $buyerId = Auth::user();
+            $buyer = Auth::user();
 
             // Ensure that the user is logged in
             if (!Auth::check()) {
@@ -170,8 +170,8 @@ class CartController extends Controller
             }
 
             // Retrieve the cart item
-            // $cartItem = Cart::find($cart_id);
-            $cartItem = Cart::where('cart_id', $cart_id)->first();
+            // $cartItem = Cart::find($cartId);
+            $cartItem = Cart::where('cartId', $cartId)->first();
 
             // Check if the cart item exists
             if (!$cartItem) {
@@ -207,11 +207,11 @@ class CartController extends Controller
 
     //Update cart Item
 
-    public function updateCartItem(Request $request, $cart_id)
+    public function updateCartItem(Request $request, $cartId)
     {
         try {
             // Retrieve the authenticated user
-            $buyerId = Auth::user();
+            $buyer = Auth::user();
 
             // Ensure that the user is logged in
             if (!Auth::check()) {
@@ -222,7 +222,7 @@ class CartController extends Controller
             }
 
             // Retrieve the cart item
-            $cartItem = Cart::where('cart_id', $cart_id)->first();
+            $cartItem = Cart::where('cartId', $cartId)->first();
 
             // Check if the cart item exists
             if (!$cartItem) {
@@ -245,8 +245,8 @@ class CartController extends Controller
                 'new_quantity' => 'required|integer|min:1', // Minimum quantity is 1
             ]);
 
-            // Fetch the product details using the cart item's product_id
-            $product = Product::where('product_id', $cartItem->product_id)->first();
+            // Fetch the product details using the cart item's productId
+            $product = Product::where('productId', $cartItem->productId)->first();
 
             // Check if the product exists
             if (!$product) {

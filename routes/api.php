@@ -71,7 +71,7 @@ Route::post('/logout', [SellerController::class, 'logout'])->middleware('auth:sa
 Route::post('/verifySellerEmail', [SellerController::class, 'verifySellerEmail'])->name('verifySellerEmail');//send verification email
 Route::post('/resendverificationcode', [BuyerController::class, 'resendverificationcode'])->name('resendcode');//resend verification code
 Route::post('/sellerPasswordReset', [SellerController::class, 'sellerPasswordReset'])->name('sellerPasswordReset');//reset buyer password
-Route::get('/getSellerProfile/{buyerId}', [SellerController::class, 'getBuyerProfile'])->middleware(('auth:sanctum')) ->name('getBuyerProfile');//api to get user profile
+Route::get('/getSellerProfile/{sellerId}', [SellerProfileController::class, 'getSellerProfile'])->middleware(('auth:sanctum')) ->name('getSellerProfile');//api to get user profile
 //End Api routes for Buyer account
 
 
@@ -89,8 +89,8 @@ Route::post('/verifyMailBusiness', [BusinessController::class, 'verifyMailBusine
 
 //Add to cart
 Route::post('/storeCart', [CartController::class, 'storeCart'])->name('showCart');//adding to cart api
-Route::get('/viewCart', [CartController::class, 'viewCart'])->middleware('auth:sanctum')->name('viewCart');//adding to cart api
-Route::post('/addToCart/{product_id}', [CartController::class, 'addToCart'])->middleware('auth:sanctum')->name('addToCart');//adding to cart api
+Route::get('/viewCart/{productId}', [CartController::class, 'viewCart'])->middleware('auth:sanctum')->name('viewCart');//adding to cart api
+Route::post('/addToCart/{productId}', [CartController::class, 'addToCart'])->middleware('auth:sanctum')->name('addToCart');//adding to cart api
 Route::post('/checkout/{userID}', [CartController::class, 'checkout'])->middleware('auth:sanctum')->name('checkout');//adding to cart api
 Route::delete('/deleteCartItem/{cart_id}', [CartController::class, 'deleteCartItem'])->middleware('auth:sanctum')->name('deleteCartItem');//adding to cart api
 Route::post('/updateCartItem/{cart_id}', [CartController::class, 'updatecartItem'])->middleware('auth:sanctum')->name('updatecartItem');//adding to cart api
@@ -100,16 +100,16 @@ Route::post('/updateCartItem/{cart_id}', [CartController::class, 'updatecartItem
 
 //--Begin of Product api --//
 Route::post('/addToCart', [ProductController::class, 'addToCart'])->middleware('auth:sanctum')->name('addToCart');// add to cart
-Route::post('/addproduct', [ProductController::class, 'addproduct'])->middleware('auth:sanctum')->name('addproduct');//profile update endpoint for sellers
-Route::get('/viewproduct/{product_id}', [ProductController::class, 'viewproduct'])->middleware('auth:sanctum')->name('viewproduct');//view products
+Route::post('/addProduct', [ProductController::class, 'addProduct'])->middleware('auth:sanctum')->name('addProduct');//profile update endpoint for sellers
+Route::get('/viewProduct/{productId}', [ProductController::class, 'viewProduct'])->middleware('auth:sanctum')->name('viewProduct');//view products
 Route::get('/allProducts', [ProductController::class, 'allProducts'])->name('allProducts');//view products
-Route::get('/productDetails/{product_id}', [ProductController::class, 'productDetails'])->name('productDetails');//productDetails
-Route::post('/editproduct/{product_id}', [ProductController::class, 'editproduct'])->middleware('auth:sanctum')->name('editproduct');//view products
-Route::post('/restockproduct/{product_id}', [ProductController::class, 'restockproduct'])->middleware('auth:sanctum')->name('restockproduct');//restock product
-Route::post('/productstate/{product_id}', [ProductController::class, 'productstate'])->middleware('auth:sanctum')->name('productstate');//make the product active/inactive
-Route::get('/searchproducts/{name}', [ProductController::class, 'searchproducts'])->name('searchproducts');//search products
-Route::delete('/deleteproduct/{product_id}', [ProductController::class, 'deleteproduct'])->middleware('auth:sanctum');//profile update endpoint for sellers
-Route::post('/toggleProductState/{product_id}', [ProductController::class, 'toggleProductState'])->middleware('auth:sanctum')->name('toggleProductState');//toggle product state
+Route::get('/productDetails/{productId}', [ProductController::class, 'productDetails'])->name('productDetails');//productDetails
+Route::post('/editProduct/{productId}', [ProductController::class, 'editProduct'])->middleware('auth:sanctum')->name('editProduct');//view products
+Route::post('/restockProduct/{productId}', [ProductController::class, 'restockproduct'])->middleware('auth:sanctum')->name('restockproduct');//restock product
+Route::post('/productstate/{productId}', [ProductController::class, 'productstate'])->middleware('auth:sanctum')->name('productstate');//make the product active/inactive
+Route::get('/searchProducts/{name}', [ProductController::class, 'searchProducts'])->name('searchProducts');//search products
+Route::delete('/deleteProduct/{productId}', [ProductController::class, 'deleteProduct'])->middleware('auth:sanctum');//profile update endpoint for sellers
+Route::post('/toggleProductState/{productId}', [ProductController::class, 'toggleProductState'])->middleware('auth:sanctum')->name('toggleProductState');//toggle product state
 Route::get('/hotDeals', [ProductController::class, 'hotDeals'])->name('hotDeals');//toggle product state
 Route::get('/popularProducts', [ProductController::class, 'popularProducts'])->name('popularProducts');//toggle product state
 //--End of Product api--//

@@ -11,12 +11,16 @@ return new class extends Migration
      *//*
     public function up(): void
     {
-        Schema::create('buyers', function (Blueprint $table) {
+        Schema::table('sellers', function (Blueprint $table) {
+
+
             $table->id();
-            $table->string('buyerId');
+            $table->timestamps();
+            $table->string('sellerId');
             $table->string('firstname');
             $table->string('lastname');
             $table->string('email');
+            $table->string('product');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('verification_code')->nullable();
             $table->integer('is_verified')->default(value:0);
@@ -27,16 +31,17 @@ return new class extends Migration
             $table->string('zipcode')->nullable();
             $table->string('password');
             $table->string('profile_photo')->nullable();
-           // $table->string('password');
-            $table->timestamps();
+            //
         });
     }
 
     /**
      * Reverse the migrations.
      */
-   // public function down(): void
-   // {
-       // Schema::dropIfExists('buyers');
-   // }
+    public function down(): void
+    {
+       // Schema::table('sellers', function (Blueprint $table) {
+            //
+       // });
+    }
 };

@@ -8,17 +8,17 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     */
+     *//*//
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('product_id');
-            $table->string('user_id');
+            $table->string('productId');
+            $table->string('sellerId');
             $table->string('product_name');
+            $table->string('categoryID');
             $table->string('product_category');
             $table->string('selling_price');
-            $table->string('cost_price');
             $table->string('quantityin_stock');
             $table->string('unit');
             $table->string('product_description');
@@ -34,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('products');
+       // Schema::dropIfExists('products');
     }
 };

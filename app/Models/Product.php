@@ -17,12 +17,11 @@ class Product extends Model
     
 
     protected $fillable = [
-        'product_id',
-        'user_id',
+        'productId',
+        'sellerId',
         'product_name',
         'product_category',
         'selling_price',
-        'cost_price',
         'quantityin_stock',
         'unit',
         'product_description',
@@ -34,8 +33,8 @@ class Product extends Model
         
     ];
 
-    public function buyers(){
-        return $this->belongsTo(BuyerModel::class);
+    public function sellers(){
+        return $this->belongsTo(Seller::class);
     }
 
     public function business(){
@@ -51,7 +50,7 @@ class Product extends Model
     }
     public function category()
     {
-        return $this->belongsTo(Category::class,  'category_id', 'id');
+        return $this->belongsTo(Category::class,  'categoryID', 'id');
     }
    
 }

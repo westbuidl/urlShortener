@@ -9,25 +9,15 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class productRestockEmail extends Mailable
+class companySellerPasswordResetEmail extends Mailable
 {
     use Queueable, SerializesModels;
-    public $seller;
-    public $product;
-    public $firstname;
-    public $product_name;
-    public $quantityin_stock;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($seller, $product, $firstname,$product_name,$quantityin_stock)
+    public function __construct()
     {
-        $this->seller = $seller;
-        $this->product = $product;
-        $this->firstname = $firstname;
-        $this->product_name = $product_name;
-        $this->quantityin_stock = $quantityin_stock;
         //
     }
 
@@ -37,7 +27,7 @@ class productRestockEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: $this->quantityin_stock . ' ' .$this->product_name. ' '  .'added to your inventory' 
+            subject: 'Company Seller Password Reset Email',
         );
     }
 
@@ -47,7 +37,7 @@ class productRestockEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view:'emails.productRestockEmail',
+            view: 'view.name',
         );
     }
 

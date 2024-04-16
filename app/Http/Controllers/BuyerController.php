@@ -255,7 +255,8 @@ class BuyerController extends Controller
     {
         // Retrieve the authenticated user
         // $user = $request->user();
-        $buyer = Buyer::find($buyerId);
+        //$buyer = Buyer::find($buyerId);
+        $buyer = Buyer::where('buyerId', $buyerId)->first();
 
         // Check if the user exists
         //if ($user && $user->id == $userID) 

@@ -8,8 +8,8 @@ use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Mail\ProductAddEmail;
-use App\Mail\Productrestockemail;
-use App\Models\BuyerModel;
+use App\Mail\productRestockEmail;
+use App\Models\Seller;
 use App\Mail\OrderConfirmationMail;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -32,22 +32,22 @@ class ProductController extends Controller
 
 
     //function for adding products
-    public function addproduct(Request $request)
+    public function addProduct(Request $request)
 
 
 
     {
         // $user = Auth::user();
-        $user = $request->user();
-        if ($user) {
-            $firstname = $user->firstname;
-            $lastname = $user->lastname;
-            $userEmail = $user->email;
-            //$product_id = IdGenerator::generate(['table' => 'Product','field'=>'product_id','length' => 6, 'prefix' =>'AGN']);
-            $product_id = 'AGP' . rand(000000, 999999);
+        $seller = $request->user();
+        if ($seller) {
+            $firstname = $seller->firstname;
+            $lastname = $seller->lastname;
+            $sellerEmail = $seller->email;
+            //$productId = IdGenerator::generate(['table' => 'Product','field'=>'productId','length' => 6, 'prefix' =>'AGN']);
+            $productId = 'AGP' . rand(000000, 999999);
 
             $validator = Validator::make($request->all(), [
-                //'product_id' => 'required|min:2|max:100',
+                //'productId' => 'required|min:2|max:100',
                 'product_name' => 'required|min:2|max:100',
                 'product_category' => 'required|min:2|max:100',
                 'selling_price' => 'required|min:2|max:100',
@@ -95,20 +95,20 @@ class ProductController extends Controller
 
             //$product_imagename = time() . '.' . $request->product_image->extension();
             //$request->product_image->move(public_path('/uploads/product_images'), $product_imagename);
-            // $product_id = str_pad(mt_rand(1, 999999), 6, '0', STR_PAD_LEFT);
+            // $productId = str_pad(mt_rand(1, 999999), 6, '0', STR_PAD_LEFT);
 
-            //$product_id = IdGenerator::generate($config);
-            //$product_id = IdGenerator::generate(['products' => 'products', 'length' => 10, 'prefix' =>'AGN-']);
+            //$productId = IdGenerator::generate($config);
+            //$productId = IdGenerator::generate(['products' => 'products', 'length' => 10, 'prefix' =>'AGN-']);
 
             $product = Product::create([
 
                 //str_rand(6 only digit)->unique;
-                //'product_id' => $request->product_id = str_rand(6 only digit)->unique;
+                //'productId' => $request->productId = str_rand(6 only digit)->unique;
 
 
 
-                'product_id' => $product_id,
-                'user_id' => $request->user()->userID,
+                'productId' => $productId,
+                'sellerId' => $request->user()->sellerId,
                 'product_name' => $request->product_name,
                 'product_category' => $request->product_category,
                 'categoryID' => $categoryID,
@@ -133,12 +133,12 @@ class ProductController extends Controller
             // Add image URLs to the product object
             $product->image_urls = $imageURLs;
 
-            $product->load('individuals:userID', 'products');
+            $product->load('sellers:sellerId', 'products');
             //$userEmail = IndividualAccount::find($request->user()->id)->email;
 
             // Mail::to($userEmail)->send(new ProductAddEmail($product));
 
-            Mail::to($userEmail)->send(new ProductAddEmail($product, $product, $firstname, $product->product_name, $product->quantityin_stock));
+            Mail::to($sellerEmail)->send(new ProductAddEmail($product, $product, $firstname, $product->product_name, $product->quantityin_stock));
             return response()->json([
                 'message' => 'Product Successfully added',
                 'data' => $product
@@ -147,10 +147,10 @@ class ProductController extends Controller
     }
 
     //Function to view products by id begin
-    public function viewproduct(Request $request, string $product_id)
+    public function viewProduct(Request $request, string $productId)
     {
         // Find the product by its ID
-        $product = Product::where('product_id', $product_id)->first();
+        $product = Product::where('productId', $productId)->first();
 
         // Check if the product exists
         if ($product) {
@@ -189,11 +189,11 @@ class ProductController extends Controller
 
 
     //view product details
-    public function productDetails(Request $request, string $product_id)
+    public function productDetails(Request $request, string $productId)
     {
         try {
             // Find the product by its ID
-            $product = Product::where('product_id', $product_id)->first();
+            $product = Product::where('productId', $productId)->first();
 
             // Check if the product exists
             if ($product) {
@@ -273,13 +273,13 @@ class ProductController extends Controller
 
 
 
-    public function searchproducts($search_query = null)
+    public function searchProducts($search_query = null)
     {
         $query = Product::query();
         // Search for products with names containing the given substring
         if ($search_query !== null) {
             $query->where(function ($query) use ($search_query) {
-                $query->where('product_id', $search_query)
+                $query->where('productId', $search_query)
                     ->orWhere('product_name', 'like', '%' . $search_query . '%');
             });
         }
@@ -318,11 +318,11 @@ class ProductController extends Controller
 
     //Function to delete product
 
-    public function deleteproduct(string $product_id, Request $request)
+    public function deleteProduct(string $productId, Request $request)
     {
         try {
             // Find the product in the database
-            $product = Product::where('product_id', $product_id)->first();
+            $product = Product::where('productId', $productId)->first();
 
             // Check if the product exists
             if (!$product) {
@@ -370,11 +370,11 @@ class ProductController extends Controller
 
 
 
-    /*public function deleteproduct(string $product_id)
+    /*public function deleteproduct(string $productId)
     {
         try {
             // Find the product in the database
-            $product = Product::where('product_id', $product_id)->first();
+            $product = Product::where('productId', $productId)->first();
     
             // Check if the product exists
             if (!$product) {
@@ -418,10 +418,10 @@ class ProductController extends Controller
 
 
     //Function to edit product
-    public function editproduct(Request $request, string $product_id)
+    public function editProduct(Request $request, string $productId)
     {
         // Find the product by its ID
-        $product = Product::where('product_id', $product_id)->first();
+        $product = Product::where('productId', $productId)->first();
 
         // Check if the product exists
         if (!$product) {
@@ -432,7 +432,7 @@ class ProductController extends Controller
         }
 
         // Check if the authenticated user is the owner of the product
-        if ($request->user()->userID != $product->user_id) {
+        if ($request->user()->sellerId != $product->sellerId) {
             // If the user is not the owner, return an error message
             return response()->json([
                 'message' => 'You are not authorized to edit this product.',
@@ -507,7 +507,7 @@ class ProductController extends Controller
         $product->update($data);
 
         // Fetch the updated product with image URLs
-        $product = Product::where('product_id', $product_id)->first();
+        $product = Product::where('productId', $productId)->first();
         $imageURLs = [];
         foreach (explode(',', $product->product_image) as $image) {
             $imageURLs[] = asset('uploads/product_images/' . $image);
@@ -525,15 +525,15 @@ class ProductController extends Controller
 
 
     //Function to restock product
-    public function restockproduct(Request $request, string $product_id)
+    public function restockProduct(Request $request, string $productId)
     {
         // Find the product by its ID
-        $product = Product::where('product_id', $product_id)->first();
+        $product = Product::where('productId', $productId)->first();
 
         // Check if the product exists
         if ($product) {
             // Check if the authenticated user is the owner of the product
-            if ($request->user()->userID == $product->user_id) {
+            if ($request->user()->sellerId == $product->sellerId) {
                 // Validate the request data
                 $validator = Validator::make($request->all(), [
                     'new_quantityin_stock' => 'required|min:2|max:100',
@@ -556,6 +556,7 @@ class ProductController extends Controller
                     'cost_price' => $request->new_cost_price,
                 ]);
 
+                //Mail::to($request->email)->send(new productRestockEmail($product, $product, $request->firstname, $product->product_name, $product->quantityin_stock));
                 // Return success response
                 return response()->json([
                     'message' => 'Restock successful',
@@ -580,10 +581,10 @@ class ProductController extends Controller
 
 
     // Function to toggle product state (active/inactive)
-    public function toggleProductState(Request $request, string $product_id)
+    public function toggleProductState(Request $request, string $productId)
     {
         // Find the product by its ID
-        $product = Product::where('product_id', $product_id)->first();
+        $product = Product::where('productId', $productId)->first();
 
         // Check if the product exists
         if ($product) {
@@ -653,7 +654,7 @@ class ProductController extends Controller
         try {
             // Query to fetch popular products based on the number of times added to the cart
             $popularProduct = Product::selectRaw('products.*, COUNT(carts.id) as cart_count')
-                ->leftJoin('carts', 'products.id', '=', 'carts.product_id')
+                ->leftJoin('carts', 'products.id', '=', 'carts.productId')
                 ->groupBy('products.id')
                 ->orderByDesc('cart_count')
                 ->limit(5) // Limit to the top 5 popular products
@@ -725,7 +726,7 @@ class ProductController extends Controller
             // Add the transaction to the Order database
             $order = new Order;
             $order->userID = $user_id;
-            $order->productID = $product_id;
+            $order->productID = $productId;
             $order->orderID = $order_id;
             $order->productName = $product->product_name;
             $order->productDescription = $product->product_description;
