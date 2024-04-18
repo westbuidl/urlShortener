@@ -20,7 +20,7 @@
                                 <tr>
                                     <td style="height:100px; width : 100%; background-color:#1d988c">
 
-                                        <img src="https://agroease.com.ng/assets/img/agroease1%202.png" style="height: 80px; margin-right: 340px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <img src="https://agroease.trade/assets/img/agroease1%202.png" style="height: 80px; margin-right: 340px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
                                         <br>
                                     </td>
                                 </tr>
@@ -42,7 +42,7 @@
 
                                         <br>
                                         <h1 style="color:#828282;padding:0 15px; margin-right:20px;font-weight:400; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;vertical-align:start; line-height:2">Powered by</h1>
-                                        <img src="https://agroease.com.ng/assets/img/agroease1.png" style="height: 80px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <img src="https://agroease.trade/assets/img/agroease1.png" style="height: 80px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
 
                                         <h1 style="color:#828282;padding:0 15px; margin-right:20px;font-weight:400; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;vertical-align:start; line-height:2">Copyright © 2024 All rights reserved</h1>
                                         <br>

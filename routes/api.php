@@ -11,6 +11,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BuyerProfileController;
+use App\Http\Controllers\CompanyBuyerController;
+use App\Http\Controllers\CompanySellerController;
 use App\Http\Controllers\SellerProfileController;
 
 /*
@@ -76,7 +78,31 @@ Route::get('/getSellerProfile/{sellerId}', [SellerProfileController::class, 'get
 
 
 
+//---Begin Api routes for CompanyBuyer --//
+Route::post('/companyBuyerSignup', [CompanyBuyerController::class, 'companyBuyerSignup'])->name('companyBuyerSignup');//creating account for business
+Route::post('/companyBuyerLogin', [CompanyBuyerController::class, 'companyBuyerLogin'])->name('companyBuyerLogin');//business account login
+Route::post('/companyBuyerChangePassword', [CompanyBuyerController::class, 'companyBuyerChangePassword'])->middleware('auth:sanctum')->name('companyBuyerChangePassword');//change password endpoint for sellers
+Route::delete('/companyBuyerDeleteProfilePicture/{companyBuyerId}', [CompanyBuyerController::class, 'companyBuyerDeleteProfilePicture'])->middleware('auth:sanctum')->name('companyBuyerDeleteProfilePicture');//profile image update endpoint
+Route::post('/companyBuyerUpdateProfile', [CompanyBuyerController::class, 'companyBuyerUpdateProfile'])->middleware('auth:sanctum')->name('companyBuyerUpdateProfile');// seller profile image update endpoint 
+Route::post('/companyBuyerAccountSetting', [CompanyBuyerController::class, 'companyBuyerAccountSetting'])->middleware('auth:sanctum')->name('companyBuyerAccountSetting');//profile update endpoint for sellers
+Route::post('/companyBuyerResetPassword', [CompanyBuyerController::class, 'companyBuyerResetPassword'])->name('companyBuyerResetPassword');//resend verification code
+Route::post('/companyBuyerVerifyMail', [CompanyBuyerController::class, 'companyBuyerVerifyMail'])->name('companyBuyerVerifyMail');//send verification email for business account setup
+
+
+//---Begin Api routes for CompanyBuyer --//
+Route::post('/companySellerSignup', [CompanySellerController::class, 'business'])->name('business');//creating account for business
+Route::post('/companySellerLogin', [CompanySellerController::class, 'companySellerLogin'])->name('companySellerLogin');//business account login
+Route::post('/companySellerChangePassword', [CompanySellerController::class, 'companySellerChangePassword'])->middleware('auth:sanctum')->name('companySellerChangePassword');//change password endpoint for sellers
+Route::delete('/companySellerDeleteProfilePicture/{companySellerId}', [CompanySellerController::class, 'companySellerDeleteProfilePicture'])->middleware('auth:sanctum')->name('companySellerDeleteProfilePicture');//profile image update endpoint
+Route::post('/companySellerUpdateProfile', [CompanySellerController::class, 'companySellerUpdateProfile'])->middleware('auth:sanctum')->name('companySellerUpdateProfile');// seller profile image update endpoint 
+Route::post('/companySellerAccountSetting', [CompanySellerController::class, 'companySellerAccountSetting'])->middleware('auth:sanctum')->name('companySellerAccountSetting');//profile update endpoint for sellers
+Route::post('/companySellerResetPassword', [CompanySellerController::class, 'companySellerResetPassword'])->name('companySellerResetPassword');//resend verification code
+Route::post('/companySellerVerifyMail', [CompanySellerController::class, 'companySellerVerifyMail'])->name('companySellerVerifyMail');//send verification email for business account setup
+
 //---Begin Api routes for Business account functions --//
+
+
+//---Begin Api routes for CompanySeller --//
 Route::post('/business', [BusinessController::class, 'business'])->name('business');//creating account for business
 Route::post('/businesslogin', [BusinessController::class, 'businesslogin'])->name('businesslogin');//business account login
 Route::post('/seller_change_password', [SellerProfileController::class, 'seller_change_password'])->middleware('auth:sanctum')->name('seller_change_password');//change password endpoint for sellers
@@ -86,6 +112,9 @@ Route::post('/seller_account_setting', [SellerProfileController::class, 'seller_
 Route::post('/businessresetpassword', [BusinessController::class, 'businessresetpassword'])->name('businessresetpassword');//resend verification code
 Route::post('/verifyMailBusiness', [BusinessController::class, 'verifyMailBusiness'])->name('verifyMailBusiness');//send verification email for business account setup
 //---Begin Api routes for Business account functions --//
+
+
+
 
 //Add to cart
 Route::post('/storeCart', [CartController::class, 'storeCart'])->name('showCart');//adding to cart api
