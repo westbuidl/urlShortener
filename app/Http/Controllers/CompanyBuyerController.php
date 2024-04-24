@@ -3,15 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Mail\Bpasswordreset;
+use App\Models\CompanyBuyer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use App\Mail\companyBuyerEmailVerified;
-use App\Mail\companyBuyerPasswordResetEmail;
-use App\Mail\companyBuyerSignupEmail;
-use App\Models\CompanyBuyer;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\companyBuyerSignupEmail;
+use App\Mail\companyBuyerEmailVerified;
+use App\Mail\resendCompanyBuyerEmailAuth;
 use Illuminate\Support\Facades\Validator;
+use App\Mail\companyBuyerPasswordResetEmail;
 
 class CompanyBuyerController extends Controller
 {
@@ -216,4 +217,40 @@ class CompanyBuyerController extends Controller
         ], 200);
     }
 
+    public function resendCompanyBuyerEmailAuth(Request $request, $email)
+    {
+        // Retrieve the email from the request body
+       // $email = $request->input('email');
+    
+        // Validate the email address format
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return response()->json([
+                'message' => 'Invalid email address. Please provide a valid email address.',
+            ], 400);
+        }
+    
+        // Retrieve the buyer by email from the database
+        $companybuyer = CompanyBuyer::where('email', $email)->first();
+    
+        // Check if buyer exists
+        if (!$companybuyer) {
+            return response()->json([
+                'message' => 'User not found for the provided email address.',
+            ], 404);
+        }
+    
+        // Generate verification code
+        $verification_code = rand(100000, 999999);
+    
+        // Update buyer's verification code
+        $companybuyer->verification_code = $verification_code;
+        $companybuyer->save();
+    
+        // Send verification email
+        Mail::to($email)->send(new resendCompanyBuyerEmailAuth($companybuyer, $verification_code));
+    
+        return response()->json([
+            'message' => 'Verification code sent to the provided email address.',
+        ], 200);
+    }
 }

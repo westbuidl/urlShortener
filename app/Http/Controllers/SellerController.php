@@ -258,7 +258,7 @@ class SellerController extends Controller
         $seller->save();
     
         // Send verification email
-        Mail::to($email)->send(new sellerSignupEmail($seller, $verification_code));
+        Mail::to($email)->send(new sellerSignupEmail($seller, $verification_code, $seller->firstname));
     
         return response()->json([
             'message' => 'Verification code sent to the provided email address.',

@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\buyerPasswordResetEmail;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\MailController;
+use App\Mail\resendBuyerEmailAuth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Validator;
@@ -326,7 +327,7 @@ class BuyerController extends Controller
         $buyer->save();
     
         // Send verification email
-        Mail::to($email)->send(new buyerSignupEmail($buyer, $verification_code));
+        Mail::to($email)->send(new resendBuyerEmailAuth($buyer, $verification_code, $buyer->firstname));
     
         return response()->json([
             'message' => 'Verification code sent to the provided email address.',

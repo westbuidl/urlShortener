@@ -4,15 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Mail\Bpasswordreset;
 use Illuminate\Http\Request;
+use App\Models\CompanySeller;
 use Illuminate\Support\Carbon;
 use App\Models\BusinessAccount;
 use App\Mail\BusinessSignupEmail;
 use App\Mail\BusinessWelcomeMail;
-use App\Mail\companySellerEmailVerified;
-use App\Models\CompanySeller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\companySellerSignupEmail;
+use App\Mail\companySellerEmailVerified;
+use App\Mail\resendCompanyBuyerEmailAuth;
 use Illuminate\Support\Facades\Validator;
+use App\Mail\resendCompanySellerEmailAuth;
 
 class CompanySellerController extends Controller
 {
@@ -219,4 +222,41 @@ class CompanySellerController extends Controller
         ], 200);
     }
 
+    public function resendCompanySellerEmailAuth(Request $request, $email)
+    {
+        // Retrieve the email from the request body
+       // $email = $request->input('email');
+    
+        // Validate the email address format
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return response()->json([
+                'message' => 'Invalid email address. Please provide a valid email address.',
+            ], 400);
+        }
+    
+        // Retrieve the buyer by email from the database
+        $companyseller = CompanySeller::where('email', $email)->first();
+    
+        // Check if buyer exists
+        if (!$companyseller) {
+            return response()->json([
+                'message' => 'User not found for the provided email address.',
+            ], 404);
+        }
+    
+        // Generate verification code
+        $verification_code = rand(100000, 999999);
+    
+        // Update buyer's verification code
+        $companyseller->verification_code = $verification_code;
+        $companyseller->save();
+    
+        // Send verification email
+        Mail::to($email)->send(new resendCompanySellerEmailAuth($companyseller, $verification_code));
+    
+        return response()->json([
+            'message' => 'Verification code sent to the provided email address.',
+        ], 200);
+    }
 }
+
