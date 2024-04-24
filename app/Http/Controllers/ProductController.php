@@ -44,7 +44,7 @@ class ProductController extends Controller
             $lastname = $seller->lastname;
             $sellerEmail = $seller->email;
             //$productId = IdGenerator::generate(['table' => 'Product','field'=>'productId','length' => 6, 'prefix' =>'AGN']);
-            $productId = 'AGP' . rand(000000, 999999);
+            $productId = 'AGP' . rand(100000, 999999);
 
             $validator = Validator::make($request->all(), [
                 //'productId' => 'required|min:2|max:100',
@@ -52,7 +52,7 @@ class ProductController extends Controller
                 'product_category' => 'required|min:2|max:100',
                 'selling_price' => 'required|min:2|max:100',
                 'cost_price' => 'required|min:2|max:100',
-                'quantityin_stock' => 'required|min:2|max:100',
+                'quantityin_stock' => 'required|min:1|max:100',
                 'unit' => 'required|min:1|max:100',
                 'product_description' => 'required|min:2|max:255',
                 'product_image' => 'required|array|min:2|max:5',

@@ -8,27 +8,28 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *//*
+     */
     public function up(): void
     {
-        Schema::create('buyers', function (Blueprint $table) {
+        Schema::create('company_sellers', function (Blueprint $table) {
             $table->id();
-            $table->string('buyerId');
-            $table->string('firstname');
-            $table->string('lastname');
-            $table->string('email');
+            $table->string('companySellerId');
+            $table->string('companyname');
+            $table->string('companyregnumber');
+            $table->string('companyemail');
+            $table->string('product');
+            $table->string('product_category');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('verification_code')->nullable();
             $table->integer('is_verified')->default(value:0);
-            $table->string('phone');
+            $table->string('companyphone');
+            $table->string('companyaddress');
             $table->string('country');
             $table->string('state');
             $table->string('city');
-             $table->string('address');
             $table->string('zipcode')->nullable();
             $table->string('password');
             $table->string('profile_photo')->nullable();
-           // $table->string('password');
             $table->timestamps();
         });
     }
@@ -36,8 +37,8 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-   // public function down(): void
-   // {
-       // Schema::dropIfExists('buyers');
-   // }
+    public function down(): void
+    {
+        Schema::dropIfExists('company_sellers');
+    }
 };

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *//*//
+     *//*
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('product_name');
             $table->string('categoryID');
             $table->string('product_category');
+            $table->string('cost_price');
             $table->string('selling_price');
             $table->string('quantityin_stock');
             $table->string('unit');

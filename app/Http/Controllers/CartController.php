@@ -18,7 +18,7 @@ class CartController extends Controller
 
 
     {
-        $cartId = 'CART' . rand(000000000, 999999999);
+        $cartId = 'CART' . rand(100000000, 999999999);
         try {
             // Retrieve the authenticated user's ID
             //$user_id = Auth::id();

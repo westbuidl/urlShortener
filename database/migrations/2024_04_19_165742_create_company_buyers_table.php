@@ -8,30 +8,27 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *//*
+     */
     public function up(): void
     {
-        Schema::table('sellers', function (Blueprint $table) {
-
-
+        Schema::create('company_buyers', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
-            $table->string('sellerId');
-            $table->string('firstname');
-            $table->string('lastname');
-            $table->string('email');
-            $table->string('product');
+            $table->string('companyBuyerId');
+            $table->string('companyname');
+            $table->string('companyregnumber');
+            $table->string('companyemail');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('verification_code')->nullable();
             $table->integer('is_verified')->default(value:0);
-            $table->string('phone');
+            $table->string('companyphone');
+            $table->string('companyaddress');
             $table->string('country');
             $table->string('state');
             $table->string('city');
             $table->string('zipcode')->nullable();
             $table->string('password');
             $table->string('profile_photo')->nullable();
-            //
+            $table->timestamps();
         });
     }
 
@@ -40,8 +37,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-       // Schema::table('sellers', function (Blueprint $table) {
-            //
-       // });
+        Schema::dropIfExists('company_buyers');
     }
 };

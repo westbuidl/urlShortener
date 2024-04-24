@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Mail\Bpasswordreset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use App\Models\BusinessAccount;
-use App\Mail\BusinessSignupEmail;
-use App\Mail\BusinessWelcomeMail;
+use App\Mail\companyBuyerEmailVerified;
+use App\Mail\companyBuyerPasswordResetEmail;
+use App\Mail\companyBuyerSignupEmail;
 use App\Models\CompanyBuyer;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -22,7 +22,7 @@ class CompanyBuyerController extends Controller
     {
 
         $companyBuyerId = 'AGCB' . rand(0000, 9999);
-        $verification_code = rand(000000, 999999);
+        $verification_code = rand(100000, 999999);
 
 
         /* $request->validate([
@@ -40,12 +40,12 @@ class CompanyBuyerController extends Controller
          ]);*/
         $validator = Validator::make($request->all(), [
             //'businessID'=>'required|min:2|max:100',
-            'businessname' => 'required|min:2|max:100',
-            'businessregnumber' => 'required|unique:business_accounts',
-            'businessemail' => 'required|unique:business_accounts',
-            'businessphone' => 'required|min:2|max:100|unique:business_accounts',
-            'products' => 'required|min:2|max:100',
-            'businessaddress' => 'required|min:2|max:100',
+            'companyname' => 'required|min:2|max:100',
+            'companyregnumber' => 'required|unique:company_buyers',
+            'companyemail' => 'required|unique:company_buyers',
+            'companyphone' => 'required|min:2|max:100|unique:company_buyers',
+            //'products' => 'required|min:2|max:100',
+            'companyaddress' => 'required|min:2|max:100',
             'country' => 'required|min:2|max:100',
             'city' => 'required|min:2|max:100',
             'state' => 'required|min:2|max:100',
@@ -62,13 +62,13 @@ class CompanyBuyerController extends Controller
         }
 
         $companyBuyer = CompanyBuyer::create([
-            'businessID' => $companyBuyerId,
-            'businessname' => $request->businessname,
-            'businessregnumber' => $request->businessregnumber,
-            'businessemail' => $request->businessemail,
-            'businessphone' => $request->businessphone,
+            'companyBuyerId' => $companyBuyerId,
+            'companyname' => $request->companyname,
+            'companyregnumber' => $request->companyregnumber,
+            'companyemail' => $request->companyemail,
+            'companyphone' => $request->companyphone,
             'products' => $request->products,
-            'businessaddress' => $request->businessaddress,
+            'companyaddress' => $request->companyaddress,
             'country' => $request->country,
             'city' => $request->city,
             'state' => $request->state,
@@ -78,9 +78,9 @@ class CompanyBuyerController extends Controller
             'verification_code' => $verification_code
             //'confirm_password'=>'required|same:password'
         ]);
-        Mail::to($request->businessemail)->send(new BusinessSignupEmail($companyBuyer));
+        Mail::to($request->companyemail)->send(new companyBuyerSignupEmail($companyBuyer, $companyBuyer->companyname, $companyBuyer->companyregnumber));
         return response()->json([
-            'message' => 'Business registration successful Check email for verification code',
+            'message' => 'Company registration successful Check email for verification code',
             'data' => $companyBuyer
         ], 200);
     }
@@ -100,7 +100,7 @@ class CompanyBuyerController extends Controller
             ], 422);
         }
 
-        $companyBuyer = CompanyBuyer::where('businessemail', $request->email)->first();
+        $companyBuyer = CompanyBuyer::where('companyemail', $request->email)->first();
 
         if ($companyBuyer) {
             if ($companyBuyer->email_verified_at) {
@@ -108,8 +108,8 @@ class CompanyBuyerController extends Controller
                     $token = $companyBuyer->createToken('auth-token')->plainTextToken;
 
                     // Store user ID in session
-                    session(['userID' => $companyBuyer->businessid]);
-                    session(['email' => $companyBuyer->businessemail]);
+                    session(['companyBuyerId' => $companyBuyer->companyBuyerId]);
+                    session(['email' => $companyBuyer->companyemail]);
 
                     return response()->json([
                         'message' => 'Login Successful',
@@ -172,9 +172,9 @@ class CompanyBuyerController extends Controller
             $companyBuyer->is_verified = true;
             $companyBuyer->save();
 
-            Mail::to($companyBuyer->businessemail)->send(new BusinessWelcomeMail($companyBuyer));
+            Mail::to($companyBuyer->companyemail)->send(new companyBuyerEmailVerified($companyBuyer, $companyBuyer->companyname, $companyBuyer->companyregnumber));
             return response()->json([
-                'message' => 'Email verified. Proceed to login.',
+                'message' => 'Company email verified. Proceed to login.',
             ], 200);
         } else {
             // If individual user is not found or OTP is incorrect
@@ -189,7 +189,7 @@ class CompanyBuyerController extends Controller
     {
 
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email|exists:business_accounts,businessemail',
+            'email' => 'required|email|exists:company_buyers,companyemail',
         ]);
 
         if ($validator->fails()) {
@@ -201,7 +201,7 @@ class CompanyBuyerController extends Controller
         //Generate new code for password
         $reset_password = rand(10000000, 99999999);
 
-        $companyBuyer = CompanyBuyer::where('businessemail', $request->email)->first();
+        $companyBuyer = CompanyBuyer::where('companyemail', $request->email)->first();
        // $individualuser->password = $reset_password;
          $companyBuyer->update([
                 'password' => Hash::make($reset_password)
@@ -209,7 +209,7 @@ class CompanyBuyerController extends Controller
         
         $companyBuyer->save();
 
-        Mail::to($companyBuyer->businessemail)->send(new Bpasswordreset($companyBuyer,$reset_password));
+        Mail::to($companyBuyer->companyemail)->send(new companyBuyerPasswordResetEmail($companyBuyer,$reset_password));
         return response()->json([
             'message' => 'Password reset code sent.',
             'password_data' => $reset_password

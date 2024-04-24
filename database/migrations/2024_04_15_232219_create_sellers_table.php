@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     */
+     *//*
     public function up(): void
     {
         Schema::create('sellers', function (Blueprint $table) {
@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('country');
             $table->string('state');
             $table->string('city');
+             $table->string('address');
             $table->string('zipcode')->nullable();
             $table->string('password');
             $table->string('profile_photo')->nullable();

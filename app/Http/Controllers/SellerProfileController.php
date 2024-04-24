@@ -84,37 +84,8 @@ class SellerProfileController extends Controller
         $validator = Validator::make($request->all(), [
             'firstname' => 'nullable|max:100',
             'lastname' => 'nullable|max:100',
-            'email' => 'nullable|max:100',
-            'phone' => 'nullable|max:100'
-        ]);
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validations failed',
-                'error' => $validator->errors()
-            ], 422);
-        }
-        $seller = $request->user();
-        $seller->update([
-            'firstname' => $request->firstname,
-            'lastname' => $request->lastname,
-            'email' => $request->email,
-            'phone' => $request->phone
-
-        ]);
-
-        return response()->json([
-            'message' => 'Seller Contact information Changed',
-        ], 200);
-    } //End update account settings function
-
-
-
-
-    //Begin update billing address function
-    public function updateSellerAddress(Request $request)
-    {
-
-        $validator = Validator::make($request->all(), [
+            //'email' => 'nullable|max:100',
+            'phone' => 'nullable|max:100',
             'country' => 'nullable|max:100',
             'state' => 'nullable|max:100',
             'city' => 'nullable|max:100',
@@ -128,17 +99,27 @@ class SellerProfileController extends Controller
         }
         $seller = $request->user();
         $seller->update([
+            'firstname' => $request->firstname,
+            'lastname' => $request->lastname,
+            //'email' => $request->email,
+            'phone' => $request->phone,
             'country' => $request->country,
             'state' => $request->state,
             'city' => $request->city,
             'zipcode' => $request->zipcode
+            
 
         ]);
 
         return response()->json([
-            'message' => 'Seller Address updated',
+            'message' => 'Seller Contact information Changed',
         ], 200);
-    } //End update billing address function
+    } //End update account settings function
+
+
+
+
+   
 
 
     //Delete buyer profile picture

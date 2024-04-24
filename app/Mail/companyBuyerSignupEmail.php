@@ -9,36 +9,34 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class companyBuyerEmailVerified extends Mailable
+class companyBuyerSignupEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $companyBuyer;
     public $companyname;
+    public $companyregnumber;
+    
 
     /**
      * Create a new message instance.
      */
-    public function __construct($companyBuyer, $companyname)
+    public function __construct($companyBuyer, $companyname, $companyregnumber)
     {
-        $this->companyname = $companyname;
         $this->companyBuyer = $companyBuyer;
-        //$this->business = $business;
+        $this->companyname = $companyname;
+        $this->companyregnumber = $companyregnumber;
         //
     }
-
-
     /**
      * Get the message envelope.
      */
     public function envelope(): Envelope
     {
-       
         return new Envelope(
-            subject: 'Welcome to AgroEase'.'  '.$this->companyname . '  '  .'your Business account is verified.' 
+            subject: $this->companyname . '  '  .'verify your email' 
         );
     }
-
 
     /**
      * Get the message content definition.
@@ -46,7 +44,7 @@ class companyBuyerEmailVerified extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.companyBuyerEmailVerified',
+            view: 'emails.companyBuyerSignupEmail',
         );
     }
 

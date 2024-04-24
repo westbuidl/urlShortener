@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use App\Models\BusinessAccount;
 use App\Mail\BusinessSignupEmail;
 use App\Mail\BusinessWelcomeMail;
+use App\Mail\companySellerEmailVerified;
 use App\Models\CompanySeller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -18,11 +19,11 @@ class CompanySellerController extends Controller
     //
 
 
-    public function companyBuyerSignup(Request $request)
+    public function companySellerSignup(Request $request)
     {
 
         $companySellerId = 'AGCS' . rand(0000, 9999);
-        $verification_code = rand(000000, 999999);
+        $verification_code = rand(100000, 999999);
 
 
         /* $request->validate([
@@ -40,12 +41,13 @@ class CompanySellerController extends Controller
          ]);*/
         $validator = Validator::make($request->all(), [
             //'businessID'=>'required|min:2|max:100',
-            'businessname' => 'required|min:2|max:100',
-            'businessregnumber' => 'required|unique:business_accounts',
-            'businessemail' => 'required|unique:business_accounts',
-            'businessphone' => 'required|min:2|max:100|unique:business_accounts',
+            'companyname' => 'required|min:2|max:100',
+            'companyregnumber' => 'required|unique:company_sellers',
+            'companyemail' => 'required|unique:company_sellers',
+            'companyphone' => 'required|min:2|max:100|unique:company_sellers',
             'products' => 'required|min:2|max:100',
-            'businessaddress' => 'required|min:2|max:100',
+            'product_category' => 'required|min:2|max:100',
+            'companyaddress' => 'required|min:2|max:100',
             'country' => 'required|min:2|max:100',
             'city' => 'required|min:2|max:100',
             'state' => 'required|min:2|max:100',
@@ -62,13 +64,14 @@ class CompanySellerController extends Controller
         }
 
         $companySeller = CompanySeller::create([
-            'businessID' => $companySellerId,
-            'businessname' => $request->businessname,
-            'businessregnumber' => $request->businessregnumber,
-            'businessemail' => $request->businessemail,
-            'businessphone' => $request->businessphone,
+            'companySellerId' => $companySellerId,
+            'companyname' => $request->companyname,
+            'companyregnumber' => $request->companyregnumber,
+            'companyemail' => $request->companyemail,
+            'companyphone' => $request->companyphone,
             'products' => $request->products,
-            'businessaddress' => $request->businessaddress,
+            'product_category' => $request->product_category,
+            'companyaddress' => $request->companyaddress,
             'country' => $request->country,
             'city' => $request->city,
             'state' => $request->state,
@@ -86,7 +89,7 @@ class CompanySellerController extends Controller
     }
 
 
-    public function companyBuyerLogin(Request $request)
+    public function companySellerLogin(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
@@ -108,8 +111,8 @@ class CompanySellerController extends Controller
                     $token = $companySeller->createToken('auth-token')->plainTextToken;
 
                     // Store user ID in session
-                    session(['userID' => $companySeller->businessid]);
-                    session(['email' => $companySeller->businessemail]);
+                    session(['companySellerId' => $companySeller->companySellerId]);
+                    session(['email' => $companySeller->companyemail]);
 
                     return response()->json([
                         'message' => 'Login Successful',
@@ -136,7 +139,7 @@ class CompanySellerController extends Controller
 
     //Email verification function
 
-    public function companyBuyerVerifyMail(Request $request)
+    public function companySellerVerifyMail(Request $request)
     {
         // Validate request inputs
         $validator = Validator::make($request->all(), [
@@ -172,7 +175,7 @@ class CompanySellerController extends Controller
             $companySeller->is_verified = true;
             $companySeller->save();
 
-            Mail::to($companySeller->businessemail)->send(new BusinessWelcomeMail($companySeller));
+            Mail::to($companySeller->businessemail)->send(new companySellerEmailVerified($companySeller));
             return response()->json([
                 'message' => 'Email verified. Proceed to login.',
             ], 200);
@@ -185,7 +188,7 @@ class CompanySellerController extends Controller
     }
 
     //function to reset password
-    public function companyBuyerResetPassword(Request $request)
+    public function companySellerResetPassword(Request $request)
     {
 
         $validator = Validator::make($request->all(), [

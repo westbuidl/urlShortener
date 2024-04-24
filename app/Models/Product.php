@@ -21,6 +21,7 @@ class Product extends Model
         'sellerId',
         'product_name',
         'product_category',
+        'cost_price',
         'selling_price',
         'quantityin_stock',
         'unit',

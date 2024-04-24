@@ -4,18 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Buyer;
-use App\Mail\buyerSignupEmail;
 use Illuminate\Support\Str;
-use App\Mail\buyerEmailVerified;
 use Illuminate\Http\Request;
+use App\Mail\buyerSignupEmail;
 use Illuminate\Support\Carbon;
+use App\Mail\buyerEmailVerified;
 use App\Mail\PasswordResetEmail;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\buyerPasswordResetEmail;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\MailController;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Validator;
 use App\Notifications\EmailVerificationNotification;
@@ -25,8 +27,8 @@ class BuyerController extends Controller
     //function for user registration
     public function signup(Request $request)
     {
-        $buyerId = 'AGB' . rand(00000000, 99999999);
-        $verification_code = rand(000000, 999999);
+        $buyerId = 'AGB' . rand(10000000, 99999999);
+        $verification_code = rand(100000, 999999);
        
         $validator = Validator::make($request->all(), [
             'firstname' => 'required|min:2|max:100',
@@ -38,6 +40,7 @@ class BuyerController extends Controller
             'country' => 'required|min:2|max:100',
             'state' => 'required|min:2|max:100',
             'city' => 'required|min:2|max:100',
+            'address' => 'required|min:2|max:100',
             'zipcode' => '',
             'password' => 'required|min:6|max:100',
             'confirm_password' => 'required|same:password'
@@ -61,6 +64,7 @@ class BuyerController extends Controller
             'country' => $request->country,
             'state' => $request->state,
             'city' => $request->city,
+            'address' => $request->address,
             'zipcode' => $request->zipcode,
             'password' => Hash::make($request->password),
             'verification_code' => $verification_code
@@ -83,6 +87,57 @@ class BuyerController extends Controller
             ]*/
         ], 200);
     }
+
+    public function verifyBuyerEmail(Request $request)
+    {
+        // Validate request inputs
+        $validator = Validator::make($request->all(), [
+            //'email' => 'required|email',
+            'otp' => 'required'
+        ]);
+
+        // If validation fails, return error response
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => $validator->errors()->first(),
+            ], 400);
+        }
+
+        // Fetch email and OTP from the form
+        //$email = $request->input('email');
+        //$otp = $request->input('otp');
+
+        // Find individual user with the provided email and OTP
+        $buyer = Buyer::where('verification_code', $request->otp)->first();
+
+        // If individual user is found
+        if ($buyer) {
+            // Check if email is already verified
+            if ($buyer->email_verified_at) {
+
+                return response()->json([
+                    'message' => 'Email already verified.',
+                ], 400);
+            }
+
+            // Mark email as verified
+            $buyer->email_verified_at = Carbon::now();
+            $buyer->is_verified = true;
+            $buyer->save();
+
+            Mail::to($buyer->email)->send(new buyerEmailVerified($buyer, $buyer->firstname));
+            return response()->json([
+                'message' => 'Email verified. Proceed to login.',
+            ], 200);
+        } else {
+            // If individual user is not found or OTP is incorrect
+            return response()->json([
+                'message' => 'Invalid OTP. Please try again.',
+            ], 400);
+        }
+    }
+
+
 
 
     //function for buyer login
@@ -169,54 +224,7 @@ class BuyerController extends Controller
     //function to check and verify email
 
 
-    public function verifyBuyerEmail(Request $request)
-    {
-        // Validate request inputs
-        $validator = Validator::make($request->all(), [
-            //'email' => 'required|email',
-            'otp' => 'required'
-        ]);
-
-        // If validation fails, return error response
-        if ($validator->fails()) {
-            return response()->json([
-                'error' => $validator->errors()->first(),
-            ], 400);
-        }
-
-        // Fetch email and OTP from the form
-        //$email = $request->input('email');
-        //$otp = $request->input('otp');
-
-        // Find individual user with the provided email and OTP
-        $buyer = Buyer::where('verification_code', $request->otp)->first();
-
-        // If individual user is found
-        if ($buyer) {
-            // Check if email is already verified
-            if ($buyer->email_verified_at) {
-
-                return response()->json([
-                    'message' => 'Email already verified.',
-                ], 400);
-            }
-
-            // Mark email as verified
-            $buyer->email_verified_at = Carbon::now();
-            $buyer->is_verified = true;
-            $buyer->save();
-
-            Mail::to($buyer->email)->send(new buyerEmailVerified($buyer, $buyer->firstname));
-            return response()->json([
-                'message' => 'Email verified. Proceed to login.',
-            ], 200);
-        } else {
-            // If individual user is not found or OTP is incorrect
-            return response()->json([
-                'message' => 'Invalid OTP. Please try again.',
-            ], 400);
-        }
-    }
+  
     //function to reset password
     public function buyerPasswordReset(Request $request)
     {
@@ -288,34 +296,43 @@ class BuyerController extends Controller
 
 
     //function to resend verification code
-    /* public function resendverificationcode(Request $request)
+    public function resendBuyerEmailAuth(Request $request, $email)
     {
-        $email = Session::get('email');
-
-        if (!$email) {
+        // Retrieve the email from the request body
+       // $email = $request->input('email');
+    
+        // Validate the email address format
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return response()->json([
-                'message' => 'Email not found.',
+                'message' => 'Invalid email address. Please provide a valid email address.',
             ], 400);
-
-            $buyer = Buyer::where('email', $email)->first();
-
-            if (!$buyer) {
-                return response()->json([
-                    'message' => 'user not found.',
-                ], 400);
-            }
-            $verification_code = rand(000000, 999999);
-
-            $buyer->verification_code = $verification_code;
-            //$buyer->is_verified = true;
-            $buyer->save();
-
-            Mail::to($request->email)->send(new buyerSignupEmail($buyer));
-
-
-            return response()->json([
-                'message' => 'Registration successful Verification Email Sent'
-            ], 200);
         }
-    }*/
+    
+        // Retrieve the buyer by email from the database
+        $buyer = Buyer::where('email', $email)->first();
+    
+        // Check if buyer exists
+        if (!$buyer) {
+            return response()->json([
+                'message' => 'User not found for the provided email address.',
+            ], 404);
+        }
+    
+        // Generate verification code
+        $verification_code = rand(100000, 999999);
+    
+        // Update buyer's verification code
+        $buyer->verification_code = $verification_code;
+        $buyer->save();
+    
+        // Send verification email
+        Mail::to($email)->send(new buyerSignupEmail($buyer, $verification_code));
+    
+        return response()->json([
+            'message' => 'Verification code sent to the provided email address.',
+        ], 200);
+    }
+    
+
+    
 }

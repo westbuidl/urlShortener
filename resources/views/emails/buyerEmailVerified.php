@@ -21,7 +21,7 @@
                                 <tr>
                                     <td style="height:100px; width : 100%; background-color:#1d988c">
 
-                                        <img src="https://agroease.trade/assets/img/agroease1%202.png" id="agro" style="height: 80px; margin-right: 340px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <img src="https://agroease.ng/assets/img/agroease1%202.png" id="agro" style="height: 80px; margin-right: 340px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
                                         <!-- <img src="party-popper 1.png" id="par" style="height: 96px; margin-left: -79px; margin-top: -5px;"></i> -->
                                         <br>
                                     </td>
@@ -31,7 +31,7 @@
                                     <td style="padding:0 35px; ">
                                         <br>
                                         <br>
-                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$firstname}}, </h1><br>
+                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$buyer->firstname}}, </h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">Congratulations and welcome to <strong>Agroease!</strong> We're thrilled to have you as a new member of our community.</h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Have questions or need assistance?</strong> <br><br> If you have any questions or need assistance at any point, don't hesitate to reach out to our support team at <a href="mailto:support@agroease.ng" style="color: #1d988c; text-decoration: none;"><strong>support@agroease.ng</strong></a>
                                             We're here to help you every step of the way.
@@ -43,7 +43,7 @@
 
                                         <br>
                                         <h1 style="color:#828282;padding:0 15px; margin-right:20px;font-weight:400; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;vertical-align:start; line-height:2">Powered by</h1>
-                                        <img src="https://agroease.trade/assets/img/agroease1.png" style="height: 80px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <img src="https://agroease.ng/assets/img/agroease1.png" style="height: 80px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
 
                                         <h1 style="color:#828282;padding:0 15px; margin-right:20px;font-weight:400; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;vertical-align:start; line-height:2">Copyright © 2024 All rights reserved</h1>
                                         <br>

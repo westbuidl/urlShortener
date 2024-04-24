@@ -50,7 +50,7 @@ Route::post('/updateBuyerBillingAddress', [BuyerProfileController::class, 'updat
 Route::post('/buyer', [BuyerController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
 Route::post('/logout', [BuyerController::class, 'logout'])->middleware('auth:sanctum');//api for logout//});
 Route::post('/verifyBuyerEmail', [BuyerController::class, 'verifyBuyerEmail'])->name('verifyBuyerEmail');//send verification email
-Route::post('/resendverificationcode', [BuyerController::class, 'resendverificationcode'])->name('resendcode');//resend verification code
+Route::post('/resendBuyerEmailAuth/{email}', [BuyerController::class, 'resendBuyerEmailAuth'])->name('resendBuyerEmailAuth');//resend verification code
 Route::post('/buyerPasswordReset', [BuyerController::class, 'buyerPasswordReset'])->name('buyerPasswordReset');//reset buyer password
 Route::get('/getBuyerProfile/{buyerId}', [BuyerController::class, 'getBuyerProfile'])->middleware(('auth:sanctum')) ->name('getBuyerProfile');//api to get user profile
 //End Api routes for Buyer account
@@ -71,7 +71,7 @@ Route::post('/updateSellerAddress', [SellerProfileController::class, 'updateSell
 Route::post('/buyer', [BuyerController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
 Route::post('/logout', [SellerController::class, 'logout'])->middleware('auth:sanctum');//api for logout//});
 Route::post('/verifySellerEmail', [SellerController::class, 'verifySellerEmail'])->name('verifySellerEmail');//send verification email
-Route::post('/resendverificationcode', [BuyerController::class, 'resendverificationcode'])->name('resendcode');//resend verification code
+Route::post('/resendSellerEmailAuth/{email}', [SellerController::class, 'resendBuyerEmailAuth'])->name('resendBuyerEmailAuth');//resend verification code
 Route::post('/sellerPasswordReset', [SellerController::class, 'sellerPasswordReset'])->name('sellerPasswordReset');//reset buyer password
 Route::get('/getSellerProfile/{sellerId}', [SellerProfileController::class, 'getSellerProfile'])->middleware(('auth:sanctum')) ->name('getSellerProfile');//api to get user profile
 //End Api routes for Buyer account
@@ -87,9 +87,9 @@ Route::post('/companyBuyerUpdateProfile', [CompanyBuyerController::class, 'compa
 Route::post('/companyBuyerAccountSetting', [CompanyBuyerController::class, 'companyBuyerAccountSetting'])->middleware('auth:sanctum')->name('companyBuyerAccountSetting');//profile update endpoint for sellers
 Route::post('/companyBuyerResetPassword', [CompanyBuyerController::class, 'companyBuyerResetPassword'])->name('companyBuyerResetPassword');//resend verification code
 Route::post('/companyBuyerVerifyMail', [CompanyBuyerController::class, 'companyBuyerVerifyMail'])->name('companyBuyerVerifyMail');//send verification email for business account setup
+Route::post('/resendEmailAuth/{email}', [CompanyBuyerController::class, 'resendBuyerEmailAuth'])->name('resendBuyerEmailAuth');//resend verification code
 
-
-//---Begin Api routes for CompanyBuyer --//
+//---Begin Api routes for CompanySeller --//
 Route::post('/companySellerSignup', [CompanySellerController::class, 'business'])->name('business');//creating account for business
 Route::post('/companySellerLogin', [CompanySellerController::class, 'companySellerLogin'])->name('companySellerLogin');//business account login
 Route::post('/companySellerChangePassword', [CompanySellerController::class, 'companySellerChangePassword'])->middleware('auth:sanctum')->name('companySellerChangePassword');//change password endpoint for sellers
@@ -98,7 +98,7 @@ Route::post('/companySellerUpdateProfile', [CompanySellerController::class, 'com
 Route::post('/companySellerAccountSetting', [CompanySellerController::class, 'companySellerAccountSetting'])->middleware('auth:sanctum')->name('companySellerAccountSetting');//profile update endpoint for sellers
 Route::post('/companySellerResetPassword', [CompanySellerController::class, 'companySellerResetPassword'])->name('companySellerResetPassword');//resend verification code
 Route::post('/companySellerVerifyMail', [CompanySellerController::class, 'companySellerVerifyMail'])->name('companySellerVerifyMail');//send verification email for business account setup
-
+Route::post('/resendEmailAuth/{email}', [CompanySellerController::class, 'resendBuyerEmailAuth'])->name('resendBuyerEmailAuth');//resend verification code
 //---Begin Api routes for Business account functions --//
 
 
