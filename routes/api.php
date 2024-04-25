@@ -82,23 +82,26 @@ Route::get('/getSellerProfile/{sellerId}', [SellerProfileController::class, 'get
 Route::post('/companyBuyerSignup', [CompanyBuyerController::class, 'companyBuyerSignup'])->name('companyBuyerSignup');//creating account for business
 Route::post('/companyBuyerLogin', [CompanyBuyerController::class, 'companyBuyerLogin'])->name('companyBuyerLogin');//business account login
 Route::post('/companyBuyerChangePassword', [CompanyBuyerController::class, 'companyBuyerChangePassword'])->middleware('auth:sanctum')->name('companyBuyerChangePassword');//change password endpoint for sellers
-Route::delete('/companyBuyerDeleteProfilePicture/{companyBuyerId}', [CompanyBuyerController::class, 'companyBuyerDeleteProfilePicture'])->middleware('auth:sanctum')->name('companyBuyerDeleteProfilePicture');//profile image update endpoint
-Route::post('/companyBuyerUpdateProfile', [CompanyBuyerController::class, 'companyBuyerUpdateProfile'])->middleware('auth:sanctum')->name('companyBuyerUpdateProfile');// seller profile image update endpoint 
-Route::post('/companyBuyerAccountSetting', [CompanyBuyerController::class, 'companyBuyerAccountSetting'])->middleware('auth:sanctum')->name('companyBuyerAccountSetting');//profile update endpoint for sellers
+Route::delete('/deleteCompanyBuyerProfilePicture/{companyBuyerId}', [CompanyBuyerController::class, 'deleteCompanyBuyerProfilePicture'])->middleware('auth:sanctum')->name('deleteCompanyBuyerProfilePicture');//profile image update endpoint
+Route::post('/updateCompanyBuyerProfilePicture', [CompanyBuyerController::class, 'updateCompanyBuyerProfilePicture'])->middleware('auth:sanctum')->name('updateCompanyBuyerProfilePicture');// seller profile image update endpoint 
+Route::post('/updateCompanyBuyerAccountDetails', [CompanyBuyerController::class, 'updateCompanyBuyerAccountDetails'])->middleware('auth:sanctum')->name('updateCompanyBuyerAccountDetails');//profile update endpoint for sellers
 Route::post('/companyBuyerResetPassword', [CompanyBuyerController::class, 'companyBuyerResetPassword'])->name('companyBuyerResetPassword');//resend verification code
 Route::post('/companyBuyerVerifyMail', [CompanyBuyerController::class, 'companyBuyerVerifyMail'])->name('companyBuyerVerifyMail');//send verification email for business account setup
+Route::post('/companyBuyerChangePassword', [CompanyBuyerController::class, 'companyBuyerChangePassword'])->name('companyBuyerChangePassword');//resend verification code
 Route::post('/resendCompanyBuyerEmailAuth/{email}', [CompanyBuyerController::class, 'resendCompanyBuyerEmailAuth'])->name('resendCompanyBuyerEmailAuth');//resend verification code
+Route::get('/getCompanyBuyerProfile/{companyBuyerId}', [CompanyBuyerController::class, 'getCompanyBuyerProfile'])->name('getCompanyBuyerProfile');//resend verification code
 
 //---Begin Api routes for CompanySeller --//
 Route::post('/companySellerSignup', [CompanySellerController::class, 'business'])->name('business');//creating account for business
 Route::post('/companySellerLogin', [CompanySellerController::class, 'companySellerLogin'])->name('companySellerLogin');//business account login
 Route::post('/companySellerChangePassword', [CompanySellerController::class, 'companySellerChangePassword'])->middleware('auth:sanctum')->name('companySellerChangePassword');//change password endpoint for sellers
-Route::delete('/companySellerDeleteProfilePicture/{companySellerId}', [CompanySellerController::class, 'companySellerDeleteProfilePicture'])->middleware('auth:sanctum')->name('companySellerDeleteProfilePicture');//profile image update endpoint
+Route::delete('/deleteCompanySellerProfilePicture/{companySellerId}', [CompanySellerController::class, 'deleteCompanySellerProfilePicture'])->middleware('auth:sanctum')->name('deleteCompanySellerProfilePicture');//profile image update endpoint
 Route::post('/companySellerUpdateProfile', [CompanySellerController::class, 'companySellerUpdateProfile'])->middleware('auth:sanctum')->name('companySellerUpdateProfile');// seller profile image update endpoint 
 Route::post('/companySellerAccountSetting', [CompanySellerController::class, 'companySellerAccountSetting'])->middleware('auth:sanctum')->name('companySellerAccountSetting');//profile update endpoint for sellers
 Route::post('/companySellerResetPassword', [CompanySellerController::class, 'companySellerResetPassword'])->name('companySellerResetPassword');//resend verification code
 Route::post('/companySellerVerifyMail', [CompanySellerController::class, 'companySellerVerifyMail'])->name('companySellerVerifyMail');//send verification email for business account setup
 Route::post('/resendCompanySellerEmailAuth/{email}', [CompanySellerController::class, 'resendCompanySellerEmailAuth'])->name('resendCompanySellerEmailAuth');//resend verification code
+Route::get('/getCompanyBuyerProfile/{companySellerId}', [CompanySellerController::class, 'getCompanyBuyerProfile'])->name('getCompanyBuyerProfile');//resend verification code
 //---Begin Api routes for Business account functions --//
 
 
@@ -146,12 +149,13 @@ Route::get('/popularProducts', [ProductController::class, 'popularProducts'])->n
 
 //--Begin of Admi api --//
 
-Route::get('/categoryDetails/{id}', [CategoryController::class, 'categoryDetails'])->name('categoryDetails');//get category details
+Route::get('/categoryDetails/{categoryID}', [CategoryController::class, 'categoryDetails'])->name('categoryDetails');//get category details
 Route::post('/addCategory', [CategoryController::class, 'addCategory'])->name('addCategory');//add categories
-Route::delete('/deleteCategory/{id}', [CategoryController::class, 'deleteCategory'])->name('deleteCategory');//delete categories
+Route::delete('/deleteCategory/{categoryID}', [CategoryController::class, 'deleteCategory'])->name('deleteCategory');//delete categories
 Route::get('/viewAllcategory', [CategoryController::class, 'viewAllcategory'])->name('viewAllcategory');//view all categories
 Route::get('/viewCategory/{categoryID}', [CategoryController::class, 'viewCategory'])->name('viewCategory');//view all categories
 Route::get('/popularCategories', [CategoryController::class, 'popularCategories'])->name('popularCategories');//view all categories
+Route::post('/editCategory/{categoryID}', [CategoryController::class, 'editCategory'])->name('editCategory');//view all categories
 
 //--End of Admin api --//
 

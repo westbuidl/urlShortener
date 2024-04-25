@@ -221,7 +221,7 @@ class SellerController extends Controller
 
         $seller->save();
 
-        Mail::to($seller->email)->send(new sellerPasswordResetEmail($seller, $reset_password,$seller->firstname));
+        Mail::to($seller->email)->send(new sellerPasswordResetEmail($seller,$reset_password,$seller->firstname));
         return response()->json([
             'message' => 'Password reset code sent.',
             'password_data' => $reset_password
@@ -249,7 +249,12 @@ class SellerController extends Controller
                 'message' => 'User not found for the provided email address.',
             ], 404);
         }
-    
+       
+        if ($seller->is_verified) {
+            return response()->json([
+                'message' => 'Email address is already verified.',
+            ], 400);
+        }
         // Generate verification code
         $verification_code = rand(100000, 999999);
     
@@ -258,7 +263,7 @@ class SellerController extends Controller
         $seller->save();
     
         // Send verification email
-        Mail::to($email)->send(new sellerSignupEmail($seller, $verification_code, $seller->firstname));
+        Mail::to($email)->send(new sellerSignupEmail($seller,$seller->firstname));
     
         return response()->json([
             'message' => 'Verification code sent to the provided email address.',

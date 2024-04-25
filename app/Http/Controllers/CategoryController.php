@@ -21,7 +21,7 @@ class CategoryController extends Controller
     public function addCategory(Request $request)
     {
 
-        $categoryID = 'AGC' . rand(000, 999);
+        $categoryID = 'AGC' . rand(100, 999);
 
         $validator = Validator::make($request->all(), [
             //'categoryID' => 'required|string|max:255',
@@ -180,9 +180,9 @@ class CategoryController extends Controller
     //End
 
     // Method to update a category
-    public function update(Request $request, $id)
+    public function update(Request $request, $categoryID)
     {
-        $category = Category::findOrFail($id);
+        $category = Category::findOrFail($categoryID);
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -198,10 +198,11 @@ class CategoryController extends Controller
     }
 
     // Method to delete a category
-    public function deleteCategory(string $id)
+    public function deleteCategory(string $categoryID)
     {
         // Find the category by ID
-        $category = Category::find($id);
+        //$category = Category::find($categoryID);
+        $category = Category::where('categoryID', $categoryID)->first();
 
         // If the category exists
         if ($category) {
@@ -263,6 +264,60 @@ class CategoryController extends Controller
         }
     }
 
+    public function editCategory(Request $request, $categoryID)
+{
+    // Find the category by ID
+    //$category = Category::find($categoryID);
+    $category = Category::where('categoryID', $categoryID)->first();
 
+    // Check if category exists
+    if (!$category) {
+        return response()->json([
+            'message' => 'Category not found.',
+        ], 404);
+    }
 
+    $validator = Validator::make($request->all(), [
+        'categoryName' => 'required|string|max:255|unique:categories,categoryName,' . $category->id,
+        'categoryDescription' => 'required|string|max:255',
+        'categoryImage' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+        'quantity_instock' => 'required|string|max:255',
+        'quantity_sold' => 'required|string|max:255',
+        // Add more validation rules as needed
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'message' => 'Validation fails',
+            'error' => $validator->errors()
+        ], 422);
+    }
+
+    // Update category fields
+    $category->categoryName = $request->categoryName;
+    $category->categoryDescription = $request->categoryDescription;
+    $category->quantity_instock = $request->quantity_instock;
+    $category->quantity_sold = $request->quantity_sold;
+
+    // Handle category image update if provided
+    if ($request->hasFile('categoryImage')) {
+        $new_imageName = time() . '.' . $request->categoryImage->extension();
+        $request->categoryImage->move(public_path('/uploads/category_image'), $new_imageName);
+        // Delete previous image if exists
+        if ($category->categoryImage && file_exists(public_path('/uploads/category_image/') . $category->categoryImage)) {
+            unlink(public_path('/uploads/category_image/') . $category->categoryImage);
+        }
+        $category->categoryImage = $new_imageName;
+    }
+
+    // Save changes to the category
+    $category->save();
+
+    return response()->json([
+        'message' => 'Category successfully updated.',
+        'data' => $category
+    ], 200);
 }
+
+
+ }

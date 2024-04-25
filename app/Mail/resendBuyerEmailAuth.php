@@ -34,7 +34,7 @@ class resendBuyerEmailAuth extends Mailable
     {
        
         return new Envelope(
-            subject: $this->firstname . '  '  .'verify your email' 
+            subject: $this->firstname .' '. 'verify your email to activate your account your Agroease account.' 
         );
     }
 

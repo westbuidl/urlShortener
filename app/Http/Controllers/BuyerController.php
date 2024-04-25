@@ -311,6 +311,13 @@ class BuyerController extends Controller
     
         // Retrieve the buyer by email from the database
         $buyer = Buyer::where('email', $email)->first();
+
+        // Check if the buyer's email is already verified
+    if ($buyer->is_verified) {
+        return response()->json([
+            'message' => 'Email address is already verified.',
+        ], 400);
+    }
     
         // Check if buyer exists
         if (!$buyer) {
@@ -327,7 +334,7 @@ class BuyerController extends Controller
         $buyer->save();
     
         // Send verification email
-        Mail::to($email)->send(new resendBuyerEmailAuth($buyer, $verification_code, $buyer->firstname));
+        Mail::to($email)->send(new resendBuyerEmailAuth($buyer, $buyer->firstname));
     
         return response()->json([
             'message' => 'Verification code sent to the provided email address.',

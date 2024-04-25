@@ -34,7 +34,7 @@ class sellerEmailVerified extends Mailable
     {
        
         return new Envelope(
-            subject: 'Welcome to AgroEase'.'  '.$this->firstname . '  '  .'your seller account is verified.' 
+            subject: 'Welcome to AgroEase'.'  '.$this->firstname . '  '.'your seller account is verified.' 
         );
     }
 
