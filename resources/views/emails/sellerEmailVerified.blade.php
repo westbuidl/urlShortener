@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registration Confirmation</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Document</title>
+    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 
@@ -19,7 +19,7 @@
                             <br>
                             <table width="95%" border="0" align="center" cellpadding="0" cellspacing="0" style="max-width:570px;background:#fff; border-radius:3px; text-align:center;-webkit-box-shadow:0 6px 18px 0 rgba(0,0,0,.06);-moz-box-shadow:0 6px 18px 0 rgba(0,0,0,.06);box-shadow:0 6px 18px 0 rgba(0,0,0,.06);">
                                 <tr>
-                                    <td style="height:100px; width : 100%; background-color:#1d988c">
+                                    <td style="height:100px; width : 100%; background-color:#7E66EF">
 
                                         <img src="https://agroease.ng/assets/img/agroease1%202.png" id="agro" style="height: 80px; margin-right: 340px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
                                         <!-- <img src="party-popper 1.png" id="par" style="height: 96px; margin-left: -79px; margin-top: -5px;"></i> -->
@@ -33,7 +33,7 @@
                                         <br>
                                         <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$firstname}}, </h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">Congratulations and welcome to <strong>Agroease!</strong> We're thrilled to have you as a new member of our community.</h1><br>
-                                        <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Have questions or need assistance?</strong> <br><br> If you have any questions or need assistance at any point, don't hesitate to reach out to our support team at <a href="mailto:support@agroease.ng" style="color: #1d988c; text-decoration: none;"><strong>support@agroease.ng</strong></a>
+                                        <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Have questions or need assistance?</strong> <br><br> If you have any questions or need assistance at any point, don't hesitate to reach out to our support team at <a href="mailto:contact@agroease.com" style="color: #7E66EF; text-decoration: none;"><strong>contact@agroease.com</strong></a>.
                                             We're here to help you every step of the way.
                                             <br><br>Once again, welcome to <strong>Agroease!</strong> We're looking forward to seeing you thrive in our community. <br><br>Best regards, <br><br>The Agroease Team</h1><br>
                                     </td>

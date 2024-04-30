@@ -47,7 +47,7 @@ class CompanyBuyerController extends Controller
             'companyemail' => 'required|unique:company_buyers',
             'companyphone' => 'required|min:2|max:100|unique:company_buyers',
             //'products' => 'required|min:2|max:100',
-            'companyaddress' => 'required|min:2|max:100',
+            'companyaddress' => 'min:2|max:100',
             'country' => 'required|min:2|max:100',
             'city' => 'required|min:2|max:100',
             'state' => 'required|min:2|max:100',

@@ -274,4 +274,77 @@ class CartController extends Controller
             ], 500);
         }
     }
+
+     //Check out Function
+     public function checkout(Request $request, $cartId)
+     {
+         try {
+             // Retrieve the authenticated user's ID
+             //$user_id = Auth::id();
+ 
+             $buyer = Auth::user()->buyerId;
+ 
+             // Ensure that the user is logged in
+             if (!$buyer) {
+                 return response()->json([
+                     'status' => false,
+                     'message' => 'User not authenticated.',
+                 ], 401);
+             }
+             // Retrieve the cart items for the authenticated user
+             $cartItems = Cart::where('cartId', $cartId)->get();
+ 
+             // Check if the cart is empty
+             if ($cartItems->isEmpty()) {
+                 return response()->json([
+                     'status' => false,
+                     'message' => 'Cart is empty. Please add items to the cart first.',
+                     'BuyerId' => $buyer
+                 ], 400);
+             }
+ 
+             // Calculate the total price of the items in the cart
+             $totalPrice = 0;
+             foreach ($cartItems as $cartItem) {
+                 $totalPrice += $cartItem->selling_price * $cartItem->quantity;
+             }
+ 
+             // Proceed with the payment (This part depends on your payment gateway integration)
+ 
+             // Assuming the payment is successful
+             // Add the transaction to the Order database
+             $order = new Order;
+             $order->userID = $user_id;
+             $order->productID = $productId;
+             $order->orderID = $order_id;
+             $order->productName = $product->product_name;
+             $order->productDescription = $product->product_description;
+             $order->amount = $amount;
+             $order->quantity = $product->categoryID;
+             $order->paymentMethod = $product->categoryID;
+             $order->Discount = $product->categoryID;
+             $order->shippingFee = $product->categoryID;
+             $order->status = $product->categoryID;
+             $order->total_price = $totalPrice;
+             $order->save();
+ 
+             // Clear the cart after successful checkout
+             Cart::where('buyerId', $buyer)->delete();
+ 
+             // Notify the user via email about the successful payment
+             Mail::to(Auth::user()->email)->send(new OrderConfirmationMail($order));
+ 
+             return response()->json([
+                 'status' => true,
+                 'message' => 'Checkout successful. Your order has been placed.',
+                 'order' => $order,
+             ], 200);
+         } catch (\Exception $e) {
+             // Return the error message in the response
+             return response()->json([
+                 'status' => false,
+                 'message' => 'An error occurred during checkout: ' . $e->getMessage(),
+             ], 500);
+         }
+     }
 }

@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Seller;
 use Illuminate\Http\Request;
+use App\Mail\addBankAccountEmail;
+use App\Mail\bankAccountSavedEmail;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class SellerProfileController extends Controller
@@ -107,7 +110,7 @@ class SellerProfileController extends Controller
             'state' => $request->state,
             'city' => $request->city,
             'zipcode' => $request->zipcode
-            
+
 
         ]);
 
@@ -119,7 +122,7 @@ class SellerProfileController extends Controller
 
 
 
-   
+
 
 
     //Delete buyer profile picture
@@ -173,10 +176,10 @@ class SellerProfileController extends Controller
             // Retrieve the seller by ID
             //$seller = Seller::findOrFail($sellerId);
             $seller = Seller::where('sellerId', $sellerId)->first();
-    
+
             // Return seller information along with profile picture
             $profile_picture = asset('uploads/profile_images/' . $seller->profile_photo);
-    
+
             return response()->json([
                 'message' => 'Seller profile found.',
                 'data' => [
@@ -197,63 +200,133 @@ class SellerProfileController extends Controller
             ], 500);
         }
     }
+
+
+    public function addBankAccount(Request $request)
+    {
+        // Get the authenticated seller's ID
+        $sellerId = auth()->user()->sellerId;
+
+        // Generate OTP
+        $otp = rand(100000, 999999);
+
+        $validator = Validator::make($request->all(), [
+            'account_name' => 'required|min:2|max:100',
+            'account_number' => 'required|min:2|max:100',
+            'bank_name' => 'required|min:2|max:100'
+
+
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validations fails',
+                'error' => $validator->errors()
+            ], 422);
+        }
+
+        // Save OTP in the seller's record for verification
+        $seller = Seller::where('sellerId', $sellerId)->first();
+        // $seller = Seller::find($sellerId);
+        $seller->verification_code = $otp;
+        $seller->save();
+
+        // Send OTP to seller's email
+        Mail::to($seller->email)->send(new addBankAccountEmail($seller, $seller->firstname));
+
+        return response()->json([
+            'message' => 'OTP sent to your registered email address.',
+        ], 200);
+    }
+
+    public function verifyBankAccount(Request $request)
+    {
+        // Get the authenticated seller's ID
+        $sellerId = auth()->user()->sellerId;
+
+        // Find the seller by ID
+        $seller = Seller::where('sellerId', $sellerId)->first();
+
+        // Check if seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        // Validate the incoming request data
+        $validator = Validator::make($request->all(), [
+            'otp' => 'required|string|max:6',
+            'account_name' => 'required|string|min:2|max:100',
+            'account_number' => 'required|min:2|max:100',
+            'bank_name' => 'required|string|min:2|max:100'
+        ]);
     
 
-
-
-
-
-    /* public function delete_buyerprofilepicture(Request $request)
-    {
-        try {
-            // Validate request inputs
-            $validator = Validator::make($request->all(), [
-                'buyer_id' => 'required|exists:individual_accounts,id',
-            ]);
-
-            // If validation fails, return error response
-            if ($validator->fails()) {
-                return response()->json([
-                    'message' => 'buyer not found.',
-                    'error' => $validator->errors()->first(),
-                ], 400);
-            }
-
-            // Get the authenticated buyer
-            $authenticatedbuyer = $request->user();
-
-            // Find the buyer in the database by buyer ID
-            $buyer = Buyer::findOrFail($request->buyer_id);
-
-            // Check if the authenticated buyer is the owner of the profile picture
-            if ($authenticatedbuyer->id !== $buyer->id) {
-                return response()->json([
-                    'message' => 'You are not authorized to delete this profile picture.',
-                ], 403);
-            }
-
-            // Check if the buyer has a profile picture
-            if (!empty($buyer->profile_photo)) {
-                // Delete the profile picture from the filesystem
-                $imagePath = public_path('/uploads/profile_images/' . $buyer->profile_photo);
-                if (File::exists($imagePath)) {
-                    File::delete($imagePath);
-                }
-
-                // Update the buyer's profile picture field to null
-                $buyer->profile_photo = null;
-                $buyer->save();
-            }
-
+        // Check if validation fails
+        if ($validator->fails()) {
             return response()->json([
-                'message' => 'Profile picture deleted successfully.',
-            ], 200);
-        } catch (\Exception $e) {
-            // Handle any exceptions that occur during the deletion process
-            return response()->json([
-                'message' => 'Error deleting profile picture.',
-                'error' => $e->getMessage(), // Include the error message for debugging
-            ], 500);
+                'message' => 'Validation fails',
+                'error' => $validator->errors()
+            ], 422);
         }
-    }*/
+
+        // Verify OTP
+        if ($request->otp != $seller->verification_code) {
+            return response()->json([
+                'message' => 'Invalid OTP. Please try again.',
+            ], 400);
+        }
+
+        // Update seller's bank account information
+        $seller->account_name = $request->account_name;
+        $seller->account_number = $request->account_number;
+        $seller->bank_name = $request->bank_name;
+        $seller->save();
+
+        // Clear OTP after successful verification
+        $seller->verification_code = null;
+        $seller->save();
+
+
+        Mail::to($seller->email)->send(new bankAccountSavedEmail($seller, $seller->firstname));
+        return response()->json([
+            'message' => 'Bank account information successfully added.',
+            'data' => $seller
+        ], 200);
+    }
+
+    public function getBankAccountDetails(Request $request)
+{
+   // Get the authenticated seller's ID
+   $sellerId= auth()->user()->sellerId;
+
+   // Find the seller by ID
+   $seller = Seller::where('sellerId', $sellerId)->first();
+
+   // Check if seller exists
+   if (!$seller) {
+       return response()->json([
+           'message' => 'Seller not found.',
+       ], 404);
+   }
+
+   // Check if the seller has bank account details
+   if (!$seller->bank_name || !$seller->account_number || !$seller->ifsc_code) {
+       return response()->json([
+           'message' => 'Seller bank account details not found.',
+       ], 404);
+   }
+
+   // Fetch seller's bank account details
+   $bankAccountDetails = [
+       'bank_name' => $seller->bank_name,
+       'account_number' => $seller->account_number,
+       'account_name' => $seller->account_name,
+   ];
+
+   return response()->json([
+       'message' => 'Seller bank account details retrieved successfully.',
+       'data' => $bankAccountDetails
+   ], 200);
+}
 }

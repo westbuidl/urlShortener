@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Product Added</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Product Add Email</title>
+    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 
@@ -19,7 +19,7 @@
                             <br>
                             <table width="95%" border="0" align="center" cellpadding="0" cellspacing="0" style="max-width:570px;background:#fff; border-radius:3px; text-align:center;-webkit-box-shadow:0 6px 18px 0 rgba(0,0,0,.06);-moz-box-shadow:0 6px 18px 0 rgba(0,0,0,.06);box-shadow:0 6px 18px 0 rgba(0,0,0,.06);">
                                 <tr>
-                                    <td style="height:100px; width : 100%; background-color:#1d988c">
+                                    <td style="height:100px; width : 100%; background-color:#7E66EF">
 
                                         <img src="https://agroease.ng/assets/img/agroease1%202.png" id="agro" style="height: 80px; margin-right: 340px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
                                         <!-- <img src="party-popper 1.png" style="height: 96px; margin-left: -79px; margin-top: -5px; position: absolute;"></i> -->
@@ -40,13 +40,12 @@
                                             <li>Description: <strong>{{$product->product_description}}</strong></li><br>
 
 
-                                        </h1>
+                                        </h1><br>
                                         @if ($product->product_image)
                                             <li><img src="{{  asset ('uploads/product_images/'.explode(',',$product->product_image)[0]) }}" alt="Product Image"></li>
-                                             @endif
-                                        <br>
-                                        <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Got Questions?</strong> <br><br>If you have any questions or need assistance with anything related to your new product, feel free to reach out to our support team at <a href="mailto:support@agroease.ng"
-                                                style="color: #1d988c; text-decoration: none;"><strong>support@agroease.ng</strong></a> We're here to help you succeed!
+                                             @endif <br>
+                                        <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Got Questions?</strong> <br><br>If you have any questions or need assistance with anything related to your new product, feel free to reach out to our support team at <a href="mailto:contact@agroease.ng"
+                                                style="color: #7E66EF; text-decoration: none;"><strong>contact@agroease.ng</strong></a>. We're here to help you succeed!
                                             <br><br>Thank you for entrusting us with your product addition. We can't wait to see it flourish in our marketplace.<br><br>Best regards, <br><br>The Agroease Team</h1><br>
                                     </td>
                                 </tr>

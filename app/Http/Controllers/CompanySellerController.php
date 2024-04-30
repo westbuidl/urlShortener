@@ -47,7 +47,7 @@ class CompanySellerController extends Controller
             'companyphone' => 'required|min:2|max:100|unique:company_sellers',
             'products' => 'required|min:2|max:100',
             'product_category' => 'required|min:2|max:100',
-            'companyaddress' => 'required|min:2|max:100',
+            'companyaddress' => 'min:2|max:100',
             'country' => 'required|min:2|max:100',
             'city' => 'required|min:2|max:100',
             'state' => 'required|min:2|max:100',
@@ -81,7 +81,7 @@ class CompanySellerController extends Controller
             'verification_code' => $verification_code
             //'confirm_password'=>'required|same:password'
         ]);
-        Mail::to($request->businessemail)->send(new ($companySeller));
+        Mail::to($request->companyemail)->send(new ($companySeller));
         return response()->json([
             'message' => 'Business registration successful Check email for verification code',
             'data' => $companySeller
@@ -175,7 +175,7 @@ class CompanySellerController extends Controller
             $companySeller->is_verified = true;
             $companySeller->save();
 
-            Mail::to($companySeller->businessemail)->send(new companySellerEmailVerified($companySeller));
+            Mail::to($companySeller->companyemail)->send(new companySellerEmailVerified($companySeller));
             return response()->json([
                 'message' => 'Email verified. Proceed to login.',
             ], 200);

@@ -27,10 +27,13 @@ return new class extends Migration
             $table->string('country');
             $table->string('state');
             $table->string('city');
-             $table->string('address');
+            $table->string('address');
             $table->string('zipcode')->nullable();
             $table->string('password');
             $table->string('profile_photo')->nullable();
+            $table->string('account_name')->nullable();
+            $table->string('account_number')->nullable();
+            $table->string('bank_name')->nullable();
         });
     }
 

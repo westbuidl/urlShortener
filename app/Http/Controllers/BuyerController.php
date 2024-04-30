@@ -30,7 +30,7 @@ class BuyerController extends Controller
     {
         $buyerId = 'AGB' . rand(10000000, 99999999);
         $verification_code = rand(100000, 999999);
-       
+
         $validator = Validator::make($request->all(), [
             'firstname' => 'required|min:2|max:100',
             'lastname' => 'required|min:2|max:100',
@@ -41,7 +41,7 @@ class BuyerController extends Controller
             'country' => 'required|min:2|max:100',
             'state' => 'required|min:2|max:100',
             'city' => 'required|min:2|max:100',
-            'address' => 'required|min:2|max:100',
+            'address' => 'min:2|max:100',
             'zipcode' => '',
             'password' => 'required|min:6|max:100',
             'confirm_password' => 'required|same:password'
@@ -74,7 +74,7 @@ class BuyerController extends Controller
 
         ]);
 
-        Mail::to($request->email)->send(new buyerSignupEmail($buyer,$buyer->firstname));
+        Mail::to($request->email)->send(new buyerSignupEmail($buyer, $buyer->firstname));
 
 
         return response()->json([
@@ -225,7 +225,7 @@ class BuyerController extends Controller
     //function to check and verify email
 
 
-  
+
     //function to reset password
     public function buyerPasswordReset(Request $request)
     {
@@ -251,7 +251,7 @@ class BuyerController extends Controller
 
         $buyer->save();
 
-        Mail::to($buyer->email)->send(new buyerPasswordResetEmail($buyer, $reset_password,$buyer->firstname));
+        Mail::to($buyer->email)->send(new buyerPasswordResetEmail($buyer, $reset_password, $buyer->firstname));
         return response()->json([
             'message' => 'Password reset code sent.',
             'password_data' => $reset_password
@@ -300,47 +300,44 @@ class BuyerController extends Controller
     public function resendBuyerEmailAuth(Request $request, $email)
     {
         // Retrieve the email from the request body
-       // $email = $request->input('email');
-    
+        // $email = $request->input('email');
+
         // Validate the email address format
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return response()->json([
                 'message' => 'Invalid email address. Please provide a valid email address.',
             ], 400);
         }
-    
+
         // Retrieve the buyer by email from the database
         $buyer = Buyer::where('email', $email)->first();
 
         // Check if the buyer's email is already verified
-    if ($buyer->is_verified) {
-        return response()->json([
-            'message' => 'Email address is already verified.',
-        ], 400);
-    }
-    
+        if ($buyer->is_verified) {
+            return response()->json([
+                'message' => 'Email address is already verified.',
+            ], 400);
+        }
+
         // Check if buyer exists
         if (!$buyer) {
             return response()->json([
                 'message' => 'User not found for the provided email address.',
             ], 404);
         }
-    
+
         // Generate verification code
         $verification_code = rand(100000, 999999);
-    
+
         // Update buyer's verification code
         $buyer->verification_code = $verification_code;
         $buyer->save();
-    
+
         // Send verification email
         Mail::to($email)->send(new resendBuyerEmailAuth($buyer, $buyer->firstname));
-    
+
         return response()->json([
             'message' => 'Verification code sent to the provided email address.',
         ], 200);
     }
-    
-
-    
 }

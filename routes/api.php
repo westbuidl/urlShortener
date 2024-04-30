@@ -74,6 +74,9 @@ Route::post('/verifySellerEmail', [SellerController::class, 'verifySellerEmail']
 Route::post('/resendSellerEmailAuth/{email}', [SellerController::class, 'resendSellerEmailAuth'])->name('resendSellerEmailAuth');//resend verification code
 Route::post('/sellerPasswordReset', [SellerController::class, 'sellerPasswordReset'])->name('sellerPasswordReset');//reset buyer password
 Route::get('/getSellerProfile/{sellerId}', [SellerProfileController::class, 'getSellerProfile'])->middleware(('auth:sanctum')) ->name('getSellerProfile');//api to get user profile
+Route::post('/addBankAccount', [SellerProfileController::class, 'addBankAccount'])->middleware(('auth:sanctum')) ->name('addBankAccount');//api to get user profile
+Route::post('/verifyBankAccount', [SellerProfileController::class, 'verifyBankAccount'])->middleware(('auth:sanctum')) ->name('verifyBankAccount');//api to get user profile
+Route::get('/getBankAccountDetails', [SellerProfileController::class, 'getBankAccountDetails'])->middleware(('auth:sanctum')) ->name('getBankAccountDetails');//api to get user profile
 //End Api routes for Buyer account
 
 
@@ -144,6 +147,7 @@ Route::delete('/deleteProduct/{productId}', [ProductController::class, 'deletePr
 Route::post('/toggleProductState/{productId}', [ProductController::class, 'toggleProductState'])->middleware('auth:sanctum')->name('toggleProductState');//toggle product state
 Route::get('/hotDeals', [ProductController::class, 'hotDeals'])->name('hotDeals');//toggle product state
 Route::get('/popularProducts', [ProductController::class, 'popularProducts'])->name('popularProducts');//toggle product state
+Route::post('/checkout', [ProductController::class, 'checkout'])->middleware('auth:sanctum')->name('checkout');// add to cart
 //--End of Product api--//
 
 

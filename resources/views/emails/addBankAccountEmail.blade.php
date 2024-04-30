@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Reset</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Email Confirmation</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 
@@ -19,7 +19,7 @@
                             <br>
                             <table width="95%" border="0" align="center" cellpadding="0" cellspacing="0" style="max-width:570px;background:#fff; border-radius:3px; text-align:center;-webkit-box-shadow:0 6px 18px 0 rgba(0,0,0,.06);-moz-box-shadow:0 6px 18px 0 rgba(0,0,0,.06);box-shadow:0 6px 18px 0 rgba(0,0,0,.06);">
                                 <tr>
-                                    <td style="height:100px; width : 100%; background-color:#7E66EF">
+                                    <td style="height:100px; width : 100%; background-color:#1d988c">
 
                                         <img src="https://agroease.ng/assets/img/agroease1%202.png" id="agro" style="height: 80px; margin-right: 340px; margin-bottom: 0px;"></i>&nbsp;&nbsp;&nbsp;&nbsp;
                                         <br>
@@ -30,18 +30,14 @@
                                     <td style="padding:0 35px; ">
                                         <br>
                                         <br>
-                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear  {{$seller->firstname}}, </h1><br>
-                                        <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">We've received a request to reset the password for your <strong>Agroease</strong> account. To proceed with the password reset, please use the following verification code:</h1><br>
-                                        <h1 style="background-color:#7e66ef; cursor:pointer; border-radius: 100px; height: 52px; padding:17px, 141px, 17px, 141px; margin-top:10px;"><span style="font-weight:600; color:#fff; font-size:26px;">{{$reset_password}}</span></h1><br>
-
-                                        <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Why do we need this code?</strong> <br><br> This code ensures the security of your account and helps us verify your identity during the password reset process.
-                                            <br>
-                                            <br>
-                                            <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Important:</strong> <br><br>
-                                                <li>Please do not share this code with anyone else.</li>
-                                                <li>If you didn 't attempt to register for Agroease, please disregard this email.</li> <br><br>If you encounter any difficulties or have any questions, don't hesitate to reach out to our support team at
-                                                <a href="mailto:contact@agroease.ng" style="color: #7E66EF; text-decoration: none;"><strong>contact@agroease.ng</strong></a>.
-                                                <br><br>Thank you for choosing <strong>Agroease!</strong> We look forward to serving you. <br><br>Best regards, <br><br>The Agroease Team</h1><br>
+                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$seller->firstname}}, </h1><br>
+                                        <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">Save your bank details <strong>Agroease!</strong> We're delighted you've chosen to join us. To finalize your registration, please use the following 6-digit verification code:</h1><br>
+                                        <h1 style="background-color:#e0dafb; border-radius: 16px; font-weight:700; margin-top:10px;font-size:16px;font-family:'Gilroy', sans-serif;text-align:center ; line-height:2"><span style="font-weight:700; color:#1a1a1a; font-size:30px;">{{$seller->verification_code}}</span> </h1><br>
+                                        <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Important:</strong> <br><br>
+                                            <li>Please do not share this code with anyone else.</li>
+                                            <li>If you didn 't attempt to register for Agroease, please disregard this email.</li> <br><br>If you encounter any difficulties or have any questions, don't hesitate to reach out to our support team at <a href="mailto:support@agroease.ng"
+                                                style="color: #1d988c; text-decoration: none;"><strong>support@agroease.ng</strong></a>
+                                            <br><br>Thank you for choosing <strong>Agroease!</strong> We look forward to serving you. <br><br>Best regards, <br><br>The Agroease Team</h1><br>
                                     </td>
                                 </tr>
                                 <tr>

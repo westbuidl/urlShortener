@@ -27,7 +27,10 @@ class Seller extends Authenticatable implements MustVerifyEmail
         'zipcode',
         'password',
         'profile_photo',
-        'verification_code'
+        'verification_code',
+        'account_name',
+        'account_number',
+        'bank_name'
     ];
 
 }

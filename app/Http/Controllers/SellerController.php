@@ -35,7 +35,7 @@ class SellerController extends Controller
              'country' => 'required|min:2|max:100',
              'state' => 'required|min:2|max:100',
              'city' => 'required|min:2|max:100',
-             'address' => 'required|min:2|max:100',
+             'address' => 'min:2|max:100',
              'zipcode' => '',
              'password' => 'required|min:6|max:100',
              'confirm_password' => 'required|same:password'

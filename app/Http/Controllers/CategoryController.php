@@ -244,12 +244,12 @@ class CategoryController extends Controller
                 ->limit(5) // Limit to the top 5 popular categories
                 ->get();
 
-                // Iterate over each category to append full image path
-        foreach ($popularCategories as $category) {
-            $category->full_image_path = asset('uploads/category_image/' . $category->categoryImage);
-        }
+            // Iterate over each category to append full image path
+            foreach ($popularCategories as $category) {
+                $category->full_image_path = asset('uploads/category_image/' . $category->categoryImage);
+            }
 
-    
+
             // Return response with popular categories
             return response()->json([
                 'message' => 'Popular categories fetched successfully.',
@@ -265,59 +265,57 @@ class CategoryController extends Controller
     }
 
     public function editCategory(Request $request, $categoryID)
-{
-    // Find the category by ID
-    //$category = Category::find($categoryID);
-    $category = Category::where('categoryID', $categoryID)->first();
+    {
+        // Find the category by ID
+        //$category = Category::find($categoryID);
+        $category = Category::where('categoryID', $categoryID)->first();
 
-    // Check if category exists
-    if (!$category) {
-        return response()->json([
-            'message' => 'Category not found.',
-        ], 404);
-    }
-
-    $validator = Validator::make($request->all(), [
-        'categoryName' => 'required|string|max:255|unique:categories,categoryName,' . $category->id,
-        'categoryDescription' => 'required|string|max:255',
-        'categoryImage' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-        'quantity_instock' => 'required|string|max:255',
-        'quantity_sold' => 'required|string|max:255',
-        // Add more validation rules as needed
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'message' => 'Validation fails',
-            'error' => $validator->errors()
-        ], 422);
-    }
-
-    // Update category fields
-    $category->categoryName = $request->categoryName;
-    $category->categoryDescription = $request->categoryDescription;
-    $category->quantity_instock = $request->quantity_instock;
-    $category->quantity_sold = $request->quantity_sold;
-
-    // Handle category image update if provided
-    if ($request->hasFile('categoryImage')) {
-        $new_imageName = time() . '.' . $request->categoryImage->extension();
-        $request->categoryImage->move(public_path('/uploads/category_image'), $new_imageName);
-        // Delete previous image if exists
-        if ($category->categoryImage && file_exists(public_path('/uploads/category_image/') . $category->categoryImage)) {
-            unlink(public_path('/uploads/category_image/') . $category->categoryImage);
+        // Check if category exists
+        if (!$category) {
+            return response()->json([
+                'message' => 'Category not found.',
+            ], 404);
         }
-        $category->categoryImage = $new_imageName;
+
+        $validator = Validator::make($request->all(), [
+            'categoryName' => 'required|string|max:255|unique:categories,categoryName,' . $category->id,
+            'categoryDescription' => 'required|string|max:255',
+            'categoryImage' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'quantity_instock' => 'required|string|max:255',
+            'quantity_sold' => 'required|string|max:255',
+            // Add more validation rules as needed
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation fails',
+                'error' => $validator->errors()
+            ], 422);
+        }
+
+        // Update category fields
+        $category->categoryName = $request->categoryName;
+        $category->categoryDescription = $request->categoryDescription;
+        $category->quantity_instock = $request->quantity_instock;
+        $category->quantity_sold = $request->quantity_sold;
+
+        // Handle category image update if provided
+        if ($request->hasFile('categoryImage')) {
+            $new_imageName = time() . '.' . $request->categoryImage->extension();
+            $request->categoryImage->move(public_path('/uploads/category_image'), $new_imageName);
+            // Delete previous image if exists
+            if ($category->categoryImage && file_exists(public_path('/uploads/category_image/') . $category->categoryImage)) {
+                unlink(public_path('/uploads/category_image/') . $category->categoryImage);
+            }
+            $category->categoryImage = $new_imageName;
+        }
+
+        // Save changes to the category
+        $category->save();
+
+        return response()->json([
+            'message' => 'Category successfully updated.',
+            'data' => $category
+        ], 200);
     }
-
-    // Save changes to the category
-    $category->save();
-
-    return response()->json([
-        'message' => 'Category successfully updated.',
-        'data' => $category
-    ], 200);
 }
-
-
- }
