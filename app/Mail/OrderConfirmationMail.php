@@ -13,12 +13,17 @@ class OrderConfirmationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $business;
+    public $reset_password;
+
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($business, $reset_password)
     {
         //
+        $this->business = $business;
+        $this->reset_password = $reset_password;
     }
 
     /**
@@ -27,7 +32,7 @@ class OrderConfirmationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Order Confirmation Mail',
+            subject: $this->business . '  '  .'verify your email' 
         );
     }
 
@@ -37,7 +42,7 @@ class OrderConfirmationMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            view: 'emails.OrderConfirmationEmail',
         );
     }
 

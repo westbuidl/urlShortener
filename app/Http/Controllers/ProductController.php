@@ -9,8 +9,6 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Mail\ProductAddEmail;
 use App\Mail\productRestockEmail;
-use App\Models\Seller;
-use App\Mail\OrderConfirmationMail;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -556,7 +554,7 @@ class ProductController extends Controller
                     'cost_price' => $request->new_cost_price,
                 ]);
 
-                //Mail::to($request->email)->send(new productRestockEmail($product, $product, $request->firstname, $product->product_name, $product->quantityin_stock));
+                Mail::to($request->email)->send(new productRestockEmail($product, $product, $request->firstname, $product->product_name, $product->quantityin_stock));
                 // Return success response
                 return response()->json([
                     'message' => 'Restock successful',
@@ -589,7 +587,7 @@ class ProductController extends Controller
         // Check if the product exists
         if ($product) {
             // Check if the authenticated user is the owner of the product
-            if ($request->user()->userID == $product->user_id) {
+            if ($request->user()->sellerId == $product->sellerId) {
                 // Toggle the product state
                 $product->update([
                     'is_active' => !$product->is_active,

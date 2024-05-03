@@ -8,24 +8,24 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *//*//
+     *//*
    public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
-            $table->string('userID');
-            $table->string('productID');
-            $table->string('orderID');
+            $table->string('buyerId');
+            $table->string('productId');
+            $table->string('orderId');
             $table->string('productName');
-           
-            $table->string('productDescription');
+            $table->string('productImage');
             $table->string('amount');
             $table->string('quantity');
             $table->string('paymentMethod');
-            $table->string('Discount');
-            $table->string('shippingFee');
-            $table->string('status')->nullable();
+            $table->string('Discount')->nullable();
+            $table->string('shippingFee')->nullable();
+            $table->string('order_status')->nullable();
+            $table->string('grand_price')->nullable();
+            $table->timestamps();
           
         });
     }

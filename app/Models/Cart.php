@@ -17,13 +17,16 @@ class Cart extends Model
         'selling_price',
         'quantity',
         'total_price',
-        'categoryID'
+        'categoryID',
+        'cartId'
 
 
         
     ];
+   
+
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'productId'); // 'productId' is the foreign key column
     }
 }

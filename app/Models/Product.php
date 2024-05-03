@@ -24,6 +24,7 @@ class Product extends Model
         'cost_price',
         'selling_price',
         'quantityin_stock',
+        'quantity_sold',
         'unit',
         'product_description',
         'product_image',
@@ -52,6 +53,10 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class,  'categoryID', 'id');
+    }
+    public function carts()
+    {
+        return $this->hasMany(Cart::class, 'productId', 'id'); // 'productId' is the foreign key column
     }
    
 }

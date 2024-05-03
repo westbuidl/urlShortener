@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
-use App\Models\Product;
 use App\Models\Buyer;
+use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Mail\OrderConfirmationMail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -32,11 +35,6 @@ class CartController extends Controller
                 ], 401);
             }
 
-            // Retrieve data from the request
-            $data = $request->validate([
-                'quantity' => 'required|integer',
-            ]);
-
 
             $product = Product::where('productId', $productId)->first();
 
@@ -47,6 +45,27 @@ class CartController extends Controller
                     'message' => 'Product not found.',
                 ], 404);
             }
+            // Retrieve data from the request
+            $data = $request->validate([
+                'quantity' => 'required|integer',
+            ]);
+
+
+            $quantity = $data['quantity'];
+
+            // Check if the requested quantity is available in stock
+            if ($quantity > $product->quantityin_stock) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Requested quantity exceeds available stock.',
+                ], 400);
+            }
+
+
+
+
+
+
 
             // Check if the product already exists in the user's cart
             $existingCartItem = Cart::where('buyerId',  $buyer->buyerId)
@@ -240,11 +259,6 @@ class CartController extends Controller
                 ], 403);
             }
 
-            // Validate the request data
-            $request->validate([
-                'new_quantity' => 'required|integer|min:1', // Minimum quantity is 1
-            ]);
-
             // Fetch the product details using the cart item's productId
             $product = Product::where('productId', $cartItem->productId)->first();
 
@@ -255,6 +269,23 @@ class CartController extends Controller
                     'message' => 'Product not found.',
                 ], 404);
             }
+            // Validate the request data
+            $request->validate([
+                'new_quantity' => 'required|integer|min:1', // Minimum quantity is 1
+            ]);
+
+            $quantity = $request['new_quantity'];
+
+            // Check if the requested quantity is available in stock
+            if ($quantity > $product->quantityin_stock) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Requested quantity exceeds available stock.',
+                ], 400);
+            }
+
+
+
 
             // Update the quantity of the cart item
             $cartItem->quantity = $request->new_quantity;
@@ -275,76 +306,150 @@ class CartController extends Controller
         }
     }
 
-     //Check out Function
-     public function checkout(Request $request, $cartId)
-     {
-         try {
-             // Retrieve the authenticated user's ID
-             //$user_id = Auth::id();
- 
-             $buyer = Auth::user()->buyerId;
- 
-             // Ensure that the user is logged in
-             if (!$buyer) {
-                 return response()->json([
-                     'status' => false,
-                     'message' => 'User not authenticated.',
-                 ], 401);
-             }
-             // Retrieve the cart items for the authenticated user
-             $cartItems = Cart::where('cartId', $cartId)->get();
- 
-             // Check if the cart is empty
-             if ($cartItems->isEmpty()) {
-                 return response()->json([
-                     'status' => false,
-                     'message' => 'Cart is empty. Please add items to the cart first.',
-                     'BuyerId' => $buyer
-                 ], 400);
-             }
- 
-             // Calculate the total price of the items in the cart
-             $totalPrice = 0;
-             foreach ($cartItems as $cartItem) {
-                 $totalPrice += $cartItem->selling_price * $cartItem->quantity;
-             }
- 
-             // Proceed with the payment (This part depends on your payment gateway integration)
- 
-             // Assuming the payment is successful
-             // Add the transaction to the Order database
-             $order = new Order;
-             $order->userID = $user_id;
-             $order->productID = $productId;
-             $order->orderID = $order_id;
-             $order->productName = $product->product_name;
-             $order->productDescription = $product->product_description;
-             $order->amount = $amount;
-             $order->quantity = $product->categoryID;
-             $order->paymentMethod = $product->categoryID;
-             $order->Discount = $product->categoryID;
-             $order->shippingFee = $product->categoryID;
-             $order->status = $product->categoryID;
-             $order->total_price = $totalPrice;
-             $order->save();
- 
-             // Clear the cart after successful checkout
-             Cart::where('buyerId', $buyer)->delete();
- 
-             // Notify the user via email about the successful payment
-             Mail::to(Auth::user()->email)->send(new OrderConfirmationMail($order));
- 
-             return response()->json([
-                 'status' => true,
-                 'message' => 'Checkout successful. Your order has been placed.',
-                 'order' => $order,
-             ], 200);
-         } catch (\Exception $e) {
-             // Return the error message in the response
-             return response()->json([
-                 'status' => false,
-                 'message' => 'An error occurred during checkout: ' . $e->getMessage(),
-             ], 500);
-         }
-     }
+    //Check out Function
+
+public function checkout($buyerId)
+{
+    $orderId = rand(1000000000, 9999999999);
+
+    try {
+        // Retrieve the authenticated user's ID
+        $authenticatedBuyerId = Auth::user()->buyerId;
+
+        // Ensure that the user is logged in and matches the requested buyer ID
+        if (!$authenticatedBuyerId || $authenticatedBuyerId != $buyerId) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Buyer not authenticated or mismatched buyer ID.',
+            ], 401);
+        }
+
+        // Retrieve the cart items for the authenticated buyer
+        $cartItems = Cart::where('buyerId', $buyerId)->get();
+
+        // Check if cart items are retrieved successfully and if the cart is not empty
+        if ($cartItems->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Cart is empty. Please add items to the cart first.',
+            ], 400);
+        }
+
+        // Iterate through each cart item and create an order for it
+        foreach ($cartItems as $cartItem) {
+            $order = new Order;
+            $order->buyerId = $buyerId;
+            $order->productId = $cartItem->productId;
+            $order->orderId = $orderId;
+            $order->productName = $cartItem->product_name;
+            $order->productImage = $cartItem->product_image;
+            $order->amount = $cartItem->selling_price;
+            $order->quantity = $cartItem->quantity;
+            $order->paymentMethod = 'paystack';
+            $order->Discount = null;
+            $order->shippingFee = null;
+            $order->order_status = 1;
+            $order->grand_price = $cartItem->amount;
+            $order->save();
+
+            // Update product quantity in stock and quantity sold
+            $product = Product::where('productId', $cartItem->productId)->first();
+            if ($product) {
+                $product->quantityin_stock -= $cartItem->quantity;
+                $product->quantity_sold += $cartItem->quantity;
+                $product->save();
+            }
+        }
+        
+        // Clear the cart after successful checkout
+        Cart::where('buyerId', $buyerId)->delete();
+
+        // Notify the user via email about the successful payment
+        // Note: You may need to move this inside the loop if you want to send separate emails for each order.
+        // Notify the user via email about the successful payment
+        Mail::to(Auth::user()->email)->send(new OrderConfirmationMail($order, $order->orderId,$order->amount));
+
+
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Checkout successful. Your orders have been placed.',
+        ], 200);
+    } catch (\Exception $e) {
+        // Return the error message in the response
+        return response()->json([
+            'status' => false,
+            'message' => 'An error occurred during checkout: ' . $e->getMessage(),
+        ], 500);
+    }
+}
+/*public function checkout(Request $request, $buyerId)
+{
+    $orderId = rand(1000000000, 9999999999);
+
+    try {
+        // Retrieve the authenticated user's ID
+        $buyerId = Auth::user()->buyerId;
+
+        // Ensure that the user is logged in
+        if (!$buyerId) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Buyer not authenticated.',
+            ], 401);
+        }
+
+        // Retrieve the cart items for the authenticated user and specific cartId
+        $cartItems = Cart::where('buyerId', $buyerId)->get();
+
+        // Check if cart items are retrieved successfully
+        if ($cartItems->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve cart items.',
+            ], 400);
+        }
+
+        // Proceed with the payment (This part depends on your payment gateway integration)
+
+        // Assuming the payment is successful
+        // Add the transaction to the Order database
+        foreach ($cartItems as $cartItem) {
+            $order = new Order;
+            $order->buyerId = $buyerId;
+            $order->productId = $cartItem->productId;
+            $order->orderId = $orderId;
+            $order->productName = $cartItem->product_name; // Assuming this field exists in your Cart model
+            $order->productImage = $cartItem->product_image; // Assuming this field exists in your Cart model
+            $order->amount = $cartItem->selling_price; // Assuming this field exists in your Cart model
+            $order->quantity = $cartItem->quantity; // Assuming this field exists in your Cart model
+            $order->paymentMethod = 'paystack';
+            $order->Discount = null;
+            $order->shippingFee = null;
+            $order->order_status = 0;
+            $order->grand_price = $cartItem->amount; // Assuming this field exists in your Cart model
+            $order->save();
+        }
+
+        // Clear the cart after successful checkout
+        Cart::where('buyerId', $buyerId)->delete();
+
+        // Notify the user via email about the successful payment
+        //Mail::to(Auth::user()->email)->send(new OrderConfirmationMail($order, $orderId, $order->amount));
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Checkout successful. Your order has been placed.',
+            'order' => $order,
+        ], 200);
+    } catch (\Exception $e) {
+        // Return the error message in the response
+        return response()->json([
+            'status' => false,
+            'message' => 'An error occurred during checkout: ' . $e->getMessage(),
+        ], 500);
+    }
+}*/
+
+
 }

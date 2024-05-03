@@ -12,17 +12,18 @@ class Order extends Model
 
 
     protected $fillable = [
-        'userID',
-        'productID',
-        'orderID',
+        'buyerId',
+        'productId',
+        'orderId',
         'productName',
-        'productDescription',
+        'productImage',
         'amount',
         'quantity',
         'paymentMethod',
         'Discount',
         'shippingFee',
-        'status'
+        'order_status',
+        'grand_price'
         
     ];
 

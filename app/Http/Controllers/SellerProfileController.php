@@ -202,13 +202,12 @@ class SellerProfileController extends Controller
     }
 
 
-    public function addBankAccount(Request $request)
+    /* public function addBankAccount(Request $request)
     {
         // Get the authenticated seller's ID
         $sellerId = auth()->user()->sellerId;
 
-        // Generate OTP
-        $otp = rand(100000, 999999);
+       
 
         $validator = Validator::make($request->all(), [
             'account_name' => 'required|min:2|max:100',
@@ -224,17 +223,18 @@ class SellerProfileController extends Controller
             ], 422);
         }
 
+        
         // Save OTP in the seller's record for verification
         $seller = Seller::where('sellerId', $sellerId)->first();
         // $seller = Seller::find($sellerId);
-        $seller->verification_code = $otp;
+        //$seller->verification_code = $otp;
         $seller->save();
 
         // Send OTP to seller's email
         Mail::to($seller->email)->send(new addBankAccountEmail($seller, $seller->firstname));
 
         return response()->json([
-            'message' => 'OTP sent to your registered email address.',
+            'message' => 'Account saved.',
         ], 200);
     }
 
@@ -253,22 +253,20 @@ class SellerProfileController extends Controller
             ], 404);
         }
 
-        // Validate the incoming request data
         $validator = Validator::make($request->all(), [
-            'otp' => 'required|string|max:6',
-            'account_name' => 'required|string|min:2|max:100',
+            'account_name' => 'required|min:2|max:100',
             'account_number' => 'required|min:2|max:100',
-            'bank_name' => 'required|string|min:2|max:100'
-        ]);
-    
+            'bank_name' => 'required|min:2|max:100'
 
-        // Check if validation fails
+
+        ]);
         if ($validator->fails()) {
             return response()->json([
-                'message' => 'Validation fails',
+                'message' => 'Validations fails',
                 'error' => $validator->errors()
             ], 422);
         }
+
 
         // Verify OTP
         if ($request->otp != $seller->verification_code) {
@@ -293,40 +291,103 @@ class SellerProfileController extends Controller
             'message' => 'Bank account information successfully added.',
             'data' => $seller
         ], 200);
+    }*/
+
+    public function addBankAccount(Request $request)
+    {
+        // Get the authenticated seller's ID
+        $sellerId = auth()->user()->sellerId;
+
+        // Retrieve the authenticated seller
+        $seller = Seller::where('sellerId', $sellerId)->first();
+
+        // Ensure the seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        // Validate the request data
+        $validator = Validator::make($request->all(), [
+            'account_name' => 'required|min:2|max:100',
+            'account_number' => 'required|min:2|max:100',
+            'bank_name' => 'required|min:2|max:100'
+        ]);
+
+        // Check if validation fails
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'error' => $validator->errors()
+            ], 422);
+        }
+
+        // Extract first name and last name from seller's account
+        $sellerFirstName = $seller->firstname;
+        $sellerLastName = $seller->lastname;
+
+        // Concatenate first name and last name
+        $sellerFullName = $sellerFirstName . ' ' . $sellerLastName;
+
+        // Check if the entered account name matches the seller's full name
+        if ($request->account_name !== $sellerFullName) {
+            return response()->json([
+                'message' => 'Bank account name does not match your registered name.'
+            ], 400);
+        }
+
+        // Update seller's bank account information
+        $seller->account_name = $request->account_name;
+        $seller->account_number = $request->account_number;
+        $seller->bank_name = $request->bank_name;
+        $seller->save();
+
+        // Clear OTP after successful verification
+        $seller->verification_code = null;
+        $seller->save();
+
+
+        Mail::to($seller->email)->send(new bankAccountSavedEmail($seller, $seller->firstname));
+        return response()->json([
+            'message' => 'Bank account information successfully added.',
+            'data' => $seller
+        ], 200);
     }
 
     public function getBankAccountDetails(Request $request)
-{
-   // Get the authenticated seller's ID
-   $sellerId= auth()->user()->sellerId;
+    {
+        // Get the authenticated seller's ID
+        $sellerId = auth()->user()->sellerId;
 
-   // Find the seller by ID
-   $seller = Seller::where('sellerId', $sellerId)->first();
+        // Find the seller by ID
+        //$seller = Seller::find($sellerId);
+        $seller = Seller::where('sellerId', $sellerId)->first();
 
-   // Check if seller exists
-   if (!$seller) {
-       return response()->json([
-           'message' => 'Seller not found.',
-       ], 404);
-   }
+        // Check if seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
 
-   // Check if the seller has bank account details
-   if (!$seller->bank_name || !$seller->account_number || !$seller->ifsc_code) {
-       return response()->json([
-           'message' => 'Seller bank account details not found.',
-       ], 404);
-   }
+        // Check if the seller has bank account details
+        if (!$seller->bank_name || !$seller->account_number) {
+            return response()->json([
+                'message' => 'Seller bank account details not found.',
+            ], 404);
+        }
 
-   // Fetch seller's bank account details
-   $bankAccountDetails = [
-       'bank_name' => $seller->bank_name,
-       'account_number' => $seller->account_number,
-       'account_name' => $seller->account_name,
-   ];
+        // Construct response with seller's bank account details
+        $bankAccountDetails = [
+            'account_name' => $seller->account_name,
+            'bank_name' => $seller->bank_name,
+            'account_number' => $seller->account_number,
+        ];
 
-   return response()->json([
-       'message' => 'Seller bank account details retrieved successfully.',
-       'data' => $bankAccountDetails
-   ], 200);
-}
+        return response()->json([
+            'message' => 'Seller bank account details retrieved successfully.',
+            'data' => $bankAccountDetails
+        ], 200);
+    }
 }

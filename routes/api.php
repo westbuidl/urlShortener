@@ -95,7 +95,7 @@ Route::post('/resendCompanyBuyerEmailAuth/{email}', [CompanyBuyerController::cla
 Route::get('/getCompanyBuyerProfile/{companyBuyerId}', [CompanyBuyerController::class, 'getCompanyBuyerProfile'])->name('getCompanyBuyerProfile');//resend verification code
 
 //---Begin Api routes for CompanySeller --//
-Route::post('/companySellerSignup', [CompanySellerController::class, 'business'])->name('business');//creating account for business
+Route::post('/companySellerSignup', [CompanySellerController::class, 'companySellerSignup'])->name('companySellerSignup');//creating account for business
 Route::post('/companySellerLogin', [CompanySellerController::class, 'companySellerLogin'])->name('companySellerLogin');//business account login
 Route::post('/companySellerChangePassword', [CompanySellerController::class, 'companySellerChangePassword'])->middleware('auth:sanctum')->name('companySellerChangePassword');//change password endpoint for sellers
 Route::delete('/deleteCompanySellerProfilePicture/{companySellerId}', [CompanySellerController::class, 'deleteCompanySellerProfilePicture'])->middleware('auth:sanctum')->name('deleteCompanySellerProfilePicture');//profile image update endpoint
@@ -124,11 +124,11 @@ Route::post('/verifyMailBusiness', [BusinessController::class, 'verifyMailBusine
 
 //Add to cart
 Route::post('/storeCart', [CartController::class, 'storeCart'])->name('showCart');//adding to cart api
-Route::get('/viewCart/{productId}', [CartController::class, 'viewCart'])->middleware('auth:sanctum')->name('viewCart');//adding to cart api
+Route::get('/viewCart/{buyerId}', [CartController::class, 'viewCart'])->middleware('auth:sanctum')->name('viewCart');//adding to cart api
 Route::post('/addToCart/{productId}', [CartController::class, 'addToCart'])->middleware('auth:sanctum')->name('addToCart');//adding to cart api
-Route::post('/checkout/{userID}', [CartController::class, 'checkout'])->middleware('auth:sanctum')->name('checkout');//adding to cart api
-Route::delete('/deleteCartItem/{cart_id}', [CartController::class, 'deleteCartItem'])->middleware('auth:sanctum')->name('deleteCartItem');//adding to cart api
-Route::post('/updateCartItem/{cart_id}', [CartController::class, 'updatecartItem'])->middleware('auth:sanctum')->name('updatecartItem');//adding to cart api
+Route::post('/checkout/{buyerId}', [CartController::class, 'checkout'])->middleware('auth:sanctum')->name('checkout');//adding to cart api
+Route::delete('/deleteCartItem/{cartId}', [CartController::class, 'deleteCartItem'])->middleware('auth:sanctum')->name('deleteCartItem');//adding to cart api
+Route::post('/updateCartItem/{cartId}', [CartController::class, 'updatecartItem'])->middleware('auth:sanctum')->name('updatecartItem');//adding to cart api
 //End adding product to cart endpoints
 
 
@@ -147,8 +147,8 @@ Route::delete('/deleteProduct/{productId}', [ProductController::class, 'deletePr
 Route::post('/toggleProductState/{productId}', [ProductController::class, 'toggleProductState'])->middleware('auth:sanctum')->name('toggleProductState');//toggle product state
 Route::get('/hotDeals', [ProductController::class, 'hotDeals'])->name('hotDeals');//toggle product state
 Route::get('/popularProducts', [ProductController::class, 'popularProducts'])->name('popularProducts');//toggle product state
-Route::post('/checkout', [ProductController::class, 'checkout'])->middleware('auth:sanctum')->name('checkout');// add to cart
-//--End of Product api--//
+//Route::post('/checkout/{buyerId}', [ProductController::class, 'checkout'])->middleware('auth:sanctum')->name('checkout');// add to cart
+//--End of Product api-/-//
 
 
 //--Begin of Admi api --//

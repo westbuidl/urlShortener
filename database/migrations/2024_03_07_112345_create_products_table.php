@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('cost_price');
             $table->string('selling_price');
             $table->string('quantityin_stock');
+            $table->string('quantity_sold')->nullable();
             $table->string('unit');
             $table->string('product_description');
             $table->string('product_image')->nullable();
