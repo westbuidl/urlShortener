@@ -10,6 +10,7 @@ use App\Http\Controllers\SellerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\PaystackController;
 use App\Http\Controllers\BuyerProfileController;
 use App\Http\Controllers\CompanyBuyerController;
 use App\Http\Controllers\CompanySellerController;
@@ -163,3 +164,14 @@ Route::post('/editCategory/{categoryID}', [CategoryController::class, 'editCateg
 
 //--End of Admin api --//
 
+
+//--Payment Api --//
+
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Route::get('/pay', [CartController::class, 'pay']);
+Route::post('/pay', [CartController::class, 'make_payment'])->name('pay');
+Route::get('/pay/callback', [CartController::class, 'payment_callback'])->name('pay.callback');
+Route::post('initialize_paystack', [CartController::class, 'initialize_paystack'])->name('api.initialize_paystack');

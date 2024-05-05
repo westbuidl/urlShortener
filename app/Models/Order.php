@@ -20,6 +20,7 @@ class Order extends Model
         'amount',
         'quantity',
         'paymentMethod',
+        'paymentReference',
         'Discount',
         'shippingFee',
         'order_status',

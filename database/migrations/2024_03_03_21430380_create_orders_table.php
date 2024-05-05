@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *//*
+     */
    public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('amount');
             $table->string('quantity');
             $table->string('paymentMethod');
+            $table->string('paymentReference');
             $table->string('Discount')->nullable();
             $table->string('shippingFee')->nullable();
             $table->string('order_status')->nullable();
