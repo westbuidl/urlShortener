@@ -127,7 +127,7 @@ Route::post('/verifyMailBusiness', [BusinessController::class, 'verifyMailBusine
 Route::post('/storeCart', [CartController::class, 'storeCart'])->name('showCart');//adding to cart api
 Route::get('/viewCart/{buyerId}', [CartController::class, 'viewCart'])->middleware('auth:sanctum')->name('viewCart');//adding to cart api
 Route::post('/addToCart/{productId}', [CartController::class, 'addToCart'])->middleware('auth:sanctum')->name('addToCart');//adding to cart api
-Route::post('/checkout/{buyerId}', [CartController::class, 'checkout'])->middleware('auth:sanctum')->name('checkout');//adding to cart api
+
 Route::delete('/deleteCartItem/{cartId}', [CartController::class, 'deleteCartItem'])->middleware('auth:sanctum')->name('deleteCartItem');//adding to cart api
 Route::post('/updateCartItem/{cartId}', [CartController::class, 'updatecartItem'])->middleware('auth:sanctum')->name('updatecartItem');//adding to cart api
 //End adding product to cart endpoints
@@ -170,8 +170,9 @@ Route::post('/editCategory/{categoryID}', [CategoryController::class, 'editCateg
 Route::get('/', function () {
     return view('welcome');
 });
-
+Route::post('/confirmOrder/{buyerId}', [CartController::class, 'confirmOrder'])->middleware('auth:sanctum')->name('confirmOrder');//adding to cart api
+Route::get('/pay/callback', [CartController::class, 'payment_callback'])->name('pay.callback');
 Route::get('/pay', [CartController::class, 'pay']);
 Route::post('/pay', [CartController::class, 'make_payment'])->name('pay');
-Route::get('/pay/callback', [CartController::class, 'payment_callback'])->name('pay.callback');
+
 Route::post('initialize_paystack', [CartController::class, 'initialize_paystack'])->name('api.initialize_paystack');

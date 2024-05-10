@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 602.84 104.36">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        letter-spacing: -.03em;
+      }
+
+      .cls-3 {
+        letter-spacing: -.03em;
+      }
+
+      .cls-4 {
+        fill: #7e66ef;
+      }
+
+      .cls-5 {
+        fill: #1d988c;
+      }
+
+      .cls-6 {
+        letter-spacing: -.03em;
+      }
+
+      .cls-7 {
+        font-family: Gilroy-Bold, Gilroy;
+        font-size: 142.93px;
+        font-weight: 700;
+      }
+
+      .cls-8 {
+        letter-spacing: -.05em;
+      }
+
+      .cls-9 {
+        letter-spacing: -.04em;
+      }
+
+      .cls-2 {
+        opacity: 0;
+      }
+    </style>
+  </defs>
+  <text class="cls-7" transform="translate(.7 73.62)"><tspan class="cls-2" x="0" y="0">a</tspan><tspan class="cls-1" x="85.19" y="0">g</tspan><tspan class="cls-8" x="170.37" y="0">r</tspan><tspan class="cls-3" x="214.25" y="0">o</tspan><tspan class="cls-6" x="294.86" y="0">ea</tspan><tspan class="cls-9" x="457.66" y="0">s</tspan><tspan class="cls-1" x="518.12" y="0">e</tspan></text>
+  <path class="cls-5" d="M34.8,0C15.58,0,0,17.02,0,38.01s15.58,38.01,34.8,38.01,34.8-17.02,34.8-38.01S54.03,0,34.8,0Zm3.44,58.2c-10.93,0-19.79-6.98-19.79-20.48,0-11.52,8.86-20.03,19.79-20.03s19.79,8.51,19.79,20.03-7.87,20.48-19.79,20.48Z"/>
+  <rect class="cls-4" x="58.03" y="2.27" width="18.44" height="71.46"/>
+</svg>

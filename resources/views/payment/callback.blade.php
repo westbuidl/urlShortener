@@ -16,6 +16,6 @@
             <tr><td>Email:</td><td>{{$data->customer->email}}</td></tr>
         </tbody>
     </table>
-    <a href="{{route('pay')}}">Back home</a>
+    <a href="{{route('popularProducts')}}">Back home</a>
 </body>
 </html>
