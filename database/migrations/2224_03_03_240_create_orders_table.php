@@ -32,6 +32,9 @@ return new class extends Migration
             $table->string('customer_email')->nullable();
             $table->string('shipping_address')->nullable();
             $table->string('grand_price')->nullable();
+            $table->string('firstname')->nullable();
+            $table->string('lastname')->nullable();
+            $table->string('billing_address')->nullable();
             $table->timestamps();
           
         });

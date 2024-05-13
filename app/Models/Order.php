@@ -29,6 +29,9 @@ class Order extends Model
         'country_code',
         'customer_email',
         'shipping_address',
+        'firstname',
+        'lastname',
+        'billing_address',
         'grand_price'
         
     ];

@@ -414,9 +414,18 @@ class CartController extends Controller
                 ], 401);
             }
 
+
+            $buyer = Buyer::where('buyerId', $buyerId)->first();
+            $buyerFirstName = $buyer->firstname;
+            $buyerLastName = $buyer->lastname;
+            $billing_address = $buyer->city . ', ' . $buyer->state . ', ' . $buyer->country . ', ' . $buyer->zipcode;
+
             $request->validate([
                 'paymentMethod' => 'required|string|min:1', // Minimum quantity is 1
                 'shipping_address' => 'required|string|min:1',
+                'city' => 'required|string|min:1',
+                'state' => 'required|string|min:1',
+
             ]);
             // Retrieve the cart items for the authenticated buyer
             $cartItems = Cart::where('buyerId', $buyerId)->get();
@@ -433,15 +442,18 @@ class CartController extends Controller
 
 
             $paymentMethod = $request->input('paymentMethod');
-            $shipping_address = $request->input('shipping_address');
+            $shippingData = $request->only(['shipping_address', 'city', 'state']);
+            $shipping_address = $shippingData['shipping_address'];
+            $city = $shippingData['city'];
+            $state = $shippingData['state'];
 
             // Proceed with payment initialization based on the selected payment method
             if ($paymentMethod === 'paystack') {
                 // Initialize payment using Paystack
-                $initializeResponse = $this->initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address);
+                $initializeResponse = $this->initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address);
             } elseif ($paymentMethod === 'flutterwave') {
                 // Initialize payment using PayPal (you would implement this method)
-                $initializeResponse = $this->initialize_flutterwave($cartItems, $paymentMethod, $buyerId, $shipping_address);
+                $initializeResponse = $this->initialize_flutterwave($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address);
             } else {
                 return response()->json([
                     'status' => false,
@@ -538,6 +550,9 @@ class CartController extends Controller
                         $order->country_code = $paymentDetails['data']['authorization']['country_code'];
                         $order->customer_email = $paymentDetails['data']['customer']['email'];
                         $order->shipping_address = $paymentDetails['data']['metadata']['shipping_address'];
+                        $order->billing_address = $paymentDetails['data']['metadata']['billing_address'];
+                        $order->firstname = $paymentDetails['data']['metadata']['firstname'];
+                        $order->lastname = $paymentDetails['data']['metadata']['lastname'];
                         $order->grand_price = $totalAmount;
                         $order->save();
 
@@ -554,8 +569,8 @@ class CartController extends Controller
                     Cart::where('buyerId', $buyerId)->delete();
 
                     // Send verification email
-                    Mail::to($customer_email)->send(new OrderConfirmationMail($order, $order->productName));
-                    //dd($paymentDetails);
+                    Mail::to($customer_email)->send(new OrderConfirmationMail($order, $order->productName, $order->firstname, $order->lastname));
+                    // dd($paymentDetails);
 
 
                     // Return success response
@@ -592,7 +607,7 @@ class CartController extends Controller
 
     private $initialize_url = "https://api.paystack.co/transaction/initialize";
 
-    public function initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address)
+    public function initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address)
     {
         //$product_name = $cartItems->product_name;
         $totalPrice = $cartItems->sum('total_price');
@@ -604,6 +619,9 @@ class CartController extends Controller
             'paymentMethod' =>  $paymentMethod,
             'buyerId' => $buyerId,
             'shipping_address' => $shipping_address,
+            'billing_address' => $billing_address,
+            'firstname' => $buyerFirstName,
+            'lastname' => $buyerLastName,
         ];
         $data = array(
             'email' => Auth::user()->email,
@@ -680,5 +698,90 @@ class CartController extends Controller
         curl_close($curl);
 
         return  $response;
+    }
+
+
+    public function getOrders()
+    {
+        // Retrieve the authenticated user's ID
+        $buyerId = Auth::user()->buyerId;
+
+        // Retrieve all orders associated with the authenticated user
+        $orders = Order::where('buyerId', $buyerId)->orderByDesc('created_at')->get();
+
+        // Check if any orders exist
+        if ($orders->isEmpty()) {
+            return response()->json([
+                'message' => 'No orders found for the authenticated user.',
+            ], 404);
+        }
+
+        // Iterate through each order to fetch product details and image URLs
+        foreach ($orders as $order) {
+            // Retrieve product details for the order
+            $products = Product::where('productId', $order->productId)->get();
+
+            // Extract image URLs for each product
+            $productImages = [];
+            foreach ($products as $product) {
+                if (!empty($product->product_image)) {
+                    foreach (explode(',', $product->product_image) as $image) {
+                        $productImages[] = asset('uploads/product_images/' . $image);
+                    }
+                }
+            }
+
+            // Add image URLs to the order object
+            $order->product_images = $productImages;
+        }
+
+        return response()->json([
+            'message' => 'All orders fetched successfully for the authenticated user.',
+            'data' => [
+                'orders' => $orders,
+            ]
+        ], 200);
+    }
+
+
+    public function getOrderById($orderId)
+    {
+        // Retrieve the authenticated user's ID
+        $buyerId = Auth::user()->buyerId;
+
+        // Retrieve the order associated with the authenticated user and the given order ID
+        $order = Order::where('buyerId', $buyerId)
+            ->where('orderId', $orderId)
+            ->first();
+
+        // Check if the order exists
+        if (!$order) {
+            return response()->json([
+                'message' => 'Order not found for the authenticated user.',
+            ], 404);
+        }
+
+        // Retrieve product details for the order
+        $products = Product::where('productId', $order->productId)->get();
+
+        // Extract image URLs for each product
+        $productImages = [];
+        foreach ($products as $product) {
+            if (!empty($product->product_image)) {
+                foreach (explode(',', $product->product_image) as $image) {
+                    $productImages[] = asset('uploads/product_images/' . $image);
+                }
+            }
+        }
+
+        // Add image URLs to the order object
+        $order->product_images = $productImages;
+
+        return response()->json([
+            'message' => 'Order fetched successfully for the authenticated user.',
+            'data' => [
+                'order' => $order,
+            ]
+        ], 200);
     }
 }
