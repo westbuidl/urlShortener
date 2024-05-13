@@ -24,6 +24,11 @@ class Order extends Model
         'Discount',
         'shippingFee',
         'order_status',
+        'channel',
+        'payment_id',
+        'country_code',
+        'customer_email',
+        'shipping_address',
         'grand_price'
         
     ];

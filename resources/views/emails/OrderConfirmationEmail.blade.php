@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Order Confirmation</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
@@ -31,19 +31,20 @@
                                     <td style="padding:0 35px; ">
                                         <br>
                                         <br>
-                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear Joseph, </h1><br>
+                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$firstname}}, </h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">Congratulations! Your order has been successfully processed, and we're thrilled to confirm your purchase with us</h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px">Sold Product Details: <br><br>
-                                            <li>Order Number: <strong> [Order Number]</strong></li>
-                                            <li>Date: <strong>[Date]</strong></li>
-                                            <li>Total Amount: <strong> [Total Amount]</strong></li>
+                                        <li>Product: <strong>{{$order->productName}}</strong></li><br>
+                                        <li>Order Number: <strong>{{$order->orderId}}</strong></li><br>
+                                            <li>Date: <strong>{{$order->created_at}}</strong></li><br>
+                                            <li>Total Amount: <strong>{{$order->currency}}{{$order->grand_price}}</strong></li><br>
                                         </h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px">Shipping Information: <br><br>
-                                            <li>Shipping Address: <strong> [Shipping Address]</strong></li>
-                                            <li>Shipping Method: <strong>[Shipping Method]</strong></li>
+                                            <li>Shipping Address: <strong> {{$order->shipping_address}}</strong></li><br>
+                                            <li>Shipping Method: <strong>[Shipping Method]</strong></li><br>
                                         </h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px">Payment Information: <br><br>
-                                            <li>Payment Method: <strong> [Payment Method]</strong></li>
+                                            <li>Payment Method: <strong>{{$order->channel}} | {{$order->paymentMethod}}</strong></li><br>
                                             <li>Billing Address: <strong>[Billing Address]</strong></li>
                                         </h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><br>We sincerely appreciate your business and trust in us. If there's anything else we can assist you with, please don't hesitate to let us know.

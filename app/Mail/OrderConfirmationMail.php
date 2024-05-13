@@ -13,17 +13,17 @@ class OrderConfirmationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $business;
-    public $reset_password;
+    public $order;
+    public $productName;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($business, $reset_password)
+    public function __construct($order, $productName)
     {
         //
-        $this->business = $business;
-        $this->reset_password = $reset_password;
+        $this->order = $order;
+        $this->productName = $productName;
     }
 
     /**
@@ -32,7 +32,7 @@ class OrderConfirmationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: $this->business . '  '  .'verify your email' 
+            subject: $this->productName .' '.'Order Confirmation' 
         );
     }
 

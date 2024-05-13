@@ -25,6 +25,12 @@ return new class extends Migration
             $table->string('Discount')->nullable();
             $table->string('shippingFee')->nullable();
             $table->string('order_status')->nullable();
+            $table->string('currency')->nullable();
+            $table->string('channel')->nullable();
+            $table->integer('payment_id')->nullable();
+            $table->string('country_code')->nullable();
+            $table->string('customer_email')->nullable();
+            $table->string('shipping_address')->nullable();
             $table->string('grand_price')->nullable();
             $table->timestamps();
           

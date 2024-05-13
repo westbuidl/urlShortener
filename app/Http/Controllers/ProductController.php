@@ -136,7 +136,7 @@ class ProductController extends Controller
 
             // Mail::to($userEmail)->send(new ProductAddEmail($product));
 
-            Mail::to($sellerEmail)->send(new ProductAddEmail($product, $product, $firstname, $product->product_name, $product->quantityin_stock));
+            Mail::to($sellerEmail)->send(new ProductAddEmail($product, $product, $firstname, $product->product_name, $product->quantityin_stock,$product->productId));
             return response()->json([
                 'message' => 'Product Successfully added',
                 'data' => $product

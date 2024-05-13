@@ -19,16 +19,18 @@ class ProductAddEmail extends Mailable
     public $firstname;
     public $product_name;
     public $quantityin_stock;
+    public $productId;
     /**
      * Create a new message instance.
      */
-    public function __construct($user, $product, $firstname,$product_name,$quantityin_stock)
+    public function __construct($user, $product, $firstname,$product_name,$quantityin_stock,$productId)
     {
         $this->user = $user;
         $this->product = $product;
         $this->firstname = $firstname;
         $this->product_name = $product_name;
         $this->quantityin_stock = $quantityin_stock;
+        $this->productId = $productId;
         //
     }
     /**
