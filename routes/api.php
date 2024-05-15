@@ -167,8 +167,16 @@ Route::post('/editCategory/{categoryID}', [CategoryController::class, 'editCateg
 
 //--Payment Api --//
 
+Route::get('/', function () {
+    return view('welcome');
+});
 Route::post('/confirmOrder/{buyerId}', [CartController::class, 'confirmOrder'])->middleware('auth:sanctum')->name('confirmOrder');//adding to cart api
 Route::get('/pay/callback', [CartController::class, 'payment_callback'])->name('pay.callback');
+Route::get('/paymentSuccess',  [CartController::class, 'paymentSuccess'])->name('paymentSuccess');
+
+Route::get('/pay', [CartController::class, 'pay']);
+Route::post('/pay', [CartController::class, 'make_payment'])->name('pay');
+
 Route::post('initialize_paystack', [CartController::class, 'initialize_paystack'])->name('api.initialize_paystack');
 Route::get('/getOrders', [CartController::class, 'getOrders'])->middleware('auth:sanctum')->name('getOrders');
 Route::get('/getOrderById/{orderId}', [CartController::class, 'getOrderById'])->middleware('auth:sanctum')->name('getOrderById');

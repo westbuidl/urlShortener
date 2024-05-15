@@ -13,11 +13,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 //use Unicodeveloper\Paystack\Paystack;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
-//use Unicodeveloper\Paystack\Facades\Paystack;
+use Unicodeveloper\Paystack\Facades\Paystack;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Paystack;
+//use Paystack;
 
 
 class CartController extends Controller
@@ -330,71 +331,6 @@ class CartController extends Controller
     }
 
 
-    //Paystack payment integration
-    /* private $initialize_url = "https://api.paystack.co/transaction/initialize";
-
-    public function initialize_paystack(Request $request)
-
-        {
-
-
-            // Validate the request data
-    $request->validate([
-        'paymentMethod' => 'required|string|min:1', // Minimum quantity is 1
-    ]);
-
-    $paymentMethod = $request->input('paymentMethod');
-
-    // Handle payment method validation
-    // Example:
-    if ($paymentMethod !== 'paystack') {
-        return response()->json([
-            'status' => false,
-            'message' => 'Invalid payment method.',
-        ], 400);
-    }
-
-    // Proceed with payment initialization
-   
- 
-            // $amount = number_format($request->amount,2);
-            $data = [
-                //'email' => Auth::user()->email,
-                'amount' => $request->amount * 100,
-                'email' => 'yrryrjrthtu@yahoo.com'
-    
-            ];
-            $fields_string = http_build_query($data);
-            //open connection
-            $ch = curl_init();
-            //set the url, number of POST vars, POST data
-    
-            curl_setopt($ch,CURLOPT_URL, $this->initialize_url);
-            curl_setopt($ch,CURLOPT_POST, true);
-            curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            "Authorization: Bearer ".env('PAYSTACK_SECRET_KEY'),
-    
-            "Cache-Control: no-cache",
-    
-            ));
-    
-            //So that curl_exec returns the contents of the cURL; rather than echoing it
-    
-            curl_setopt($ch,CURLOPT_RETURNTRANSFER, true); 
-            //execute post
-    
-            $result = curl_exec($ch);
-            $response = json_decode($result);
-    
-            return json_encode([
-                    'data' => $response,
-                    'metadata' => [
-                        'payment_for' => 'token'
-                    ]
-               ]);
-        }*/
-
 
 
     //Check out Function
@@ -488,6 +424,9 @@ class CartController extends Controller
     {
         $paymentDetails = Paystack::getPaymentData();
 
+        // Store payment details in session
+      Session::put('paymentDetails', $paymentDetails);
+
         try {
 
             //dd(Auth::user());
@@ -574,7 +513,8 @@ class CartController extends Controller
 
 
                     // Return success response
-                    return view('payment.callback')->with(compact('data'));
+                    //return view('payment.callback')->with(compact('data'));
+                    return redirect()->route('paymentSuccess')->with(compact('data'));
                 } else {
                     // Payment was not successful, handle accordingly
 
@@ -669,17 +609,13 @@ class CartController extends Controller
     }
 
 
-    public function verify_payment($reference, $paymentMethod = [])
+    public function verify_payment($reference)
     {
-        if ($paymentMethod === null) {
-            $paymentMethod = [];
-        }
-
-        $paymentMethod = http_build_query($paymentMethod);
+        
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => "https://api.paystack.co/transaction/verify/$reference?$paymentMethod",
+            CURLOPT_URL => "https://api.paystack.co/transaction/verify/$reference",
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
@@ -700,6 +636,19 @@ class CartController extends Controller
         return  $response;
     }
 
+    public function paymentSuccess(Request $request)
+{
+    // Retrieve data from the request or session
+    $paymentDetails = Session::get('paymentDetails');
+    $paymentDetails = request('data');
+
+    return json_encode([
+        'data' => $paymentDetails
+        
+    ]);
+
+    // Return the response or process the data as needed
+}
 
     public function getOrders()
     {
