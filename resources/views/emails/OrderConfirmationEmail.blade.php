@@ -34,11 +34,15 @@
                                         <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$order->firstname}}, </h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">Congratulations! Your order has been successfully processed, and we're thrilled to confirm your purchase with us</h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px">Sold Product Details: <br><br>
-                                        <li>Product: <strong>{{$order->productName}}</strong></li><br>
-                                        <li>Order Number: <strong>{{$order->orderId}}</strong></li><br>
-                                            <li>Date: <strong>{{$order->created_at}}</strong></li><br>
-                                            <li>Total Amount: <strong>{{$order->currency}}{{$order->grand_price}}</strong></li><br>
+                                       
+                                        @foreach ($order as $orderDetails)
+                                        <li>Product: <strong>{{$orderDetails->productName}}</strong></li><br>
+                                        <li>Order Number: <strong>{{$orderDetails->orderId}}</strong></li><br>
+                                            <li>Date: <strong>{{$orderDetails->created_at}}</strong></li><br>
+                                            <li>Total Amount: <strong>{{$orderDetails->currency}}{{$orderDetails->grand_price}}</strong></li><br>
+                                        @endforeach
                                         </h1><br>
+                                        
                                         <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px">Shipping Information: <br><br>
                                             <li>Shipping Address: <strong> {{$order->shipping_address}}</strong></li><br>
                                             <li>Shipping Method: <strong>[Shipping Method]</strong></li><br>
@@ -75,3 +79,6 @@
 </body>
 
 </html>
+
+
+

@@ -13,17 +13,19 @@ class OrderConfirmationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $order;
+    public $cartItems;
     public $productName;
+    public $order;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($order, $productName)
+    public function __construct($order, $productName, $cartItems)
     {
         //
         $this->order = $order;
         $this->productName = $productName;
+        $this->cartItems = $cartItems;
     }
 
     /**

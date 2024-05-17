@@ -10,6 +10,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Mail\OrderConfirmationMail;
 use App\Http\Controllers\Controller;
+use App\Mail\productSoldEmail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 //use Unicodeveloper\Paystack\Paystack;
@@ -425,7 +426,7 @@ class CartController extends Controller
         $paymentDetails = Paystack::getPaymentData();
 
         // Store payment details in session
-      Session::put('paymentDetails', $paymentDetails);
+        Session::put('paymentDetails', $paymentDetails);
 
         try {
 
@@ -466,6 +467,7 @@ class CartController extends Controller
                     if ($cartItems->isEmpty()) {
                         return redirect()->route('cart')->withError('Cart is empty. Please add items to the cart first.');
                     }
+
 
                     // Proceed with creating the order
                     $totalAmount = $data['amount'] / 100; // Convert amount back to actual value
@@ -508,6 +510,9 @@ class CartController extends Controller
                     Cart::where('buyerId', $buyerId)->delete();
 
                     // Send verification email
+                    //foreach ($order as $orders) {
+                    // Mail::to($customer_email)->send(new OrderConfirmationMail([$order, $order->productName]));
+                    //}
                     Mail::to($customer_email)->send(new OrderConfirmationMail($order, $order->productName, $order->firstname, $order->lastname));
                     // dd($paymentDetails);
 
@@ -611,7 +616,7 @@ class CartController extends Controller
 
     public function verify_payment($reference)
     {
-        
+
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
@@ -637,18 +642,35 @@ class CartController extends Controller
     }
 
     public function paymentSuccess(Request $request)
-{
-    // Retrieve data from the request or session
-    $paymentDetails = Session::get('paymentDetails');
-    $paymentDetails = request('data');
+    {
+        try {
+            // Make a request to the previous endpoint to fetch payment details
+            $response = Http::get('previous-endpoint-url');
 
-    return json_encode([
-        'data' => $paymentDetails
-        
-    ]);
+            // Check if the request was successful
+            if ($response->successful()) {
+                // Retrieve payment details from the response
+                $paymentDetails = $response->json();
 
-    // Return the response or process the data as needed
-}
+                // Process the payment details as needed
+                // For example, you can return the payment details or perform further actions
+
+                return response()->json([
+                    'data' => $paymentDetails
+                ]);
+            } else {
+                // Handle unsuccessful request
+                return response()->json([
+                    'error' => 'Failed to retrieve payment details from the previous endpoint'
+                ], $response->status());
+            }
+        } catch (\Exception $e) {
+            // Handle exceptions
+            return response()->json([
+                'error' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     public function getOrders()
     {
@@ -693,44 +715,59 @@ class CartController extends Controller
     }
 
 
+    //public function getOrderById($orderId)
     public function getOrderById($orderId)
     {
         // Retrieve the authenticated user's ID
         $buyerId = Auth::user()->buyerId;
 
-        // Retrieve the order associated with the authenticated user and the given order ID
-        $order = Order::where('buyerId', $buyerId)
+        // Retrieve all orders associated with the authenticated user and the given order ID
+        $orders = Order::where('buyerId', $buyerId)
             ->where('orderId', $orderId)
-            ->first();
+            ->get();
 
-        // Check if the order exists
-        if (!$order) {
+        // Check if any orders exist
+        if ($orders->isEmpty()) {
             return response()->json([
-                'message' => 'Order not found for the authenticated user.',
+                'message' => 'No orders found for the authenticated user with the given order ID.',
             ], 404);
         }
 
-        // Retrieve product details for the order
-        $products = Product::where('productId', $order->productId)->get();
+        // Iterate through each order to fetch product details and image URLs
+        $ordersWithProducts = [];
+        foreach ($orders as $order) {
+            // Retrieve product details for the order
+            $products = Product::where('productId', $order->productId)->get();
 
-        // Extract image URLs for each product
-        $productImages = [];
-        foreach ($products as $product) {
-            if (!empty($product->product_image)) {
-                foreach (explode(',', $product->product_image) as $image) {
-                    $productImages[] = asset('uploads/product_images/' . $image);
+            // Extract image URLs for each product
+            $productImages = [];
+            foreach ($products as $product) {
+                if (!empty($product->product_image)) {
+                    foreach (explode(',', $product->product_image) as $image) {
+                        $productImages[] = asset('uploads/product_images/' . $image);
+                    }
                 }
             }
+
+            // Add image URLs to the order object
+            $order->product_images = $productImages;
+
+            // Append the order with product details to the result array
+            $ordersWithProducts[] = $order;
         }
 
-        // Add image URLs to the order object
-        $order->product_images = $productImages;
-
         return response()->json([
-            'message' => 'Order fetched successfully for the authenticated user.',
+            'message' => 'Orders Fetched successfully .',
             'data' => [
-                'order' => $order,
+                'orders' => $ordersWithProducts,
             ]
         ], 200);
     }
 }
+/*@foreach ($cartItems as $orderDetails)
+<li>Product: <strong>{{$orderDetails->productName}}</strong></li><br>
+<li>Order Number: <strong>{{$orderDetails->orderId}}</strong></li><br>
+    <li>Date: <strong>{{$orderDetails->created_at}}</strong></li><br>
+    <li>Total Amount: <strong>{{$orderDetails->currency}}{{$orderDetails->grand_price}}</strong></li><br>
+@endforeach
+</h1><br>*/
