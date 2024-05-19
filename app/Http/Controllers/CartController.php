@@ -8,12 +8,13 @@ use App\Models\Buyer;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Mail\productSoldEmail;
 use App\Mail\OrderConfirmationMail;
 use App\Http\Controllers\Controller;
-use App\Mail\productSoldEmail;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 //use Unicodeveloper\Paystack\Paystack;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
@@ -384,13 +385,15 @@ class CartController extends Controller
             $city = $shippingData['city'];
             $state = $shippingData['state'];
 
+
+
             // Proceed with payment initialization based on the selected payment method
             if ($paymentMethod === 'paystack') {
                 // Initialize payment using Paystack
                 $initializeResponse = $this->initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address);
             } elseif ($paymentMethod === 'flutterwave') {
                 // Initialize payment using PayPal (you would implement this method)
-                $initializeResponse = $this->initialize_flutterwave($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address);
+                $initializeResponse = $this->initialize_payOnDelivery($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address);
             } else {
                 return response()->json([
                     'status' => false,
@@ -416,21 +419,15 @@ class CartController extends Controller
 
 
 
-
-
-
-
     public function payment_callback(Request $request)
 
     {
         $paymentDetails = Paystack::getPaymentData();
 
-        // Store payment details in session
-        Session::put('paymentDetails', $paymentDetails);
-
         try {
 
             //dd(Auth::user());
+            //$buyerId = 'AGB80406550';
             $buyerId = $paymentDetails['data']['metadata']['buyerId'];
 
 
@@ -438,7 +435,9 @@ class CartController extends Controller
             //$status = request('status');
             $paymentMethod = request('paymentMethod');
             $customer_email = $paymentDetails['data']['customer']['email'];
-            //$buyerId = $request->input('buyerId');
+            $paymentInfo = $paymentDetails['data']['id'];
+            
+            $paymentResponse = $this->paymentSuccess($paymentInfo);
 
             $response = json_decode($this->verify_payment($reference), true); // Decode as associative array for easier access
 
@@ -452,14 +451,6 @@ class CartController extends Controller
                     // Payment was successful, proceed to create an order
                     $orderId = rand(1000000000, 9999999999);
 
-
-
-
-
-
-
-
-
                     // Retrieve the cart items for the authenticated buyer
                     $cartItems = Cart::where('buyerId', $buyerId)->get();
 
@@ -467,7 +458,6 @@ class CartController extends Controller
                     if ($cartItems->isEmpty()) {
                         return redirect()->route('cart')->withError('Cart is empty. Please add items to the cart first.');
                     }
-
 
                     // Proceed with creating the order
                     $totalAmount = $data['amount'] / 100; // Convert amount back to actual value
@@ -510,16 +500,14 @@ class CartController extends Controller
                     Cart::where('buyerId', $buyerId)->delete();
 
                     // Send verification email
-                    //foreach ($order as $orders) {
-                    // Mail::to($customer_email)->send(new OrderConfirmationMail([$order, $order->productName]));
-                    //}
                     Mail::to($customer_email)->send(new OrderConfirmationMail($order, $order->productName, $order->firstname, $order->lastname));
-                    // dd($paymentDetails);
+                    //dd($paymentDetails);
 
 
                     // Return success response
-                    //return view('payment.callback')->with(compact('data'));
-                    return redirect()->route('paymentSuccess')->with(compact('data'));
+                    return view('payment.callback-successful')->with(compact('data'));
+                    //return redirect()->route('paymentSuccess')->with(compact('data'));
+
                 } else {
                     // Payment was not successful, handle accordingly
 
@@ -548,6 +536,8 @@ class CartController extends Controller
             ], 500);
         }
     }
+
+
 
 
     private $initialize_url = "https://api.paystack.co/transaction/initialize";
@@ -641,36 +631,40 @@ class CartController extends Controller
         return  $response;
     }
 
-    public function paymentSuccess(Request $request)
+    public function paymentSuccess($paymentInfo)
     {
-        try {
-            // Make a request to the previous endpoint to fetch payment details
-            $response = Http::get('previous-endpoint-url');
+        // Return the provided payment details
+        // $paymentDetails = ['data']['status'];
+        /* return response()->json([
+        'payment Info' => $paymentInfo
+    ]);*/
 
-            // Check if the request was successful
-            if ($response->successful()) {
-                // Retrieve payment details from the response
-                $paymentDetails = $response->json();
 
-                // Process the payment details as needed
-                // For example, you can return the payment details or perform further actions
 
-                return response()->json([
-                    'data' => $paymentDetails
-                ]);
-            } else {
-                // Handle unsuccessful request
-                return response()->json([
-                    'error' => 'Failed to retrieve payment details from the previous endpoint'
-                ], $response->status());
-            }
-        } catch (\Exception $e) {
-            // Handle exceptions
-            return response()->json([
-                'error' => 'An error occurred: ' . $e->getMessage()
-            ], 500);
-        }
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+            //CURLOPT_URL => "https://api.paystack.co/transaction/verify/$paymentInfo",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "GET",
+            CURLOPT_HTTPHEADER => array(
+                "Authorization: Bearer " . env('PAYSTACK_SECRET_KEY'),
+                "Cache-Control: no-cache",
+
+                // "X-Buyer-Id: $buyerId"
+            ),
+        ));
+
+        $paymentResponse = curl_exec($curl);
+        curl_close($curl);
+
+        return  $paymentResponse;
     }
+
 
     public function getOrders()
     {

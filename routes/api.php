@@ -105,7 +105,7 @@ Route::post('/companySellerAccountSetting', [CompanySellerController::class, 'co
 Route::post('/companySellerResetPassword', [CompanySellerController::class, 'companySellerResetPassword'])->name('companySellerResetPassword');//resend verification code
 Route::post('/companySellerVerifyMail', [CompanySellerController::class, 'companySellerVerifyMail'])->name('companySellerVerifyMail');//send verification email for business account setup
 Route::post('/resendCompanySellerEmailAuth/{email}', [CompanySellerController::class, 'resendCompanySellerEmailAuth'])->name('resendCompanySellerEmailAuth');//resend verification code
-Route::get('/getCompanyBuyerProfile/{companySellerId}', [CompanySellerController::class, 'getCompanyBuyerProfile'])->name('getCompanyBuyerProfile');//resend verification code
+Route::get('/getCompanySellerProfile/{companySellerId}', [CompanySellerController::class, 'getCompanySellerProfile'])->name('getCompanySellerProfile');//resend verification code
 //---Begin Api routes for Business account functions --//
 
 
@@ -135,7 +135,7 @@ Route::post('/updateCartItem/{cartId}', [CartController::class, 'updatecartItem'
 
 
 //--Begin of Product api --//
-Route::post('/addToCart', [ProductController::class, 'addToCart'])->middleware('auth:sanctum')->name('addToCart');// add to cart
+//Route::post('/addToCart', [ProductController::class, 'addToCart'])->middleware('auth:sanctum')->name('addToCart');// add to cart
 Route::post('/addProduct', [ProductController::class, 'addProduct'])->middleware('auth:sanctum')->name('addProduct');//profile update endpoint for sellers
 Route::get('/viewProduct/{productId}', [ProductController::class, 'viewProduct'])->middleware('auth:sanctum')->name('viewProduct');//view products
 Route::get('/allProducts', [ProductController::class, 'allProducts'])->name('allProducts');//view products
