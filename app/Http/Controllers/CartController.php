@@ -460,6 +460,7 @@ class CartController extends Controller
                     }
 
                     // Proceed with creating the order
+                    $orders = []; // Array to store order objects
                     $totalAmount = $data['amount'] / 100; // Convert amount back to actual value
                     foreach ($cartItems as $cartItem) {
                         $order = new Order();
@@ -486,6 +487,9 @@ class CartController extends Controller
                         $order->lastname = $paymentDetails['data']['metadata']['lastname'];
                         $order->grand_price = $totalAmount;
                         $order->save();
+                        $orders[] = $order; 
+
+                       
 
                         // Update product quantity in stock and quantity sold
                         $product = Product::where('productId', $cartItem->productId)->first();
@@ -500,7 +504,8 @@ class CartController extends Controller
                     Cart::where('buyerId', $buyerId)->delete();
 
                     // Send verification email
-                    Mail::to($customer_email)->send(new OrderConfirmationMail($order, $order->productName, $order->firstname, $order->lastname));
+                   // Mail::to($customer_email)->send(new OrderConfirmationMail($order, $order->productName, $order->firstname, $order->lastname));
+                   Mail::to($customer_email)->send(new OrderConfirmationMail($orders));
                     //dd($paymentDetails);
 
 

@@ -13,14 +13,20 @@ class companySellerSignupEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
+
+    public $companySeller;
+    public $companyname;
+    public $companyregnumber;
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($companySeller, $companyname, $companyregnumber)
     {
+        $this->companySeller = $companySeller;
+        $this->companyname = $companyname;
+        $this->companyregnumber = $companyregnumber;
         //
     }
-
     /**
      * Get the message envelope.
      */
@@ -37,7 +43,7 @@ class companySellerSignupEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            view: 'emails.companySellerSignupEmail',
         );
     }
 

@@ -13,6 +13,7 @@ use App\Mail\companySellerEmailVerified;
 use Illuminate\Support\Facades\Validator;
 use App\Mail\resendCompanySellerEmailAuth;
 use App\Mail\companySellerPasswordResetEmail;
+use App\Mail\companySellerSignupEmail;
 
 class CompanySellerController extends Controller
 {
@@ -69,7 +70,7 @@ class CompanySellerController extends Controller
             'companyregnumber' => $request->companyregnumber,
             'companyemail' => $request->companyemail,
             'companyphone' => $request->companyphone,
-            'product' => $request->products,
+            'product' => $request->product,
             'product_category' => $request->product_category,
             'companyaddress' => $request->companyaddress,
             'country' => $request->country,
@@ -81,7 +82,8 @@ class CompanySellerController extends Controller
             'verification_code' => $verification_code
             //'confirm_password'=>'required|same:password'
         ]);
-        Mail::to($request->companyemail)->send(new ($companySeller));
+        
+        Mail::to($request->companyemail)->send(new companySellerSignupEmail($companySeller, $companySeller->companyname, $companySeller->companyregnumber));
         return response()->json([
             'message' => 'Business registration successful Check email for verification code',
             'data' => $companySeller

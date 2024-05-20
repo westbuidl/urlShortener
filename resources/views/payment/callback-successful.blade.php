@@ -50,7 +50,7 @@
             <p>Total Transactions</p>
             <h5>₦{{ $data['amount'] }}</h5>
         </div>
-        <button class="button">Continue Shopping</button>
+        <button class="button"><a href="https://agroease.trade">Continue Shopping</a></button>
         
 
     </section>
