@@ -436,7 +436,7 @@ class CartController extends Controller
             $paymentMethod = request('paymentMethod');
             $customer_email = $paymentDetails['data']['customer']['email'];
             $paymentInfo = $paymentDetails['data']['id'];
-            
+
             $paymentResponse = $this->paymentSuccess($paymentInfo);
 
             $response = json_decode($this->verify_payment($reference), true); // Decode as associative array for easier access
@@ -487,9 +487,9 @@ class CartController extends Controller
                         $order->lastname = $paymentDetails['data']['metadata']['lastname'];
                         $order->grand_price = $totalAmount;
                         $order->save();
-                        $orders[] = $order; 
+                        $orders[] = $order;
 
-                       
+
 
                         // Update product quantity in stock and quantity sold
                         $product = Product::where('productId', $cartItem->productId)->first();
@@ -504,8 +504,8 @@ class CartController extends Controller
                     Cart::where('buyerId', $buyerId)->delete();
 
                     // Send verification email
-                   // Mail::to($customer_email)->send(new OrderConfirmationMail($order, $order->productName, $order->firstname, $order->lastname));
-                   Mail::to($customer_email)->send(new OrderConfirmationMail($orders));
+                    // Mail::to($customer_email)->send(new OrderConfirmationMail($order, $order->productName, $order->firstname, $order->lastname));
+                    Mail::to($customer_email)->send(new OrderConfirmationMail($orders));
                     //dd($paymentDetails);
 
 

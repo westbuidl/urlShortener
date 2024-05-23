@@ -58,5 +58,9 @@ class Product extends Model
     {
         return $this->hasMany(Cart::class, 'productId', 'id'); // 'productId' is the foreign key column
     }
+    public function Seller()
+    {
+    return $this->belongsTo(Seller::class, 'sellerId', 'sellerId');
+    }
    
 }

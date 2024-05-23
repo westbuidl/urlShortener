@@ -33,4 +33,9 @@ class Seller extends Authenticatable implements MustVerifyEmail
         'bank_name'
     ];
 
+    public function Seller()
+    {
+        return $this->belongsTo(Seller::class, 'sellerId'); // Adjust column names accordingly
+    }
+
 }

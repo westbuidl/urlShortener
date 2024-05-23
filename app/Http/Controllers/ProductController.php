@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Seller;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Mail\ProductAddEmail;
@@ -165,12 +166,27 @@ class ProductController extends Controller
                 // Add image URLs to the product object
                 $product->image_urls = $imageURLs;
 
-                return response()->json([
-                    'message' => 'Product found.',
-                    'data' => [
-                        'product' => $product,
-                    ]
-                ], 200);
+                // Fetch seller's name and address
+                $seller = Seller::where('sellerId', $product->sellerId)->first();
+                if ($seller) {
+                    $sellerName = $seller->firstname; // Adjust according to your Seller model
+                    $sellerAddress = $seller->state; // Adjust according to your Seller model
+
+                    return response()->json([
+                        'message' => 'Product found.',
+                        'data' => [
+                            'product' => $product,
+                            'seller' => [
+                                'name' => $sellerName,
+                                'address' => $sellerAddress,
+                            ]
+                        ]
+                    ], 200);
+                } else {
+                    return response()->json([
+                        'message' => 'Seller not found.',
+                    ], 404);
+                }
             } else {
                 // If the user is not the owner, return an error message
                 return response()->json([

@@ -40,12 +40,12 @@
                                             <li>Order Number: <strong>{{$order->orderId}}</strong></li><br>
                                             <li>Product ID: <strong>{{$order->productId}}</strong></li><br>
                                             <li>Quantity: <strong>{{$order->quantity}}</strong></li><br>
-                                            <li>Unit Price: <strong>{{ $order->currency }}{{ $order->amount }}</strong></li><br>
-                                            <li>Total Amount: <strong>{{ $order->currency }}{{ $order->amount * $order->quantity }}</strong></li><br>
+                                            <li>Unit Price: <strong>{{  '₦' . number_format($order->amount, 2) }}</strong></li><br>
+                                            <li>Total Amount: <strong>{{  '₦' . number_format($order->amount * $order->quantity, 2) }}</strong></li><br>
                                             <li><br><img src="{{ asset('uploads/product_images/' . $order->productImage) }}" alt="{{$order->productName}}" style="width: 100px; height: auto;"></li><br>
                                         @endforeach
                                         </h1>
-                                        <li>Grand Total: <strong>{{$order->currency}}{{$order->grand_price}}</strong></li><br>
+                                        <li>Grand Total: <strong>{{  '₦' . number_format($order->grand_price, 2) }}</strong></li><br>
                                         <br>
 
                                        

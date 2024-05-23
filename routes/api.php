@@ -159,19 +159,6 @@ Route::get('/popularProducts', [ProductController::class, 'popularProducts'])->n
 //--End of Product api-/-//
 
 
-//--Begin of Admi api --//
-
-Route::get('/categoryDetails/{categoryID}', [CategoryController::class, 'categoryDetails'])->name('categoryDetails');//get category details
-Route::post('/addCategory', [CategoryController::class, 'addCategory'])->name('addCategory');//add categories
-Route::delete('/deleteCategory/{categoryID}', [CategoryController::class, 'deleteCategory'])->name('deleteCategory');//delete categories
-Route::get('/viewAllcategory', [CategoryController::class, 'viewAllcategory'])->name('viewAllcategory');//view all categories
-Route::get('/viewCategory/{categoryID}', [CategoryController::class, 'viewCategory'])->name('viewCategory');//view all categories
-Route::get('/popularCategories', [CategoryController::class, 'popularCategories'])->name('popularCategories');//view all categories
-Route::post('/editCategory/{categoryID}', [CategoryController::class, 'editCategory'])->name('editCategory');//view all categories
-
-//--End of Admin api --//
-
-
 //--Payment Api --//
 
 Route::get('/', function () {
@@ -189,3 +176,28 @@ Route::get('/getOrders', [CartController::class, 'getOrders'])->middleware('auth
 Route::get('/getOrderById/{orderId}', [CartController::class, 'getOrderById'])->middleware('auth:sanctum')->name('getOrderById');
 Route::get('/getOrderSuccessful/{orderId}', [CartController::class, 'getOrderSuccessful'])->middleware('auth:sanctum')->name('getOrderSuccessful');
 Route::get('/getOrdersFailed/{orderId}', [CartController::class, 'getOrdersFailed'])->middleware('auth:sanctum')->name('getOrdersFailed');
+
+
+//--Begin of Category API--//
+
+Route::get('/categoryDetails/{categoryID}', [CategoryController::class, 'categoryDetails'])->name('categoryDetails');//get category details
+Route::post('/addCategory', [CategoryController::class, 'addCategory'])->name('addCategory');//add categories
+Route::delete('/deleteCategory/{categoryID}', [CategoryController::class, 'deleteCategory'])->name('deleteCategory');//delete categories
+Route::get('/viewAllcategory', [CategoryController::class, 'viewAllcategory'])->name('viewAllcategory');//view all categories
+Route::get('/viewCategory/{categoryID}', [CategoryController::class, 'viewCategory'])->name('viewCategory');//view all categories
+Route::get('/popularCategories', [CategoryController::class, 'popularCategories'])->name('popularCategories');//view all categories
+Route::post('/editCategory/{categoryID}', [CategoryController::class, 'editCategory'])->name('editCategory');//view all categories
+
+//--End of Category api --//
+
+//--Begin of Buyer Admin API--//
+
+Route::get('/getBuyers/{categoryID}', [CategoryController::class, 'categoryDetails'])->name('categoryDetails');//get category details
+Route::post('/addCategory', [CategoryController::class, 'addCategory'])->name('addCategory');//add categories
+Route::delete('/deleteCategory/{categoryID}', [CategoryController::class, 'deleteCategory'])->name('deleteCategory');//delete categories
+Route::get('/viewAllcategory', [CategoryController::class, 'viewAllcategory'])->name('viewAllcategory');//view all categories
+Route::get('/viewCategory/{categoryID}', [CategoryController::class, 'viewCategory'])->name('viewCategory');//view all categories
+Route::get('/popularCategories', [CategoryController::class, 'popularCategories'])->name('popularCategories');//view all categories
+Route::post('/editCategory/{categoryID}', [CategoryController::class, 'editCategory'])->name('editCategory');//view all categories
+
+//--End of Buyer Admin API--//

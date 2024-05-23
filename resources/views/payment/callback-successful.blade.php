@@ -48,7 +48,7 @@
         </div>
         <div class="total-transaction">
             <p>Total Transactions</p>
-            <h5>₦{{ $data['amount'] }}</h5>
+            <h5>{{  '₦' . number_format($data['amount'], 2) }}</h5>
         </div>
         <button class="button"><a href="https://agroease.trade">Continue Shopping</a></button>
         
