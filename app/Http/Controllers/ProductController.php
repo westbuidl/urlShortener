@@ -91,7 +91,10 @@ class ProductController extends Controller
                 $product_images->move(public_path('/uploads/product_images'), $new_imageName);
                 $imageName = $imageName . $new_imageName . ",";
             }
-
+            // Calculate the additional 0.02% to the prices
+            $adjustmentFactor = 1 + (0.02 / 100);
+            $adjustedSellingPrice = $request->selling_price * $adjustmentFactor;
+            $adjustedCostPrice = $request->cost_price * $adjustmentFactor;
             //$product_imagename = time() . '.' . $request->product_image->extension();
             //$request->product_image->move(public_path('/uploads/product_images'), $product_imagename);
             // $productId = str_pad(mt_rand(1, 999999), 6, '0', STR_PAD_LEFT);
@@ -111,8 +114,8 @@ class ProductController extends Controller
                 'product_name' => $request->product_name,
                 'product_category' => $request->product_category,
                 'categoryID' => $categoryID,
-                'selling_price' => $request->selling_price,
-                'cost_price' => $request->cost_price,
+                'selling_price' => $adjustedSellingPrice,
+                'cost_price' => $adjustedCostPrice,
                 'quantityin_stock' => $request->quantityin_stock,
                 'unit' => $request->unit,
                 'product_description' => $request->product_description,
@@ -166,27 +169,12 @@ class ProductController extends Controller
                 // Add image URLs to the product object
                 $product->image_urls = $imageURLs;
 
-                // Fetch seller's name and address
-                $seller = Seller::where('sellerId', $product->sellerId)->first();
-                if ($seller) {
-                    $sellerName = $seller->firstname; // Adjust according to your Seller model
-                    $sellerAddress = $seller->state; // Adjust according to your Seller model
-
-                    return response()->json([
-                        'message' => 'Product found.',
-                        'data' => [
-                            'product' => $product,
-                            'seller' => [
-                                'name' => $sellerName,
-                                'address' => $sellerAddress,
-                            ]
-                        ]
-                    ], 200);
-                } else {
-                    return response()->json([
-                        'message' => 'Seller not found.',
-                    ], 404);
-                }
+                return response()->json([
+                    'message' => 'Product found.',
+                    'data' => [
+                        'product' => $product,
+                    ]
+                ], 200);
             } else {
                 // If the user is not the owner, return an error message
                 return response()->json([
@@ -199,7 +187,7 @@ class ProductController extends Controller
                 'message' => 'Product not found.',
             ], 404);
         }
-    }   //Function to view products ends
+    }   //Function to view products ends   //Function to view products ends
 
 
     //view product details
@@ -224,10 +212,19 @@ class ProductController extends Controller
                 $product->image_urls = $imageURLs;
                 $product->category_name = $category ? $category->categoryName : null;
 
+                // Fetch the seller's name and address
+                $seller = Seller::where('sellerId', $product->sellerId)->first();
+                $sellerName = $seller ? $seller->firstname : null; // Adjust according to your Seller model
+                $sellerAddress = $seller ? $seller->state : null;  // Adjust according to your Seller model
+
                 return response()->json([
                     'message' => 'Product found.',
                     'data' => [
                         'product' => $product,
+                        'seller Info' => [
+                            'name' => $sellerName,
+                            'address' => $sellerAddress,
+                        ]
                     ]
                 ], 200);
             } else {

@@ -6,14 +6,15 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\Buyer;
 use App\Models\Order;
+use App\Models\Seller;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Mail\productSoldEmail;
 use App\Mail\OrderConfirmationMail;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 //use Unicodeveloper\Paystack\Paystack;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
@@ -357,12 +358,14 @@ class CartController extends Controller
             $buyerFirstName = $buyer->firstname;
             $buyerLastName = $buyer->lastname;
             $billing_address = $buyer->city . ', ' . $buyer->state . ', ' . $buyer->country . ', ' . $buyer->zipcode;
+            $phone_number = $buyer->phone_number;
 
             $request->validate([
                 'paymentMethod' => 'required|string|min:1', // Minimum quantity is 1
                 'shipping_address' => 'required|string|min:1',
                 'city' => 'required|string|min:1',
                 'state' => 'required|string|min:1',
+                'phone_number' => 'required|string|min:1',
 
             ]);
             // Retrieve the cart items for the authenticated buyer
@@ -384,13 +387,14 @@ class CartController extends Controller
             $shipping_address = $shippingData['shipping_address'];
             $city = $shippingData['city'];
             $state = $shippingData['state'];
+            $phone_number = $request->input('phone_number');
 
 
 
             // Proceed with payment initialization based on the selected payment method
             if ($paymentMethod === 'paystack') {
                 // Initialize payment using Paystack
-                $initializeResponse = $this->initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address);
+                $initializeResponse = $this->initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address, $phone_number);
             } elseif ($paymentMethod === 'flutterwave') {
                 // Initialize payment using PayPal (you would implement this method)
                 $initializeResponse = $this->initialize_payOnDelivery($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address);
@@ -461,7 +465,12 @@ class CartController extends Controller
 
                     // Proceed with creating the order
                     $orders = []; // Array to store order objects
+                    $sellingPrice = floatval($request->selling_price);
+                    $costPrice = floatval($request->cost_price);
+
                     $totalAmount = $data['amount'] / 100; // Convert amount back to actual value
+                    $platformFee = $totalAmount * 0.08; // Calculate platform fee (8% of total order)
+                    $accruedProfit = $totalAmount - $platformFee; // Calculate seller's accrued profit
                     foreach ($cartItems as $cartItem) {
                         $order = new Order();
                         $order->buyerId = $buyerId;
@@ -485,15 +494,35 @@ class CartController extends Controller
                         $order->billing_address = $paymentDetails['data']['metadata']['billing_address'];
                         $order->firstname = $paymentDetails['data']['metadata']['firstname'];
                         $order->lastname = $paymentDetails['data']['metadata']['lastname'];
+                        $order->phone_number = $paymentDetails['data']['metadata']['phone_number'];
                         $order->grand_price = $totalAmount;
                         $order->save();
                         $orders[] = $order;
 
-
-
-                        // Update product quantity in stock and quantity sold
+                        // Fetch product to get sellerId
                         $product = Product::where('productId', $cartItem->productId)->first();
+
                         if ($product) {
+                            // Calculate the platform fee and seller's profit
+                            $platformFee = $cartItem->selling_price * 0.08;
+                            $accruedProfit = $cartItem->selling_price - $platformFee;
+
+                            // Update seller's profit and platform fee in the database
+                            $seller = Seller::where('sellerId', $product->sellerId)->first();
+                            if ($seller) {
+                                // Convert the current values to float before adding
+                                $currentAccruedProfit = floatval($seller->accrued_profit);
+                                $currentPlatformFee = floatval($seller->platform_fee);
+
+                                // Update the values
+                                $seller->accrued_profit = $currentAccruedProfit + $accruedProfit;
+                                $seller->platform_fee = $currentPlatformFee + $platformFee;
+
+                                // Save the seller record
+                                $seller->save();
+                            }
+
+                            // Update product quantity in stock and quantity sold
                             $product->quantityin_stock -= $cartItem->quantity;
                             $product->quantity_sold += $cartItem->quantity;
                             $product->save();
@@ -547,7 +576,7 @@ class CartController extends Controller
 
     private $initialize_url = "https://api.paystack.co/transaction/initialize";
 
-    public function initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address)
+    public function initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address, $phone_number)
     {
         //$product_name = $cartItems->product_name;
         $totalPrice = $cartItems->sum('total_price');
@@ -560,6 +589,7 @@ class CartController extends Controller
             'buyerId' => $buyerId,
             'shipping_address' => $shipping_address,
             'billing_address' => $billing_address,
+            'phone_number' => $phone_number,
             'firstname' => $buyerFirstName,
             'lastname' => $buyerLastName,
         ];

@@ -30,7 +30,9 @@ class Seller extends Authenticatable implements MustVerifyEmail
         'verification_code',
         'account_name',
         'account_number',
-        'bank_name'
+        'bank_name',
+        'accrued_profit',
+        'platform_fee'
     ];
 
     public function Seller()

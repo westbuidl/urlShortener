@@ -32,7 +32,8 @@ class Order extends Model
         'firstname',
         'lastname',
         'billing_address',
-        'grand_price'
+        'grand_price',
+        'phone_number',
         
     ];
 

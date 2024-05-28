@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     */
+     *//*
    public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
@@ -36,6 +36,7 @@ return new class extends Migration
             $table->string('lastname')->nullable();
             $table->string('billing_address')->nullable();
             $table->timestamps();
+            $table->string('phone_number')->nullable();
           
         });
     }
