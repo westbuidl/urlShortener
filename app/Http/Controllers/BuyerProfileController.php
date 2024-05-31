@@ -118,7 +118,8 @@ class BuyerProfileController extends Controller
             'country' => 'nullable|max:100',
             'state' => 'nullable|max:100',
             'city' => 'nullable|max:100',
-            'zipcode' => 'nullable|max:100'
+            'zipcode' => 'nullable|max:100',
+            'address' => 'nullable|max:100',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -131,7 +132,8 @@ class BuyerProfileController extends Controller
             'country' => $request->country,
             'state' => $request->state,
             'city' => $request->city,
-            'zipcode' => $request->zipcode
+            'zipcode' => $request->zipcode,
+            'address' => $request->address
 
         ]);
 

@@ -9,6 +9,9 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
+use Illuminate\Mail\Markdown;
+
+
 class OrderConfirmationMail extends Mailable
 {
     use Queueable, SerializesModels;
@@ -33,7 +36,7 @@ class OrderConfirmationMail extends Mailable
     public function build()
     {
         return $this->subject('Order Confirmation')
-                    ->view('emails.OrderConfirmationEmail')
+                    ->view('emails.orderConfirmationEmail')
                     ->with('orders', $this->orders);
     }
     /**

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\Seller;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Mail\addBankAccountEmail;
 use App\Mail\bankAccountSavedEmail;
@@ -10,6 +12,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class SellerProfileController extends Controller
 {
@@ -388,6 +391,114 @@ class SellerProfileController extends Controller
         return response()->json([
             'message' => 'Seller bank account details retrieved successfully.',
             'data' => $bankAccountDetails
+        ], 200);
+    }
+
+
+    public function getRecentSales(Request $request)
+    {
+        // Get the authenticated seller
+        $sellerId = auth()->user()->sellerId;
+
+        // Check if the user is authenticated and is a seller
+        $seller = Seller::where('sellerId', $sellerId)->first();
+
+        // Ensure the seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        // Fetch recent sales (last 10 orders) for the authenticated seller
+        $recentSales = Order::where('sellerId', $sellerId)
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+        return response()->json([
+            'message' => 'Recent sales found.',
+            'data' => [
+                'recent_sales' => $recentSales,
+            ]
+        ], 200);
+    }
+
+
+    public function getAllSales(Request $request)
+    {
+        // Get the authenticated seller
+        $sellerId = auth()->user()->sellerId;
+
+        // Check if the user is authenticated and is a seller
+        $seller = Seller::where('sellerId', $sellerId)->first();
+
+        // Ensure the seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        // Fetch all sales for the authenticated seller
+        $allSales = Order::where('sellerId', $sellerId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        //$TotalSales = Order::where('sellerId', $sellerId)->get();
+        $totalOrders = $allSales->count();
+        $totalVolme = $allSales->sum('grand_price');
+        $totalProfit = $totalVolme * (1 - 0.08);
+
+        return response()->json([
+            'message' => 'All sales found.',
+            'data' => [
+                'all_sales' => $allSales,
+                'total_orders' => $totalOrders,
+                'total_volume' => $totalVolme,
+                'total_profit' => $totalProfit,
+            ]
+        ], 200);
+    }
+
+
+
+    public function getTopSellingProducts(Request $request)
+    {
+        // Get the authenticated seller
+        $sellerId = auth()->user()->sellerId;
+
+        // Check if the user is authenticated and is a seller
+        $seller = Seller::where('sellerId', $sellerId)->first();
+
+        // Ensure the seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        // Aggregate sales data based on products
+        $topSellingProducts = Order::where('sellerId', $sellerId)
+            ->select('productId', DB::raw('SUM(quantity) as total_quantity'))
+            ->groupBy('productId')
+            ->orderByDesc('total_quantity')
+            ->take(10)
+            ->get();
+
+        // Fetch product details for the top selling products
+        $productDetails = [];
+        foreach ($topSellingProducts as $product) {
+            $productDetails[] = [
+                'product' => Product::where($product->productId),
+                'total_quantity_sold' => $product->total_quantity,
+            ];
+        }
+
+        return response()->json([
+            'message' => 'Top selling products found.',
+            'data' => [
+                'top_selling_products' => $productDetails,
+            ]
         ], 200);
     }
 }

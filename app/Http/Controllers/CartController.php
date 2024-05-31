@@ -471,7 +471,40 @@ class CartController extends Controller
                     $totalAmount = $data['amount'] / 100; // Convert amount back to actual value
                     $platformFee = $totalAmount * 0.08; // Calculate platform fee (8% of total order)
                     $accruedProfit = $totalAmount - $platformFee; // Calculate seller's accrued profit
+
                     foreach ($cartItems as $cartItem) {
+
+
+                         // Fetch product to get sellerId
+                         $product = Product::where('productId', $cartItem->productId)->first();
+
+                         if ($product) {
+                             // Calculate the platform fee and seller's profit
+                             $platformFee = $cartItem->selling_price * 0.08;
+                             $accruedProfit = $cartItem->selling_price - $platformFee;
+ 
+                             // Update seller's profit and platform fee in the database
+                             $seller = Seller::where('sellerId', $product->sellerId)->first();
+                             if ($seller) {
+                                 // Convert the current values to float before adding
+                                 $currentAccruedProfit = floatval($seller->accrued_profit);
+                                 $currentPlatformFee = floatval($seller->platform_fee);
+ 
+                                 // Update the values
+                                 $seller->accrued_profit = $currentAccruedProfit + $accruedProfit;
+                                 $seller->platform_fee = $currentPlatformFee + $platformFee;
+ 
+                                 // Save the seller record
+                                 $seller->save();
+                             }
+ 
+                             // Update product quantity in stock and quantity sold
+                             $product->quantityin_stock -= $cartItem->quantity;
+                             $product->quantity_sold += $cartItem->quantity;
+                             $product->save();
+                         }
+
+
                         $order = new Order();
                         $order->buyerId = $buyerId;
                         $order->productId = $cartItem->productId;
@@ -496,37 +529,11 @@ class CartController extends Controller
                         $order->lastname = $paymentDetails['data']['metadata']['lastname'];
                         $order->phone_number = $paymentDetails['data']['metadata']['phone_number'];
                         $order->grand_price = $totalAmount;
+                        $order->sellerId = $product->sellerId;
                         $order->save();
                         $orders[] = $order;
 
-                        // Fetch product to get sellerId
-                        $product = Product::where('productId', $cartItem->productId)->first();
-
-                        if ($product) {
-                            // Calculate the platform fee and seller's profit
-                            $platformFee = $cartItem->selling_price * 0.08;
-                            $accruedProfit = $cartItem->selling_price - $platformFee;
-
-                            // Update seller's profit and platform fee in the database
-                            $seller = Seller::where('sellerId', $product->sellerId)->first();
-                            if ($seller) {
-                                // Convert the current values to float before adding
-                                $currentAccruedProfit = floatval($seller->accrued_profit);
-                                $currentPlatformFee = floatval($seller->platform_fee);
-
-                                // Update the values
-                                $seller->accrued_profit = $currentAccruedProfit + $accruedProfit;
-                                $seller->platform_fee = $currentPlatformFee + $platformFee;
-
-                                // Save the seller record
-                                $seller->save();
-                            }
-
-                            // Update product quantity in stock and quantity sold
-                            $product->quantityin_stock -= $cartItem->quantity;
-                            $product->quantity_sold += $cartItem->quantity;
-                            $product->save();
-                        }
+                       
                     }
 
                     // Clear the cart after successful checkout

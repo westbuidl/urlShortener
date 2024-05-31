@@ -42,7 +42,7 @@
 
                                         </h1><br>
                                         @if ($product->product_image)
-                                            <li><img src="{{  asset ('uploads/product_images/'.explode(',',$product->product_image)[0]) }}" alt="Product Image"></li>
+                                            <li><img src="{{  asset ('https://agroease.ng/agroease-api/public/uploads/product_images/'.explode(',',$product->product_image)[0]) }}" alt="Product Image" width="42px" height="41px"></li>
                                              @endif <br>
                                         <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Got Questions?</strong> <br><br>If you have any questions or need assistance with anything related to your new product, feel free to reach out to our support team at <a href="mailto:contact@agroease.ng"
                                                 style="color: #7E66EF; text-decoration: none;"><strong>contact@agroease.ng</strong></a>. We're here to help you succeed!

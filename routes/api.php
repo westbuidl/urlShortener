@@ -78,8 +78,9 @@ Route::get('/getSellerProfile/{sellerId}', [SellerProfileController::class, 'get
 Route::post('/addBankAccount', [SellerProfileController::class, 'addBankAccount'])->middleware(('auth:sanctum')) ->name('addBankAccount');//api to get user profile
 Route::post('/verifyBankAccount', [SellerProfileController::class, 'verifyBankAccount'])->middleware(('auth:sanctum')) ->name('verifyBankAccount');//api to get user profile
 Route::get('/getBankAccountDetails', [SellerProfileController::class, 'getBankAccountDetails'])->middleware(('auth:sanctum')) ->name('getBankAccountDetails');//api to get user profile
-Route::get('/recentSales', [SellerProfileController::class, 'recentSales'])->middleware(('auth:sanctum')) ->name('recentSales');//recent sales
-Route::get('/totalProfit', [SellerProfileController::class, 'totalProfit'])->middleware(('auth:sanctum')) ->name('totalProfit');//get Total profit
+Route::get('/getRecentSales', [SellerProfileController::class, 'getRecentSales'])->middleware(('auth:sanctum')) ->name('getRecentSales');//recent sales
+Route::get('/getAllSales', [SellerProfileController::class, 'getAllSales'])->middleware(('auth:sanctum')) ->name('getAllSales');//recent sales
+Route::get('/getTopSellingProducts', [SellerProfileController::class, 'getTopSellingProducts'])->middleware(('auth:sanctum')) ->name('getTopSellingProducts');//get Total profit
 Route::get('/totalSales', [SellerProfileController::class, 'totalSales'])->middleware(('auth:sanctum')) ->name('totalSales');//get Total Sales
 Route::get('/totalOrder', [SellerProfileController::class, 'totalOrder'])->middleware(('auth:sanctum')) ->name('totalOrder');//get Total Sales
 Route::get('/totalReturn', [SellerProfileController::class, 'totalReturn'])->middleware(('auth:sanctum')) ->name('totalReturn');//get Total Sales
