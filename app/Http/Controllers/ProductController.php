@@ -247,10 +247,13 @@ class ProductController extends Controller
 
 
     // Function to fetch all products
-    public function allProducts()
+    public function allProducts(Request $request)
     {
-        // Retrieve all products from the database
-        $products = Product::orderByDesc('id')->get();
+        // Set the number of items per page (you can customize this value)
+    $perPage = $request->input('per_page', 10);
+
+    // Retrieve all products from the database with pagination
+    $products = Product::orderByDesc('id')->paginate($perPage);
 
         // Check if any products exist
         if ($products->isEmpty()) {

@@ -49,7 +49,7 @@ Route::delete('/deleteBuyerProfilePicture/{buyerId}', [BuyerProfileController::c
 Route::post('/updateBuyerAccountDetails', [BuyerProfileController::class, 'updateBuyerAccountDetails'])->middleware('auth:sanctum')->name('updateBuyerAccountDetails');//profile update endpointupdate for 
 Route::post('/updateBuyerBillingAddress', [BuyerProfileController::class, 'updateBuyerBillingAddress'])->middleware('auth:sanctum')->name('updateBuyerBillingAddress');//profile update endpointupdate for 
 Route::post('/buyer', [BuyerController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
-Route::post('/logout', [BuyerController::class, 'logout'])->middleware('auth:sanctum');//api for logout//});
+Route::post('/buyerLogout', [BuyerController::class, 'buyerLogout'])->middleware('auth:sanctum');//api for logout//});
 Route::post('/verifyBuyerEmail', [BuyerController::class, 'verifyBuyerEmail'])->name('verifyBuyerEmail');//send verification email
 Route::post('/resendBuyerEmailAuth/{email}', [BuyerController::class, 'resendBuyerEmailAuth'])->name('resendBuyerEmailAuth');//resend verification code
 Route::post('/buyerPasswordReset', [BuyerController::class, 'buyerPasswordReset'])->name('buyerPasswordReset');//reset buyer password
@@ -69,8 +69,8 @@ Route::post('/updateSellerProfilePicture', [SellerProfileController::class, 'upd
 Route::delete('/deleteSellerProfilePicture/{seller_Id}', [SellerProfileController::class, 'deleteSellerProfilePicture'])->middleware('auth:sanctum')->name('deleteSellerProfilePicture');//profile image update endpoint
 Route::post('/updateSellerAccountDetails', [SellerProfileController::class, 'updateSellerAccountDetails'])->middleware('auth:sanctum')->name('updateSellerAccountDetails');//profile update endpointupdate for 
 Route::post('/updateSellerAddress', [SellerProfileController::class, 'updateSellerAddress'])->middleware('auth:sanctum')->name('updateSellerAddress');//profile update endpointupdate for 
-Route::post('/buyer', [BuyerController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
-Route::post('/logout', [SellerController::class, 'logout'])->middleware('auth:sanctum');//api for logout//});
+//Route::post('/buyer', [BuyerController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
+Route::post('/sellerLogout', [SellerController::class, 'sellerLogout'])->middleware('auth:sanctum');//api for logout//});
 Route::post('/verifySellerEmail', [SellerController::class, 'verifySellerEmail'])->name('verifySellerEmail');//send verification email
 Route::post('/resendSellerEmailAuth/{email}', [SellerController::class, 'resendSellerEmailAuth'])->name('resendSellerEmailAuth');//resend verification code
 Route::post('/sellerPasswordReset', [SellerController::class, 'sellerPasswordReset'])->name('sellerPasswordReset');//reset buyer password

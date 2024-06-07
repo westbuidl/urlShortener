@@ -212,7 +212,7 @@ class BuyerController extends Controller
 } */
 
 
-    public function logout(Request $request)
+    /*public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
 
@@ -220,7 +220,34 @@ class BuyerController extends Controller
             'message' => 'User logged out',
 
         ], 200);
+    }*/
+
+    public function buyerLogout(Request $request)
+{
+    // Assuming 'BuyerId' is a field in the authenticated user model
+
+    $buyer = $request->user();
+
+    //$buyerId = $request->input('buyerId');
+    
+    // Find the buyer using the BuyerId
+    $buyer = Buyer::where('buyerId', $buyer->buyerId)->first();
+
+    if ($buyer) {
+        // Revoke all tokens for the buyer
+        $buyer->tokens()->delete();
+
+        return response()->json([
+            'message' => 'Buyer logged out successfully',
+        ], 200);
+    } else {
+        return response()->json([
+            'message' => 'Buyer not found',
+        ], 404);
     }
+}
+
+
 
     //function to check and verify email
 

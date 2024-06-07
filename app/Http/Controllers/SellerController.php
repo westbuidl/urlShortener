@@ -185,7 +185,7 @@ class SellerController extends Controller
         }
     }
 
-    public function logout(Request $request)
+    /*public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
 
@@ -193,7 +193,32 @@ class SellerController extends Controller
             'message' => 'Seller logged out',
 
         ], 200);
+    }*/
+
+    public function sellerLogout(Request $request)
+{
+    // Assuming 'BuyerId' is a field in the authenticated user model
+
+    $seller = $request->user();
+
+    //$buyerId = $request->input('buyerId');
+    
+    // Find the buyer using the BuyerId
+    $seller = Seller::where('sellerId', $seller->sellerId)->first();
+
+    if ($seller) {
+        // Revoke all tokens for the buyer
+        $seller->tokens()->delete();
+
+        return response()->json([
+            'message' => 'Seller logged out successfully',
+        ], 200);
+    } else {
+        return response()->json([
+            'message' => 'Seller not found',
+        ], 404);
     }
+}
 
 
     //Seller forgot password
