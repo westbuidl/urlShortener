@@ -136,6 +136,23 @@ class CompanyBuyerController extends Controller
     }
 
 
+    public function companyBuyerLogout(Request $request)
+{
+    $companyBuyerLogout = $request->user();
+
+    if ($companyBuyerLogout) {
+        $companyBuyerLogout->tokens()->delete();
+
+        return response()->json([
+            'message' => 'Company Buyer logged out successfully',
+        ], 200);
+    } else {
+        return response()->json([
+            'message' => 'Company Buyer account not found',
+        ], 404);
+    }
+}
+
     //Email verification function
 
     public function companyBuyerVerifyMail(Request $request)
@@ -267,7 +284,7 @@ class CompanyBuyerController extends Controller
      public function updateCompanyBuyerProfilePicture(Request $request)
      {
          $validator = Validator::make($request->all(), [
-             'profile_photo' => 'required|image|mimes:jpg,png,bmp'
+             'profile_photo' => 'required|image|mimes:jpg,png,bmp|max:1024',
  
          ]);
          if ($validator->fails()) {

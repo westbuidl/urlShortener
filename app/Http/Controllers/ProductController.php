@@ -152,7 +152,10 @@ class ProductController extends Controller
     public function viewProduct(Request $request, string $productId)
     {
         // Find the product by its ID
-        $product = Product::where('productId', $productId)->first();
+
+        $perPage = $request->input('per_page', 10);
+
+        $product = Product::where('productId', $productId)->first()->paginate($perPage);
 
         // Check if the product exists
         if ($product) {
@@ -287,7 +290,61 @@ class ProductController extends Controller
 
 
 
-    public function searchProducts($search_query = null)
+    public function searchProducts(Request $request)
+{
+    // Retrieve the search query from query parameters
+    $perPage = $request->input('per_page', 10);
+
+    $search_query = $request->query('search_query', null);
+
+    // Initialize the query builder for the Product model
+    $query = Product::query();
+
+    // Search for products with names containing the given substring
+    if ($search_query !== null) {
+        $query->where(function ($query) use ($search_query) {
+            $query->where('productId', $search_query)
+                  ->orWhere('product_name', 'like', '%' . $search_query . '%');
+        });
+    }
+
+    // Execute the query and get the results
+    $products = $query->get();
+
+    // Check if any products were found
+    if ($products->isEmpty()) {
+        return response()->json([
+            'message' => 'No products found matching the search criteria.',
+        ], 404);
+    } else {
+        // Iterate through each product to fetch its images
+        foreach ($products as $product) {
+            // Extract image URLs for the product
+            $imageURLs = [];
+            if (!empty($product->product_image)) {
+                foreach (explode(',', $product->product_image) as $image) {
+                    $imageURLs[] = asset('uploads/product_images/' . $image);
+                }
+            }
+
+            // Add image URLs to the product object
+            $product->image_urls = $imageURLs;
+        }
+
+        return response()->json([
+            'message' => 'Product found.',
+            'data' => $products
+        ], 200);
+    }
+}
+
+
+
+
+
+
+
+   /* public function searchProducts($search_query = null)
     {
         $query = Product::query();
         // Search for products with names containing the given substring
@@ -322,7 +379,7 @@ class ProductController extends Controller
                 'data' => $products
             ], 200);
         }
-    }
+    }*/
 
     //Function to view products ends
 
@@ -630,6 +687,8 @@ class ProductController extends Controller
 
     //Hot deals method
     public function hotDeals(Request $request)
+
+    //$perPage = $request->input('per_page', 10);
     {
         try {
             // Calculate the timestamp for 48 hours ago

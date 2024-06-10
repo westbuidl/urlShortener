@@ -138,6 +138,22 @@ class CompanySellerController extends Controller
         }
     }
 
+    public function companySellerLogout(Request $request)
+    {
+        $companySellerLogout = $request->user();
+    
+        if ($companySellerLogout) {
+            $companySellerLogout->tokens()->delete();
+    
+            return response()->json([
+                'message' => 'Company Seller logged out successfully',
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'Company Seller account not found',
+            ], 404);
+        }
+    }
 
     //Email verification function
 
@@ -272,7 +288,7 @@ class CompanySellerController extends Controller
      public function updateCompanySellerProfilePicture(Request $request)
      {
          $validator = Validator::make($request->all(), [
-             'profile_photo' => 'required|image|mimes:jpg,png,bmp'
+             'profile_photo' => 'required|image|mimes:jpg,png,bmp|max:1024',
  
          ]);
          if ($validator->fails()) {

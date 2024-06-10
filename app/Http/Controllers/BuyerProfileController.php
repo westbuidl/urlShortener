@@ -44,7 +44,7 @@ class BuyerProfileController extends Controller
     public function updateBuyerProfilePicture(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'profile_photo' => 'required|image|mimes:jpg,png,bmp'
+            'profile_photo' => 'required|image|mimes:jpg,png,bmp|max:1024',
 
         ]);
         if ($validator->fails()) {

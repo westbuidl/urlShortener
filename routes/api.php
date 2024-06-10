@@ -49,7 +49,7 @@ Route::delete('/deleteBuyerProfilePicture/{buyerId}', [BuyerProfileController::c
 Route::post('/updateBuyerAccountDetails', [BuyerProfileController::class, 'updateBuyerAccountDetails'])->middleware('auth:sanctum')->name('updateBuyerAccountDetails');//profile update endpointupdate for 
 Route::post('/updateBuyerBillingAddress', [BuyerProfileController::class, 'updateBuyerBillingAddress'])->middleware('auth:sanctum')->name('updateBuyerBillingAddress');//profile update endpointupdate for 
 Route::post('/buyer', [BuyerController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
-Route::post('/buyerLogout', [BuyerController::class, 'buyerLogout'])->middleware('auth:sanctum');//api for logout//});
+Route::post('/buyerLogout', [BuyerController::class, 'buyerLogout'])->middleware('auth:sanctum')->name('buyerLogout');
 Route::post('/verifyBuyerEmail', [BuyerController::class, 'verifyBuyerEmail'])->name('verifyBuyerEmail');//send verification email
 Route::post('/resendBuyerEmailAuth/{email}', [BuyerController::class, 'resendBuyerEmailAuth'])->name('resendBuyerEmailAuth');//resend verification code
 Route::post('/buyerPasswordReset', [BuyerController::class, 'buyerPasswordReset'])->name('buyerPasswordReset');//reset buyer password
@@ -70,7 +70,7 @@ Route::delete('/deleteSellerProfilePicture/{seller_Id}', [SellerProfileControlle
 Route::post('/updateSellerAccountDetails', [SellerProfileController::class, 'updateSellerAccountDetails'])->middleware('auth:sanctum')->name('updateSellerAccountDetails');//profile update endpointupdate for 
 Route::post('/updateSellerAddress', [SellerProfileController::class, 'updateSellerAddress'])->middleware('auth:sanctum')->name('updateSellerAddress');//profile update endpointupdate for 
 //Route::post('/buyer', [BuyerController::class, 'user'])->middleware('auth:sanctum');//api for access token protected routes
-Route::post('/sellerLogout', [SellerController::class, 'sellerLogout'])->middleware('auth:sanctum');//api for logout//});
+Route::post('/sellerLogout', [SellerController::class, 'sellerLogout'])->middleware('auth:sanctum')->name('sellerLogout');
 Route::post('/verifySellerEmail', [SellerController::class, 'verifySellerEmail'])->name('verifySellerEmail');//send verification email
 Route::post('/resendSellerEmailAuth/{email}', [SellerController::class, 'resendSellerEmailAuth'])->name('resendSellerEmailAuth');//resend verification code
 Route::post('/sellerPasswordReset', [SellerController::class, 'sellerPasswordReset'])->name('sellerPasswordReset');//reset buyer password
@@ -93,6 +93,7 @@ Route::get('/totalReturn', [SellerProfileController::class, 'totalReturn'])->mid
 //---Begin Api routes for CompanyBuyer --//
 Route::post('/companyBuyerSignup', [CompanyBuyerController::class, 'companyBuyerSignup'])->name('companyBuyerSignup');//creating account for business
 Route::post('/companyBuyerLogin', [CompanyBuyerController::class, 'companyBuyerLogin'])->name('companyBuyerLogin');//business account login
+Route::post('/companyBuyerLogout', [CompanyBuyerController::class, 'companyBuyerLogout'])->name('companyBuyerLogout');//
 Route::post('/companyBuyerChangePassword', [CompanyBuyerController::class, 'companyBuyerChangePassword'])->middleware('auth:sanctum')->name('companyBuyerChangePassword');//change password endpoint for sellers
 Route::delete('/deleteCompanyBuyerProfilePicture/{companyBuyerId}', [CompanyBuyerController::class, 'deleteCompanyBuyerProfilePicture'])->middleware('auth:sanctum')->name('deleteCompanyBuyerProfilePicture');//profile image update endpoint
 Route::post('/updateCompanyBuyerProfilePicture', [CompanyBuyerController::class, 'updateCompanyBuyerProfilePicture'])->middleware('auth:sanctum')->name('updateCompanyBuyerProfilePicture');// seller profile image update endpoint 
@@ -106,6 +107,7 @@ Route::get('/getCompanyBuyerProfile/{companyBuyerId}', [CompanyBuyerController::
 //---Begin Api routes for CompanySeller --//
 Route::post('/companySellerSignup', [CompanySellerController::class, 'companySellerSignup'])->name('companySellerSignup');//creating account for business
 Route::post('/companySellerLogin', [CompanySellerController::class, 'companySellerLogin'])->name('companySellerLogin');//business account login
+Route::post('/companySellerLogout', [CompanySellerController::class, 'companySellerLogout'])->name('companySellerLogout');//business account login
 Route::post('/companySellerChangePassword', [CompanySellerController::class, 'companySellerChangePassword'])->middleware('auth:sanctum')->name('companySellerChangePassword');//change password endpoint for sellers
 Route::delete('/deleteCompanySellerProfilePicture/{companySellerId}', [CompanySellerController::class, 'deleteCompanySellerProfilePicture'])->middleware('auth:sanctum')->name('deleteCompanySellerProfilePicture');//profile image update endpoint
 Route::post('/companySellerUpdateProfile', [CompanySellerController::class, 'companySellerUpdateProfile'])->middleware('auth:sanctum')->name('companySellerUpdateProfile');// seller profile image update endpoint 
@@ -151,7 +153,7 @@ Route::get('/productDetails/{productId}', [ProductController::class, 'productDet
 Route::post('/editProduct/{productId}', [ProductController::class, 'editProduct'])->middleware('auth:sanctum')->name('editProduct');//view products
 Route::post('/restockProduct/{productId}', [ProductController::class, 'restockproduct'])->middleware('auth:sanctum')->name('restockproduct');//restock product
 Route::post('/productstate/{productId}', [ProductController::class, 'productstate'])->middleware('auth:sanctum')->name('productstate');//make the product active/inactive
-Route::get('/searchProducts/{name}', [ProductController::class, 'searchProducts'])->name('searchProducts');//search products
+Route::get('/searchProducts', [ProductController::class, 'searchProducts'])->name('searchProducts');//search products
 Route::delete('/deleteProduct/{productId}', [ProductController::class, 'deleteProduct'])->middleware('auth:sanctum');//profile update endpoint for sellers
 Route::post('/toggleProductState/{productId}', [ProductController::class, 'toggleProductState'])->middleware('auth:sanctum')->name('toggleProductState');//toggle product state
 Route::get('/hotDeals', [ProductController::class, 'hotDeals'])->name('hotDeals');//toggle product state

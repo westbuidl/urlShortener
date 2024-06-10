@@ -231,7 +231,7 @@ class BuyerController extends Controller
     //$buyerId = $request->input('buyerId');
     
     // Find the buyer using the BuyerId
-    $buyer = Buyer::where('buyerId', $buyer->buyerId)->first();
+    //$buyer = Buyer::where('buyerId', $buyer->buyerId)->first();
 
     if ($buyer) {
         // Revoke all tokens for the buyer

@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 use App\Mail\sellerSignupEmail;
 use App\Mail\PasswordResetEmail;
 use App\Mail\sellerEmailVerified;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -195,19 +196,36 @@ class SellerController extends Controller
         ], 200);
     }*/
 
+    /*public function sellerLogout(Request $request)
+    {
+        // Assuming 'BuyerId' is a field in the authenticated user model
+
+        $seller = auth()->user();
+        
+
+        //$buyerId = $request->input('buyerId');
+
+        // Find the buyer using the BuyerId
+        $seller = Seller::where('sellerId', $seller->sellerId)->first();
+
+        if ($seller) {
+            // Revoke all tokens for the buyer
+            $seller->tokens()->delete();
+
+            return response()->json([
+                'message' => 'Seller logged out successfully',
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'Seller not found',
+            ], 404);
+        }
+    }*/
     public function sellerLogout(Request $request)
 {
-    // Assuming 'BuyerId' is a field in the authenticated user model
-
     $seller = $request->user();
 
-    //$buyerId = $request->input('buyerId');
-    
-    // Find the buyer using the BuyerId
-    $seller = Seller::where('sellerId', $seller->sellerId)->first();
-
     if ($seller) {
-        // Revoke all tokens for the buyer
         $seller->tokens()->delete();
 
         return response()->json([
@@ -219,6 +237,7 @@ class SellerController extends Controller
         ], 404);
     }
 }
+
 
 
     //Seller forgot password
