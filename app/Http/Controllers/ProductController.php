@@ -53,7 +53,7 @@ class ProductController extends Controller
                 'cost_price' => 'required|min:2|max:100',
                 'quantityin_stock' => 'required|min:1|max:100',
                 'unit' => 'required|min:1|max:100',
-                'product_description' => 'required|min:2|max:255',
+                'product_description' => 'required|min:2',
                 'product_image' => 'required|array|min:2|max:5',
                 'product_image.*' => 'image|mimes:jpg,png,bmp'
                 //'product_image' => 'required|image|mimes:jpg,png,bmp'
@@ -516,7 +516,7 @@ class ProductController extends Controller
             'new_cost_price' => 'required|min:2|max:100',
             'new_quantityin_stock' => 'required|min:2|max:100',
             'new_unit' => 'required|min:2|max:100',
-            'new_product_description' => 'required|min:2|max:255',
+            'new_product_description' => 'required|min:2',
             'product_image' => 'array|min:2|max:5',
             'product_image.*' => 'image|mimes:jpg,png,bmp'
         ]);
@@ -601,6 +601,10 @@ class ProductController extends Controller
 
         // Check if the product exists
         if ($product) {
+
+            // Retrieve the authenticated seller
+            $seller = $request->user();
+            
             // Check if the authenticated user is the owner of the product
             if ($request->user()->sellerId == $product->sellerId) {
                 // Validate the request data
@@ -625,7 +629,7 @@ class ProductController extends Controller
                     'cost_price' => $request->new_cost_price,
                 ]);
 
-                Mail::to($request->email)->send(new productRestockEmail($product, $product, $request->firstname, $product->product_name, $product->quantityin_stock));
+                Mail::to($seller->email)->send(new productRestockEmail($product, $product, $request->firstname, $product->productName, $product->quantityin_stock));
                 // Return success response
                 return response()->json([
                     'message' => 'Restock successful',

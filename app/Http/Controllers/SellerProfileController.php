@@ -396,33 +396,58 @@ class SellerProfileController extends Controller
 
 
     public function getRecentSales(Request $request)
-    {
-        // Get the authenticated seller
-        $sellerId = auth()->user()->sellerId;
+{
+    // Get the authenticated seller
+    $sellerId = auth()->user()->sellerId;
 
-        // Check if the user is authenticated and is a seller
-        $seller = Seller::where('sellerId', $sellerId)->first();
+    // Check if the user is authenticated and is a seller
+    $seller = Seller::where('sellerId', $sellerId)->first();
 
-        // Ensure the seller exists
-        if (!$seller) {
-            return response()->json([
-                'message' => 'Seller not found.',
-            ], 404);
+    // Ensure the seller exists
+    if (!$seller) {
+        return response()->json([
+            'message' => 'Seller not found.',
+        ], 404);
+    }
+
+    // Fetch recent sales (last 10 orders) for the authenticated seller
+    $recentSales = Order::where('sellerId', $sellerId)
+        ->orderBy('created_at', 'desc')
+        ->take(10)
+        ->get();
+
+    // Prepare the sales data with product images
+    $salesData = $recentSales->map(function ($order) {
+        // Initialize the first product image as null
+        $firstProductImage = null;
+
+        // Split the productImage string into an array
+        $productImages = explode(',', $order->productImage);
+
+        // Check if the array is not empty and set the first product image
+        if (!empty($productImages) && isset($productImages[0]) && $productImages[0] !== '') {
+            $firstProductImage = asset('uploads/product_images/' . $productImages[0]);
         }
 
-        // Fetch recent sales (last 10 orders) for the authenticated seller
-        $recentSales = Order::where('sellerId', $sellerId)
-            ->orderBy('created_at', 'desc')
-            ->take(10)
-            ->get();
+        return [
+            'order_id' => $order->orderId,
+            'product_id' => $order->productId,
+            'product_name' => $order->productName,
+            'product_image' => $firstProductImage,
+            'quantity' => $order->quantity,
+            'total_price' => $order->grand_price,
+            'order_date' => $order->created_at,
+        ];
+    });
 
-        return response()->json([
-            'message' => 'Recent sales found.',
-            'data' => [
-                'recent_sales' => $recentSales,
-            ]
-        ], 200);
-    }
+    return response()->json([
+        'message' => 'Recent sales found.',
+        'data' => [
+            'recent_sales' => $salesData,
+        ]
+    ], 200);
+}
+
 
 
     public function getAllSales(Request $request)
@@ -459,13 +484,27 @@ class SellerProfileController extends Controller
 
         // Prepare the sales data with product images
     $salesData = $allSales->map(function ($order) {
+
+        $firstProductImage = null;
+
+         // Split the productImage string into an array
+         $productImages = explode(',', $order->productImage);
+
+// Check if the array is not empty and set the first product image
+        if (!empty($productImages) && isset($productImages[0]) && $productImages[0] !== '') {
+            $firstProductImage = asset('uploads/product_images/' . $productImages[0]);
+        }
+
+        //$productImage = json_decode($order->productImage, true);
+        //$firstProductImage = isset($productImage[0]) ? asset('uploads/product_images/' . $productImage[0]) : null;
+
         return [
             'order_id' => $order->orderId,
             'product_id' => $order->productId,
             'product_name' => $order->productName,
-            //'product_image' => asset('uploads/product_images/' . $order->productImage),
+            //'product_image' => asset('uploads/product_images/' . $order->productImage[0]),
             //'product_image' => $order->productImage ? asset('uploads/product_images/' . $order->productImage) : null,
-            'product_image' => $order->productImage ? asset('uploads/product_images/' . $order->productImage) : null,
+            'product_image' => $firstProductImage,
             'quantity' => $order->quantity,
             'total_price' => $order->grand_price,
             'order_date' => $order->created_at,
@@ -508,6 +547,16 @@ class SellerProfileController extends Controller
         ->where('orderId', $orderId)
         ->first();
 
+
+        $firstProductImage = null;
+
+         // Split the productImage string into an array
+         $productImages = explode(',', $order->productImage);
+
+// Check if the array is not empty and set the first product image
+        if (!empty($productImages) && isset($productImages[0]) && $productImages[0] !== '') {
+            $firstProductImage = asset('uploads/product_images/' . $productImages[0]);
+        }
     // Ensure the order exists
     if (!$order) {
         return response()->json([
@@ -520,7 +569,8 @@ class SellerProfileController extends Controller
         'order_id' => $order->orderId,
         'product_id' => $order->productId,
         'product_name' => $order->productName,
-        'product_image' => $order->productImage ? asset('uploads/product_images/' . $order->productImage) : null,
+        'product_image' => $firstProductImage,
+        //'product_image' => $order->productImage[0] ? asset('uploads/product_images/' . $order->productImage[0]) : null,
         'quantity' => $order->quantity,
         'total_price' => $order->grand_price,
         'order_date' => $order->created_at,

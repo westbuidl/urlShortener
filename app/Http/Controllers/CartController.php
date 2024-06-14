@@ -475,34 +475,34 @@ class CartController extends Controller
                     foreach ($cartItems as $cartItem) {
 
 
-                         // Fetch product to get sellerId
-                         $product = Product::where('productId', $cartItem->productId)->first();
+                        // Fetch product to get sellerId
+                        $product = Product::where('productId', $cartItem->productId)->first();
 
-                         if ($product) {
-                             // Calculate the platform fee and seller's profit
-                             $platformFee = $cartItem->selling_price * 0.08;
-                             $accruedProfit = $cartItem->selling_price - $platformFee;
- 
-                             // Update seller's profit and platform fee in the database
-                             $seller = Seller::where('sellerId', $product->sellerId)->first();
-                             if ($seller) {
-                                 // Convert the current values to float before adding
-                                 $currentAccruedProfit = floatval($seller->accrued_profit);
-                                 $currentPlatformFee = floatval($seller->platform_fee);
- 
-                                 // Update the values
-                                 $seller->accrued_profit = $currentAccruedProfit + $accruedProfit;
-                                 $seller->platform_fee = $currentPlatformFee + $platformFee;
- 
-                                 // Save the seller record
-                                 $seller->save();
-                             }
- 
-                             // Update product quantity in stock and quantity sold
-                             $product->quantityin_stock -= $cartItem->quantity;
-                             $product->quantity_sold += $cartItem->quantity;
-                             $product->save();
-                         }
+                        if ($product) {
+                            // Calculate the platform fee and seller's profit
+                            $platformFee = $cartItem->selling_price * 0.08;
+                            $accruedProfit = $cartItem->selling_price - $platformFee;
+
+                            // Update seller's profit and platform fee in the database
+                            $seller = Seller::where('sellerId', $product->sellerId)->first();
+                            if ($seller) {
+                                // Convert the current values to float before adding
+                                $currentAccruedProfit = floatval($seller->accrued_profit);
+                                $currentPlatformFee = floatval($seller->platform_fee);
+
+                                // Update the values
+                                $seller->accrued_profit = $currentAccruedProfit + $accruedProfit;
+                                $seller->platform_fee = $currentPlatformFee + $platformFee;
+
+                                // Save the seller record
+                                $seller->save();
+                            }
+
+                            // Update product quantity in stock and quantity sold
+                            $product->quantityin_stock -= $cartItem->quantity;
+                            $product->quantity_sold += $cartItem->quantity;
+                            $product->save();
+                        }
 
 
                         $order = new Order();
@@ -532,8 +532,6 @@ class CartController extends Controller
                         $order->sellerId = $product->sellerId;
                         $order->save();
                         $orders[] = $order;
-
-                       
                     }
 
                     // Clear the cart after successful checkout
@@ -726,20 +724,19 @@ class CartController extends Controller
         // Iterate through each order to fetch product details and image URLs
         foreach ($orders as $order) {
             // Retrieve product details for the order
-            $products = Product::where('productId', $order->productId)->get();
+            $product = Product::where('productId', $order->productId)->first();
 
-            // Extract image URLs for each product
-            $productImages = [];
-            foreach ($products as $product) {
-                if (!empty($product->product_image)) {
-                    foreach (explode(',', $product->product_image) as $image) {
-                        $productImages[] = asset('uploads/product_images/' . $image);
-                    }
+            // Extract the first image URL for the product
+            $productImage = null;
+            if ($product && !empty($product->product_image)) {
+                $images = explode(',', $product->product_image);
+                if (!empty($images[0])) {
+                    $productImage = asset('uploads/product_images/' . $images[0]);
                 }
             }
 
-            // Add image URLs to the order object
-            $order->product_images = $productImages;
+            // Add the first image URL to the order object
+            $order->product_image = $productImage;
         }
 
         return response()->json([
@@ -751,51 +748,44 @@ class CartController extends Controller
     }
 
 
+
     //public function getOrderById($orderId)
     public function getOrderById($orderId)
     {
         // Retrieve the authenticated user's ID
         $buyerId = Auth::user()->buyerId;
 
-        // Retrieve all orders associated with the authenticated user and the given order ID
-        $orders = Order::where('buyerId', $buyerId)
+        // Retrieve the order associated with the authenticated user and the given order ID
+        $order = Order::where('buyerId', $buyerId)
             ->where('orderId', $orderId)
-            ->get();
+            ->first();
 
-        // Check if any orders exist
-        if ($orders->isEmpty()) {
+        // Check if the order exists
+        if (!$order) {
             return response()->json([
                 'message' => 'No orders found for the authenticated user with the given order ID.',
             ], 404);
         }
 
-        // Iterate through each order to fetch product details and image URLs
-        $ordersWithProducts = [];
-        foreach ($orders as $order) {
-            // Retrieve product details for the order
-            $products = Product::where('productId', $order->productId)->get();
+        // Retrieve product details for the order
+        $product = Product::where('productId', $order->productId)->first();
 
-            // Extract image URLs for each product
-            $productImages = [];
-            foreach ($products as $product) {
-                if (!empty($product->product_image)) {
-                    foreach (explode(',', $product->product_image) as $image) {
-                        $productImages[] = asset('uploads/product_images/' . $image);
-                    }
-                }
+        // Extract the first image URL for the product
+        $productImage = null;
+        if ($product && !empty($product->product_image)) {
+            $images = explode(',', $product->product_image);
+            if (!empty($images[0])) {
+                $productImage = asset('uploads/product_images/' . $images[0]);
             }
-
-            // Add image URLs to the order object
-            $order->product_images = $productImages;
-
-            // Append the order with product details to the result array
-            $ordersWithProducts[] = $order;
         }
 
+        // Add the first image URL to the order object
+        $order->product_image = $productImage;
+
         return response()->json([
-            'message' => 'Orders Fetched successfully .',
+            'message' => 'Order fetched successfully.',
             'data' => [
-                'orders' => $ordersWithProducts,
+                'order' => $order,
             ]
         ], 200);
     }
