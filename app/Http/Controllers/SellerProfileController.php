@@ -449,56 +449,141 @@ class SellerProfileController extends Controller
         $totalVolme = $allSales->sum('grand_price');
         $totalProfit = $totalVolme * (1 - 0.08);
 
+        // Calculate completed and pending sales
+    $completedSales = $allSales->where('order_status', 'success')->count();
+    $pendingSales = $allSales->where('status', 'pending')->count();
+
+    // Fetch the total number of products uploaded by the seller
+    $totalProducts = Product::where('sellerId', $sellerId)->count();
+
+
+        // Prepare the sales data with product images
+    $salesData = $allSales->map(function ($order) {
+        return [
+            'order_id' => $order->orderId,
+            'product_id' => $order->productId,
+            'product_name' => $order->productName,
+            //'product_image' => asset('uploads/product_images/' . $order->productImage),
+            //'product_image' => $order->productImage ? asset('uploads/product_images/' . $order->productImage) : null,
+            'product_image' => $order->productImage ? asset('uploads/product_images/' . $order->productImage) : null,
+            'quantity' => $order->quantity,
+            'total_price' => $order->grand_price,
+            'order_date' => $order->created_at,
+        ];
+    });
+
+
         return response()->json([
             'message' => 'All sales found.',
             'data' => [
-                'all_sales' => $allSales,
+                'all_sales' => $salesData,
                 'total_orders' => $totalOrders,
                 'total_volume' => $totalVolme,
                 'total_profit' => $totalProfit,
+                'total_products' => $totalProducts,
+            'completed_sales' => $completedSales,
+            'pending_sales' => $pendingSales,
             ]
         ], 200);
     }
 
 
+    public function getSaleDetails(Request $request, $orderId)
+{
+    // Get the authenticated seller
+    $sellerId = auth()->user()->sellerId;
 
-    public function getTopSellingProducts(Request $request)
-    {
-        // Get the authenticated seller
-        $sellerId = auth()->user()->sellerId;
+    // Check if the user is authenticated and is a seller
+    $seller = Seller::where('sellerId', $sellerId)->first();
 
-        // Check if the user is authenticated and is a seller
-        $seller = Seller::where('sellerId', $sellerId)->first();
-
-        // Ensure the seller exists
-        if (!$seller) {
-            return response()->json([
-                'message' => 'Seller not found.',
-            ], 404);
-        }
-
-        // Aggregate sales data based on products
-        $topSellingProducts = Order::where('sellerId', $sellerId)
-            ->select('productId', DB::raw('SUM(quantity) as total_quantity'))
-            ->groupBy('productId')
-            ->orderByDesc('total_quantity')
-            ->take(10)
-            ->get();
-
-        // Fetch product details for the top selling products
-        $productDetails = [];
-        foreach ($topSellingProducts as $product) {
-            $productDetails[] = [
-                'product' => Product::where($product->productId),
-                'total_quantity_sold' => $product->total_quantity,
-            ];
-        }
-
+    // Ensure the seller exists
+    if (!$seller) {
         return response()->json([
-            'message' => 'Top selling products found.',
+            'message' => 'Seller not found.',
+        ], 404);
+    }
+
+    // Fetch the sale details for the given orderId and authenticated seller
+    $order = Order::where('sellerId', $sellerId)
+        ->where('orderId', $orderId)
+        ->first();
+
+    // Ensure the order exists
+    if (!$order) {
+        return response()->json([
+            'message' => 'Order not found.',
+        ], 404);
+    }
+
+    // Prepare the sale data with product image
+    $saleDetails = [
+        'order_id' => $order->orderId,
+        'product_id' => $order->productId,
+        'product_name' => $order->productName,
+        'product_image' => $order->productImage ? asset('uploads/product_images/' . $order->productImage) : null,
+        'quantity' => $order->quantity,
+        'total_price' => $order->grand_price,
+        'order_date' => $order->created_at,
+    ];
+
+    return response()->json([
+        'message' => 'Sale details found.',
+        'data' => $saleDetails
+    ], 200);
+}
+
+
+
+public function getTopSellingProducts(Request $request)
+{
+    // Get the authenticated seller
+    $sellerId = auth()->user()->sellerId;
+
+    // Check if the user is authenticated and is a seller
+    $seller = Seller::where('sellerId', $sellerId)->first();
+
+    // Ensure the seller exists
+    if (!$seller) {
+        return response()->json([
+            'message' => 'Seller not found.',
+        ], 404);
+    }
+
+    // Aggregate sales data based on products
+    $topSellingProducts = Order::where('sellerId', $sellerId)
+        ->select('productId', 'productName', 'productImage', DB::raw('SUM(quantity) as total_quantity'))
+        ->groupBy('productId', 'productName', 'productImage')
+        ->orderByDesc('total_quantity')
+        ->take(10)
+        ->get();
+
+    if ($topSellingProducts->isEmpty()) {
+        return response()->json([
+            'message' => 'No top selling products found.',
             'data' => [
-                'top_selling_products' => $productDetails,
+                'top_selling_products' => [],
             ]
         ], 200);
     }
+
+    // Prepare the product details along with total quantity sold
+    $productDetails = $topSellingProducts->map(function ($product) {
+        return [
+            'product_id' => $product->productId,
+            'product_name' => $product->productName,
+            'product_image' => $product->productImage ? asset('uploads/product_images/' . $product->productImage) : null,
+            'total_quantity_sold' => $product->total_quantity,
+        ];
+    });
+
+    return response()->json([
+        'message' => 'Top selling products found.',
+        'data' => [
+            'top_selling_products' => $productDetails,
+        ]
+    ], 200);
+}
+
+
+
 }

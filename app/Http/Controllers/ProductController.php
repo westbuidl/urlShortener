@@ -153,9 +153,9 @@ class ProductController extends Controller
     {
         // Find the product by its ID
 
-        $perPage = $request->input('per_page', 10);
+        //$perPage = $request->input('perPage', 10);
 
-        $product = Product::where('productId', $productId)->first()->paginate($perPage);
+        $product = Product::where('productId', $productId)->first();
 
         // Check if the product exists
         if ($product) {
@@ -250,42 +250,40 @@ class ProductController extends Controller
 
 
     // Function to fetch all products
-    public function allProducts(Request $request)
-    {
-        // Set the number of items per page (you can customize this value)
-    $perPage = $request->input('per_page', 10);
+   // Function to fetch all products
+   public function allProducts()
+   {
+       // Retrieve all products from the database
+       $products = Product::orderByDesc('id')->get();
 
-    // Retrieve all products from the database with pagination
-    $products = Product::orderByDesc('id')->paginate($perPage);
+       // Check if any products exist
+       if ($products->isEmpty()) {
+           return response()->json([
+               'message' => 'No products found.',
+           ], 404);
+       }
 
-        // Check if any products exist
-        if ($products->isEmpty()) {
-            return response()->json([
-                'message' => 'No products found.',
-            ], 404);
-        }
+       // Iterate through each product to fetch its images
+       foreach ($products as $product) {
+           // Extract image URLs for the product
+           $imageURLs = [];
+           if (!empty($product->product_image)) {
+               foreach (explode(',', $product->product_image) as $image) {
+                   $imageURLs[] = asset('uploads/product_images/' . $image);
+               }
+           }
 
-        // Iterate through each product to fetch its images
-        foreach ($products as $product) {
-            // Extract image URLs for the product
-            $imageURLs = [];
-            if (!empty($product->product_image)) {
-                foreach (explode(',', $product->product_image) as $image) {
-                    $imageURLs[] = asset('uploads/product_images/' . $image);
-                }
-            }
+           // Add image URLs to the product object
+           $product->image_urls = $imageURLs;
+       }
 
-            // Add image URLs to the product object
-            $product->image_urls = $imageURLs;
-        }
-
-        return response()->json([
-            'message' => 'All products fetched successfully.',
-            'data' => [
-                'product' => $products,
-            ]
-        ], 200);
-    }
+       return response()->json([
+           'message' => 'All products fetched successfully.',
+           'data' => [
+               'product' => $products,
+           ]
+       ], 200);
+   }
 
 
 
@@ -293,7 +291,7 @@ class ProductController extends Controller
     public function searchProducts(Request $request)
 {
     // Retrieve the search query from query parameters
-    $perPage = $request->input('per_page', 10);
+    //$perPage = $request->input('per_page', 10);
 
     $search_query = $request->query('search_query', null);
 

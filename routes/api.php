@@ -15,6 +15,7 @@ use App\Http\Controllers\BuyerProfileController;
 use App\Http\Controllers\CompanyBuyerController;
 use App\Http\Controllers\CompanySellerController;
 use App\Http\Controllers\SellerProfileController;
+use App\Http\Controllers\WishlistController;
 
 /*
 |--------------------------------------------------------------------------
@@ -84,7 +85,7 @@ Route::get('/getTopSellingProducts', [SellerProfileController::class, 'getTopSel
 Route::get('/totalSales', [SellerProfileController::class, 'totalSales'])->middleware(('auth:sanctum')) ->name('totalSales');//get Total Sales
 Route::get('/totalOrder', [SellerProfileController::class, 'totalOrder'])->middleware(('auth:sanctum')) ->name('totalOrder');//get Total Sales
 Route::get('/totalReturn', [SellerProfileController::class, 'totalReturn'])->middleware(('auth:sanctum')) ->name('totalReturn');//get Total Sales
-
+Route::get('/getSaleDetails/{orderId}', [SellerProfileController::class, 'getSaleDetails'])->middleware('auth:sanctum')->name('getSaleDetails/{orderId}');
 
 //End Api routes for Buyer account
 
@@ -93,21 +94,21 @@ Route::get('/totalReturn', [SellerProfileController::class, 'totalReturn'])->mid
 //---Begin Api routes for CompanyBuyer --//
 Route::post('/companyBuyerSignup', [CompanyBuyerController::class, 'companyBuyerSignup'])->name('companyBuyerSignup');//creating account for business
 Route::post('/companyBuyerLogin', [CompanyBuyerController::class, 'companyBuyerLogin'])->name('companyBuyerLogin');//business account login
-Route::post('/companyBuyerLogout', [CompanyBuyerController::class, 'companyBuyerLogout'])->name('companyBuyerLogout');//
+Route::post('/companyBuyerLogout', [CompanyBuyerController::class, 'companyBuyerLogout'])->middleware('auth:sanctum')->name('companyBuyerLogout');//
 Route::post('/companyBuyerChangePassword', [CompanyBuyerController::class, 'companyBuyerChangePassword'])->middleware('auth:sanctum')->name('companyBuyerChangePassword');//change password endpoint for sellers
 Route::delete('/deleteCompanyBuyerProfilePicture/{companyBuyerId}', [CompanyBuyerController::class, 'deleteCompanyBuyerProfilePicture'])->middleware('auth:sanctum')->name('deleteCompanyBuyerProfilePicture');//profile image update endpoint
 Route::post('/updateCompanyBuyerProfilePicture', [CompanyBuyerController::class, 'updateCompanyBuyerProfilePicture'])->middleware('auth:sanctum')->name('updateCompanyBuyerProfilePicture');// seller profile image update endpoint 
 Route::post('/updateCompanyBuyerAccountDetails', [CompanyBuyerController::class, 'updateCompanyBuyerAccountDetails'])->middleware('auth:sanctum')->name('updateCompanyBuyerAccountDetails');//profile update endpoint for sellers
 Route::post('/companyBuyerResetPassword', [CompanyBuyerController::class, 'companyBuyerResetPassword'])->name('companyBuyerResetPassword');//resend verification code
 Route::post('/companyBuyerVerifyMail', [CompanyBuyerController::class, 'companyBuyerVerifyMail'])->name('companyBuyerVerifyMail');//send verification email for business account setup
-Route::post('/companyBuyerChangePassword', [CompanyBuyerController::class, 'companyBuyerChangePassword'])->name('companyBuyerChangePassword');//resend verification code
+//Route::post('/companyBuyerChangePassword', [CompanyBuyerController::class, 'companyBuyerChangePassword'])->name('companyBuyerChangePassword');//resend verification code
 Route::post('/resendCompanyBuyerEmailAuth/{email}', [CompanyBuyerController::class, 'resendCompanyBuyerEmailAuth'])->name('resendCompanyBuyerEmailAuth');//resend verification code
 Route::get('/getCompanyBuyerProfile/{companyBuyerId}', [CompanyBuyerController::class, 'getCompanyBuyerProfile'])->name('getCompanyBuyerProfile');//resend verification code
 
 //---Begin Api routes for CompanySeller --//
 Route::post('/companySellerSignup', [CompanySellerController::class, 'companySellerSignup'])->name('companySellerSignup');//creating account for business
 Route::post('/companySellerLogin', [CompanySellerController::class, 'companySellerLogin'])->name('companySellerLogin');//business account login
-Route::post('/companySellerLogout', [CompanySellerController::class, 'companySellerLogout'])->name('companySellerLogout');//business account login
+Route::post('/companySellerLogout', [CompanySellerController::class, 'companySellerLogout'])->middleware('auth:sanctum')->name('companySellerLogout');//business account login
 Route::post('/companySellerChangePassword', [CompanySellerController::class, 'companySellerChangePassword'])->middleware('auth:sanctum')->name('companySellerChangePassword');//change password endpoint for sellers
 Route::delete('/deleteCompanySellerProfilePicture/{companySellerId}', [CompanySellerController::class, 'deleteCompanySellerProfilePicture'])->middleware('auth:sanctum')->name('deleteCompanySellerProfilePicture');//profile image update endpoint
 Route::post('/companySellerUpdateProfile', [CompanySellerController::class, 'companySellerUpdateProfile'])->middleware('auth:sanctum')->name('companySellerUpdateProfile');// seller profile image update endpoint 
@@ -160,6 +161,14 @@ Route::get('/hotDeals', [ProductController::class, 'hotDeals'])->name('hotDeals'
 Route::get('/popularProducts', [ProductController::class, 'popularProducts'])->name('popularProducts');//toggle product state
 //Route::post('/checkout/{buyerId}', [ProductController::class, 'checkout'])->middleware('auth:sanctum')->name('checkout');// add to cart
 //--End of Product api-/-//
+
+
+
+//Everything Wishlist
+Route::post('/addToWishlist/{productId}', [WishlistController::class, 'addToWishlist'])->middleware('auth:sanctum')->name('addToWishlist/{productId}');
+Route::delete('/removeFromWishlist/{productId}', [WishlistController::class, 'removeFromWishlist'])->middleware('auth:sanctum')->name('removeFromWishlist/{productId}');
+Route::get('/viewWishlist', [WishlistController::class, 'viewWishlist'])->middleware('auth:sanctum')->name('viewWishlist');
+
 
 
 //--Payment Api --//

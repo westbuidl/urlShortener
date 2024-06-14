@@ -13,17 +13,18 @@ class resendCompanyBuyerEmailAuth extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $seller;
-    public $firstname;
+    public $companybuyer;
+   // public $reset_password;
+    public $companyname;
     
 
     /**
      * Create a new message instance.
      */
-    public function __construct($seller, $firstname)
+    public function __construct($companybuyer, $companyname)
     {
-        $this->seller = $seller;
-        $this->firstname = $firstname;
+        $this->companybuyer = $companybuyer;
+        $this->companyname = $companyname;
         //$this->business = $business;
         //
     }
@@ -33,7 +34,7 @@ class resendCompanyBuyerEmailAuth extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: $this->firstname .' '. 'verify your email to activate your account your Agroease account.'  
+            subject: $this->companyname .' '. 'verify your email to activate your account your Agroease account.'  
         );
     }
 

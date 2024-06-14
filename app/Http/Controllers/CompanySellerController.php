@@ -140,10 +140,10 @@ class CompanySellerController extends Controller
 
     public function companySellerLogout(Request $request)
     {
-        $companySellerLogout = $request->user();
+        $companySeller = $request->user();
     
-        if ($companySellerLogout) {
-            $companySellerLogout->tokens()->delete();
+        if ($companySeller) {
+            $companySeller->tokens()->delete();
     
             return response()->json([
                 'message' => 'Company Seller logged out successfully',

@@ -137,21 +137,21 @@ class CompanyBuyerController extends Controller
 
 
     public function companyBuyerLogout(Request $request)
-{
-    $companyBuyerLogout = $request->user();
+    {
+        $companyBuyer = $request->user();
 
-    if ($companyBuyerLogout) {
-        $companyBuyerLogout->tokens()->delete();
+        if ($companyBuyer) {
+            $companyBuyer->tokens()->delete();
 
-        return response()->json([
-            'message' => 'Company Buyer logged out successfully',
-        ], 200);
-    } else {
-        return response()->json([
-            'message' => 'Company Buyer account not found',
-        ], 404);
+            return response()->json([
+                'message' => 'Company Buyer logged out successfully',
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'Company Buyer account not found',
+            ], 404);
+        }
     }
-}
 
     //Email verification function
 
@@ -221,11 +221,11 @@ class CompanyBuyerController extends Controller
         $reset_password = rand(10000000, 99999999);
 
         $companyBuyer = CompanyBuyer::where('companyemail', $request->email)->first();
-       // $individualuser->password = $reset_password;
-         $companyBuyer->update([
-                'password' => Hash::make($reset_password)
-            ]);
-        
+        // $individualuser->password = $reset_password;
+        $companyBuyer->update([
+            'password' => Hash::make($reset_password)
+        ]);
+
         $companyBuyer->save();
 
         Mail::to($companyBuyer->companyemail)->send(new companyBuyerPasswordResetEmail($companyBuyer, $reset_password, $companyBuyer->companyname));
@@ -238,25 +238,25 @@ class CompanyBuyerController extends Controller
     public function resendCompanyBuyerEmailAuth(Request $request, $email)
     {
         // Retrieve the email from the request body
-       // $email = $request->input('email');
-    
+        // $email = $request->input('email');
+
         // Validate the email address format
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return response()->json([
                 'message' => 'Invalid email address. Please provide a valid email address.',
             ], 400);
         }
-    
+
         // Retrieve the buyer by email from the database
         $companybuyer = CompanyBuyer::where('companyemail', $email)->first();
-    
+
         // Check if buyer exists
         if (!$companybuyer) {
             return response()->json([
                 'message' => 'User not found for the provided email address.',
             ], 404);
         }
-    
+
         if ($companybuyer->is_verified) {
             return response()->json([
                 'message' => 'Email address is already verified.',
@@ -264,14 +264,14 @@ class CompanyBuyerController extends Controller
         }
         // Generate verification code
         $verification_code = rand(100000, 999999);
-    
+
         // Update buyer's verification code
         $companybuyer->verification_code = $verification_code;
         $companybuyer->save();
-    
+
         // Send verification email
-        Mail::to($email)->send(new resendCompanyBuyerEmailAuth($companybuyer, $verification_code));
-    
+        Mail::to($email)->send(new resendCompanyBuyerEmailAuth($companybuyer, $verification_code, $companybuyer->companyname));
+
         return response()->json([
             'message' => 'Verification code sent to the provided email address.',
         ], 200);
@@ -280,175 +280,59 @@ class CompanyBuyerController extends Controller
 
 
 
-     // Begin profile picture update function
-     public function updateCompanyBuyerProfilePicture(Request $request)
-     {
-         $validator = Validator::make($request->all(), [
-             'profile_photo' => 'required|image|mimes:jpg,png,bmp|max:1024',
- 
-         ]);
-         if ($validator->fails()) {
-             return response()->json([
-                 'message' => 'validations fails',
-                 'errors' => $validator->errors()
-             ], 422);
-         }
-         $companyBuyer = $request->user();
-         if ($request->hasFile('profile_photo')) {
-             if ($companyBuyer->profile_photo) {
-                 $old_path = public_path() . '/uploads/profile_images/' . $companyBuyer->profile_photo;
-                 if (File::exists($old_path)) {
-                     File::delete($old_path);
-                 }
-             }
-             $image_name = 'profile-image-' . time() . '.' . $request->profile_photo->extension();
-             $request->profile_photo->move(public_path('/uploads/profile_images'), $image_name);
-         } else {
-             $image_name = $companyBuyer->profile_photo;
-         }
- 
-         $companyBuyer->update([
-             'profile_photo' => $image_name
- 
-         ]);
-         return response()->json([
-             'message' => 'Profile Picture successfully updated',
- 
-         ], 200);
-     } // End profile update function
- 
- 
-     //Begin update account settings function
-     public function updateCompanyBuyerAccountDetails(Request $request)
-     {
-         $validator = Validator::make($request->all(), [
-             'companyname' => 'nullable|max:100',
-             'companyregnumber' => 'nullable|max:100',
-             //'email' => 'nullable|max:100',
-             'companyphone' => 'nullable|max:100',
-             'companyemail' => 'nullable|max:100',
-             'companyaddress' => 'nullable|max:100',
-             'country' => 'nullable|max:100',
-             'state' => 'nullable|max:100',
-             'city' => 'nullable|max:100',
-             'zipcode' => 'nullable|max:100'
-             
-         ]);
-         if ($validator->fails()) {
-             return response()->json([
-                 'message' => 'Validations failed',
-                 'error' => $validator->errors()
-             ], 422);
-         }
-         $companyBuyer = $request->user();
-         $companyBuyer->update([
-             'companyname' => $request->companyname,
-             'companyregnumber' => $request->companyregnumber,
-             //'email' => $request->email,
-             'companyphone' => $request->companyphone,
-             'companyemail' => $request->companyemail,
-             'companyaddress' => $request->companyaddress,
-             'country' => $request->country,
-             'city' => $request->city,
-             'state' => $request->state,
-             'zipcode' => $request->zipcode
-             
- 
-         ]);
- 
-         return response()->json([
-             'message' => 'Company Buyer Contact information Changed',
-         ], 200);
-     } //End update account settings function
- 
- 
- 
- 
-    
- 
- 
-     //Delete Company Seller profile picture
- 
-     public function deleteCompanyBuyerProfilePicture(Request $request, $companyBuyerId)
-     {
-         try {
- 
-             $companyBuyer = $request->user();
- 
-             // If validation fails, return error response
- 
- 
-             // Find the buyer in the database
-             //$companySeller = Seller::findOrFail($request->companyBuyerId);
-             $companyBuyer = CompanyBuyer::where('companyBuyerId', $companyBuyerId)->first();
- 
-             // Check if the buyer has a profile picture
-             if (!empty($companyBuyer->profile_photo)) {
-                 // Delete the profile picture from the filesystem
-                 $imagePath = public_path('/uploads/profile_images/' . $companyBuyer->profile_photo);
-                 if (File::exists($imagePath)) {
-                     File::delete($imagePath);
-                 }
- 
-                 // Update the buyer's profile picture field to null
-                 $companyBuyer->profile_photo = null;
-                 $companyBuyer->save();
- 
- 
-                 return response()->json([
-                     'message' => 'Profile picture deleted successfully.',
-                 ], 200);
-             } else {
-                 return response()->json([
-                     'message' => 'no profile picture found for this Seller',
-                 ], 400);
-             }
-         } catch (\Exception $e) {
-             // Handle any exceptions that occur during the deletion process
-             return response()->json([
-                 'message' => 'Error deleting profile picture.',
-                 'error' => $e->getMessage(), // Include the error message for debugging
-             ], 500);
-         }
-     }
- 
-     public function getCompanyBuyerProfile(Request $request, $companyBuyerId)
-     {
-         try {
-             // Retrieve the companySeller by ID
-             //$companySeller = Seller::findOrFail($companyBuyerId);
-             $companyBuyer = CompanyBuyer::where('companyBuyerId', $companyBuyerId)->first();
-     
-             // Return companySeller information along with profile picture
-             $profile_picture = asset('uploads/profile_images/' . $companyBuyer->profile_photo);
-     
-             return response()->json([
-                 'message' => 'Company Buyer profile found.',
-                 'data' => [
-                     'companyBuyer' => $companyBuyer,
-                     'profile_picture' => $profile_picture
-                 ]
-             ], 200);
-         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-             // Handle the case when the companySeller is not found
-             return response()->json([
-                 'message' => 'Error: Company Buyer not found with ID ' . $companyBuyerId,
-             ], 404);
-         } catch (\Exception $e) {
-             // Handle any other exceptions that may occur
-             return response()->json([
-                 'message' => 'Error: Something went wrong.',
-                 'error' => $e->getMessage()
-             ], 500);
-         }
-     }
-
-     public function companyBuyerChangePassword(Request $request)
+    // Begin profile picture update function
+    public function updateCompanyBuyerProfilePicture(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'old_password' => 'required|min:6|max:100',
-            'password' => 'required|min:6|max:100',
-            'confirm_password' => 'required|same:password'
+            'profile_photo' => 'required|image|mimes:jpg,png,bmp|max:1024',
+
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'validations fails',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        $companyBuyer = $request->user();
+        if ($request->hasFile('profile_photo')) {
+            if ($companyBuyer->profile_photo) {
+                $old_path = public_path() . '/uploads/profile_images/' . $companyBuyer->profile_photo;
+                if (File::exists($old_path)) {
+                    File::delete($old_path);
+                }
+            }
+            $image_name = 'profile-image-' . time() . '.' . $request->profile_photo->extension();
+            $request->profile_photo->move(public_path('/uploads/profile_images'), $image_name);
+        } else {
+            $image_name = $companyBuyer->profile_photo;
+        }
+
+        $companyBuyer->update([
+            'profile_photo' => $image_name
+
+        ]);
+        return response()->json([
+            'message' => 'Profile Picture successfully updated',
+
+        ], 200);
+    } // End profile update function
+
+
+    //Begin update account settings function
+    public function updateCompanyBuyerAccountDetails(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'companyname' => 'nullable|max:100',
+            'companyregnumber' => 'nullable|max:100',
+            //'email' => 'nullable|max:100',
+            'companyphone' => 'nullable|max:100',
+            'companyemail' => 'nullable|max:100',
+            'companyaddress' => 'nullable|max:100',
+            'country' => 'nullable|max:100',
+            'state' => 'nullable|max:100',
+            'city' => 'nullable|max:100',
+            'zipcode' => 'nullable|max:100'
+
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -457,18 +341,144 @@ class CompanyBuyerController extends Controller
             ], 422);
         }
         $companyBuyer = $request->user();
-        if (Hash::check($request->old_password, $companyBuyer->password)) {
-            $companyBuyer->update([
-                'password' => Hash::make($request->password)
-            ]);
+        $companyBuyer->update([
+            'companyname' => $request->companyname,
+            'companyregnumber' => $request->companyregnumber,
+            //'email' => $request->email,
+            'companyphone' => $request->companyphone,
+            'companyemail' => $request->companyemail,
+            'companyaddress' => $request->companyaddress,
+            'country' => $request->country,
+            'city' => $request->city,
+            'state' => $request->state,
+            'zipcode' => $request->zipcode
+
+
+        ]);
+
+        return response()->json([
+            'message' => 'Company Buyer Contact information Changed',
+        ], 200);
+    } //End update account settings function
+
+
+
+
+
+
+
+    //Delete Company Seller profile picture
+
+    public function deleteCompanyBuyerProfilePicture(Request $request, $companyBuyerId)
+    {
+        try {
+
+            $companyBuyer = $request->user();
+
+            // If validation fails, return error response
+
+
+            // Find the buyer in the database
+            //$companySeller = Seller::findOrFail($request->companyBuyerId);
+            $companyBuyer = CompanyBuyer::where('companyBuyerId', $companyBuyerId)->first();
+
+            // Check if the buyer has a profile picture
+            if (!empty($companyBuyer->profile_photo)) {
+                // Delete the profile picture from the filesystem
+                $imagePath = public_path('/uploads/profile_images/' . $companyBuyer->profile_photo);
+                if (File::exists($imagePath)) {
+                    File::delete($imagePath);
+                }
+
+                // Update the buyer's profile picture field to null
+                $companyBuyer->profile_photo = null;
+                $companyBuyer->save();
+
+
+                return response()->json([
+                    'message' => 'Profile picture deleted successfully.',
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'no profile picture found for this Seller',
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            // Handle any exceptions that occur during the deletion process
             return response()->json([
-                'message' => 'Password changed'
+                'message' => 'Error deleting profile picture.',
+                'error' => $e->getMessage(), // Include the error message for debugging
+            ], 500);
+        }
+    }
+
+    public function getCompanyBuyerProfile(Request $request, $companyBuyerId)
+    {
+        try {
+            // Retrieve the companySeller by ID
+            //$companySeller = Seller::findOrFail($companyBuyerId);
+            $companyBuyer = CompanyBuyer::where('companyBuyerId', $companyBuyerId)->first();
+
+            // Return companySeller information along with profile picture
+            $profile_picture = asset('uploads/profile_images/' . $companyBuyer->profile_photo);
+
+            return response()->json([
+                'message' => 'Company Buyer profile found.',
+                'data' => [
+                    'companyBuyer' => $companyBuyer,
+                    'profile_picture' => $profile_picture
+                ]
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Handle the case when the companySeller is not found
+            return response()->json([
+                'message' => 'Error: Company Buyer not found with ID ' . $companyBuyerId,
+            ], 404);
+        } catch (\Exception $e) {
+            // Handle any other exceptions that may occur
+            return response()->json([
+                'message' => 'Error: Something went wrong.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function companyBuyerChangePassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'old_password' => 'required|min:6|max:100',
+            'password' => 'required|min:6|max:100',
+            'confirm_password' => 'required|same:password'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validations failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $companyBuyer = $request->user();
+
+        if (!$companyBuyer) {
+            return response()->json([
+                'message' => 'Company Buyer not found',
+            ], 404);
+        }
+
+        if (Hash::check($request->old_password, $companyBuyer->password)) {
+            $companyBuyer->password = Hash::make($request->password);
+            $companyBuyer->save();
+
+            return response()->json([
+                'message' => 'Password changed successfully',
             ], 200);
         } else {
             return response()->json([
-                'message' => 'Old password does not match'
+                'message' => 'Old password does not match',
             ], 400);
         }
-    } // End function to change password
+    }
+    // End function to change password
 
 }
