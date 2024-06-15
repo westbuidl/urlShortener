@@ -790,10 +790,3 @@ class CartController extends Controller
         ], 200);
     }
 }
-/*@foreach ($cartItems as $orderDetails)
-<li>Product: <strong>{{$orderDetails->productName}}</strong></li><br>
-<li>Order Number: <strong>{{$orderDetails->orderId}}</strong></li><br>
-    <li>Date: <strong>{{$orderDetails->created_at}}</strong></li><br>
-    <li>Total Amount: <strong>{{$orderDetails->currency}}{{$orderDetails->grand_price}}</strong></li><br>
-@endforeach
-</h1><br>*/
