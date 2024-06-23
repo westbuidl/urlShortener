@@ -26,6 +26,7 @@ class Product extends Model
         'quantityin_stock',
         'quantity_sold',
         'unit',
+        'productWeight',
         'product_description',
         'product_image',
         'is_active',

@@ -18,7 +18,8 @@ class Cart extends Model
         'quantity',
         'total_price',
         'categoryID',
-        'cartId'
+        'cartId',
+        'productWeight',
 
 
         

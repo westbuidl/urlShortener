@@ -52,6 +52,7 @@ class ProductController extends Controller
                 'selling_price' => 'required|min:2|max:100',
                 'cost_price' => 'required|min:2|max:100',
                 'quantityin_stock' => 'required|min:1|max:100',
+                'productWeight' => 'required|min:1|max:100',
                 'unit' => 'required|min:1|max:100',
                 'product_description' => 'required|min:2',
                 'product_image' => 'required|array|min:2|max:5',
@@ -114,8 +115,9 @@ class ProductController extends Controller
                 'product_name' => $request->product_name,
                 'product_category' => $request->product_category,
                 'categoryID' => $categoryID,
-                'selling_price' => $adjustedSellingPrice,
-                'cost_price' => $adjustedCostPrice,
+                'selling_price' => $request->selling_price,
+                'cost_price' => $request->cost_price,
+                'productWeight' => $request->productWeight,
                 'quantityin_stock' => $request->quantityin_stock,
                 'unit' => $request->unit,
                 'product_description' => $request->product_description,
@@ -140,7 +142,7 @@ class ProductController extends Controller
 
             // Mail::to($userEmail)->send(new ProductAddEmail($product));
 
-            Mail::to($sellerEmail)->send(new ProductAddEmail($product, $product, $firstname, $product->product_name, $product->quantityin_stock,$product->productId));
+            Mail::to($sellerEmail)->send(new ProductAddEmail($product, $product, $firstname, $product->product_name, $product->quantityin_stock, $product->productId, $product->productWeight));
             return response()->json([
                 'message' => 'Product Successfully added',
                 'data' => $product
@@ -250,71 +252,19 @@ class ProductController extends Controller
 
 
     // Function to fetch all products
-   // Function to fetch all products
-   public function allProducts()
-   {
-       // Retrieve all products from the database
-       $products = Product::orderByDesc('id')->get();
+    // Function to fetch all products
+    public function allProducts()
+    {
+        // Retrieve all products from the database
+        $products = Product::orderByDesc('id')->get();
 
-       // Check if any products exist
-       if ($products->isEmpty()) {
-           return response()->json([
-               'message' => 'No products found.',
-           ], 404);
-       }
+        // Check if any products exist
+        if ($products->isEmpty()) {
+            return response()->json([
+                'message' => 'No products found.',
+            ], 404);
+        }
 
-       // Iterate through each product to fetch its images
-       foreach ($products as $product) {
-           // Extract image URLs for the product
-           $imageURLs = [];
-           if (!empty($product->product_image)) {
-               foreach (explode(',', $product->product_image) as $image) {
-                   $imageURLs[] = asset('uploads/product_images/' . $image);
-               }
-           }
-
-           // Add image URLs to the product object
-           $product->image_urls = $imageURLs;
-       }
-
-       return response()->json([
-           'message' => 'All products fetched successfully.',
-           'data' => [
-               'product' => $products,
-           ]
-       ], 200);
-   }
-
-
-
-
-    public function searchProducts(Request $request)
-{
-    // Retrieve the search query from query parameters
-    //$perPage = $request->input('per_page', 10);
-
-    $search_query = $request->query('search_query', null);
-
-    // Initialize the query builder for the Product model
-    $query = Product::query();
-
-    // Search for products with names containing the given substring
-    if ($search_query !== null) {
-        $query->where(function ($query) use ($search_query) {
-            $query->where('productId', $search_query)
-                  ->orWhere('product_name', 'like', '%' . $search_query . '%');
-        });
-    }
-
-    // Execute the query and get the results
-    $products = $query->get();
-
-    // Check if any products were found
-    if ($products->isEmpty()) {
-        return response()->json([
-            'message' => 'No products found matching the search criteria.',
-        ], 404);
-    } else {
         // Iterate through each product to fetch its images
         foreach ($products as $product) {
             // Extract image URLs for the product
@@ -330,11 +280,63 @@ class ProductController extends Controller
         }
 
         return response()->json([
-            'message' => 'Product found.',
-            'data' => $products
+            'message' => 'All products fetched successfully.',
+            'data' => [
+                'product' => $products,
+            ]
         ], 200);
     }
-}
+
+
+
+
+    public function searchProducts(Request $request)
+    {
+        // Retrieve the search query from query parameters
+        //$perPage = $request->input('per_page', 10);
+
+        $search_query = $request->query('search_query', null);
+
+        // Initialize the query builder for the Product model
+        $query = Product::query();
+
+        // Search for products with names containing the given substring
+        if ($search_query !== null) {
+            $query->where(function ($query) use ($search_query) {
+                $query->where('productId', $search_query)
+                    ->orWhere('product_name', 'like', '%' . $search_query . '%');
+            });
+        }
+
+        // Execute the query and get the results
+        $products = $query->get();
+
+        // Check if any products were found
+        if ($products->isEmpty()) {
+            return response()->json([
+                'message' => 'No products found matching the search criteria.',
+            ], 404);
+        } else {
+            // Iterate through each product to fetch its images
+            foreach ($products as $product) {
+                // Extract image URLs for the product
+                $imageURLs = [];
+                if (!empty($product->product_image)) {
+                    foreach (explode(',', $product->product_image) as $image) {
+                        $imageURLs[] = asset('uploads/product_images/' . $image);
+                    }
+                }
+
+                // Add image URLs to the product object
+                $product->image_urls = $imageURLs;
+            }
+
+            return response()->json([
+                'message' => 'Product found.',
+                'data' => $products
+            ], 200);
+        }
+    }
 
 
 
@@ -342,7 +344,7 @@ class ProductController extends Controller
 
 
 
-   /* public function searchProducts($search_query = null)
+    /* public function searchProducts($search_query = null)
     {
         $query = Product::query();
         // Search for products with names containing the given substring
@@ -515,6 +517,7 @@ class ProductController extends Controller
             'new_selling_price' => 'required|min:2|max:100',
             'new_cost_price' => 'required|min:2|max:100',
             'new_quantityin_stock' => 'required|min:2|max:100',
+            'new_productWeight' => 'required|min:1|max:100',
             'new_unit' => 'required|min:2|max:100',
             'new_product_description' => 'required|min:2',
             'product_image' => 'array|min:2|max:5',
@@ -550,6 +553,7 @@ class ProductController extends Controller
             'categoryID' => $categoryID,
             'cost_price' => $request->new_cost_price,
             'quantityin_stock' => $request->new_quantityin_stock,
+            'productWeight' => $request->new_productWeight,
             'unit' => $request->new_unit,
             'product_description' => $request->new_product_description
         ];
@@ -604,7 +608,7 @@ class ProductController extends Controller
 
             // Retrieve the authenticated seller
             $seller = $request->user();
-            
+
             // Check if the authenticated user is the owner of the product
             if ($request->user()->sellerId == $product->sellerId) {
                 // Validate the request data
@@ -753,10 +757,4 @@ class ProductController extends Controller
             ], 500);
         }
     }
-
-
-   
-
-
-
 }

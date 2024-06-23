@@ -542,45 +542,45 @@ class SellerProfileController extends Controller
         ], 404);
     }
 
-    // Fetch the sale details for the given orderId and authenticated seller
-    $order = Order::where('sellerId', $sellerId)
+    // Fetch all sale details for the given orderId and authenticated seller
+    $orders = Order::where('sellerId', $sellerId)
         ->where('orderId', $orderId)
-        ->first();
+        ->get();
 
-
-        $firstProductImage = null;
-
-         // Split the productImage string into an array
-         $productImages = explode(',', $order->productImage);
-
-// Check if the array is not empty and set the first product image
-        if (!empty($productImages) && isset($productImages[0]) && $productImages[0] !== '') {
-            $firstProductImage = asset('uploads/product_images/' . $productImages[0]);
-        }
-    // Ensure the order exists
-    if (!$order) {
+    // Ensure orders exist
+    if ($orders->isEmpty()) {
         return response()->json([
-            'message' => 'Order not found.',
+            'message' => 'Orders not found.',
         ], 404);
     }
 
-    // Prepare the sale data with product image
-    $saleDetails = [
-        'order_id' => $order->orderId,
-        'product_id' => $order->productId,
-        'product_name' => $order->productName,
-        'product_image' => $firstProductImage,
-        //'product_image' => $order->productImage[0] ? asset('uploads/product_images/' . $order->productImage[0]) : null,
-        'quantity' => $order->quantity,
-        'total_price' => $order->grand_price,
-        'order_date' => $order->created_at,
-    ];
+    // Prepare sale data with product images
+    $saleDetails = $orders->map(function ($order) {
+        // Handle product images
+        $firstProductImage = null;
+        $productImages = explode(',', $order->productImage);
+
+        if (!empty($productImages) && isset($productImages[0]) && $productImages[0] !== '') {
+            $firstProductImage = asset('uploads/product_images/' . $productImages[0]);
+        }
+
+        return [
+            'order_id' => $order->orderId,
+            'product_id' => $order->productId,
+            'product_name' => $order->productName,
+            'product_image' => $firstProductImage,
+            'quantity' => $order->quantity,
+            'total_price' => $order->grand_price,
+            'order_date' => $order->created_at,
+        ];
+    });
 
     return response()->json([
         'message' => 'Sale details found.',
         'data' => $saleDetails
     ], 200);
 }
+
 
 
 

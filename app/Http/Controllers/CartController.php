@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Mail\productSoldEmail;
 use App\Mail\OrderConfirmationMail;
 use App\Http\Controllers\Controller;
+use App\Mail\SaleConfirmationEmail;
 use Illuminate\Support\Facades\Auth;
 //use Unicodeveloper\Paystack\Paystack;
 use Illuminate\Support\Facades\Http;
@@ -28,9 +29,12 @@ class CartController extends Controller
 {
     //
 
+    
+
+
     public function addToCart(Request $request, $productId)
 
-
+   
     {
         $cartId = 'CART' . rand(100000000, 999999999);
         try {
@@ -101,6 +105,7 @@ class CartController extends Controller
                 // If the product already exists in the cart and requested quantity is within available stock, update the quantity
                 $existingCartItem->quantity += $data['quantity'];
                 $existingCartItem->total_price += $data['quantity'] * $product->selling_price;
+                $existingCartItem->productWeight += $data['quantity'] * $product->productWeight; // Increment the total weight
                 $existingCartItem->save();
                 $cart = $existingCartItem; // Return the updated cart item
                 //}
@@ -116,6 +121,7 @@ class CartController extends Controller
                 $cart->product_name = $product->product_name;
                 $cart->product_category = $product->product_category;
                 $cart->selling_price = $product->selling_price;
+                $cart->productWeight = $data['quantity'] * $product->productWeight; // Set the initial total weight
                 $cart->quantity = $data['quantity'];
                 $cart->total_price = $data['quantity'] * $product->selling_price;
                 $cart->categoryID = $product->categoryID;
@@ -317,6 +323,7 @@ class CartController extends Controller
             // Update the quantity of the cart item
             $cartItem->quantity = $request->new_quantity;
             $cartItem->total_price = $request->new_quantity * $product->selling_price;
+            $cartItem->productWeight = $quantity * $product->productWeight; // Increment the total weight
             $cartItem->save();
 
             return response()->json([
@@ -409,7 +416,7 @@ class CartController extends Controller
             //return redirect($initializeResponse->data->authorization_url);
 
             return $initializeResponse;
-            dd($initializeResponse);
+            //dd($initializeResponse);
         } catch (\Exception $e) {
             // Return the error message in the response
             return response()->json([
@@ -502,6 +509,11 @@ class CartController extends Controller
                             $product->quantityin_stock -= $cartItem->quantity;
                             $product->quantity_sold += $cartItem->quantity;
                             $product->save();
+
+
+                            // Calculate the shipping fee
+                        $shippingFee = $product->productWeight * $cartItem->quantity * 811;
+
                         }
 
 
@@ -516,7 +528,7 @@ class CartController extends Controller
                         $order->paymentMethod = $paymentDetails['data']['metadata']['paymentMethod']; // Assuming paystack is used
                         $order->paymentReference = $reference;
                         $order->Discount = null;
-                        $order->shippingFee = null;
+                        $order->shippingFee = $shippingFee;
                         $order->order_status = $paymentDetails['data']['status'];
                         $order->currency = $paymentDetails['data']['currency'];
                         $order->channel = $paymentDetails['data']['channel'];
@@ -537,9 +549,15 @@ class CartController extends Controller
                     // Clear the cart after successful checkout
                     Cart::where('buyerId', $buyerId)->delete();
 
+                    $adminEmail1 = 'hyacinth@agroease.ng';
+                    $adminEmail2 = 'etim.precious@agroease.ng';
+
                     // Send verification email
                     // Mail::to($customer_email)->send(new OrderConfirmationMail($order, $order->productName, $order->firstname, $order->lastname));
                     Mail::to($customer_email)->send(new OrderConfirmationMail($orders));
+                    Mail::to($adminEmail1)
+                        ->cc($adminEmail2)
+                        ->send(new SaleConfirmationEmail($orders,$seller->email,$seller->phone,$seller->firstname));
                     //dd($paymentDetails);
 
 
@@ -590,7 +608,7 @@ class CartController extends Controller
         // $amount = number_format($request->amount,2);
 
         $metadata = [
-            'paymentMethod' =>  $paymentMethod,
+            'paymentMethod' => $paymentMethod,
             'buyerId' => $buyerId,
             'shipping_address' => $shipping_address,
             'billing_address' => $billing_address,
@@ -647,6 +665,11 @@ class CartController extends Controller
     public function verify_payment($reference)
     {
 
+        $secretKey = env('PAYSTACK_SECRET_KEY');
+        // Debugging line to check if secretKey is correctly retrieved
+        error_log("Paystack Secret Key: " . $secretKey);
+
+
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
@@ -666,9 +689,19 @@ class CartController extends Controller
         ));
 
         $response = curl_exec($curl);
+        $err = curl_error($curl);
+
         curl_close($curl);
 
-        return  $response;
+        if ($err) {
+            // Log the error
+            error_log("cURL Error: " . $err);
+            return "cURL Error: " . $err;
+        } else {
+            // Log the response
+            error_log("Paystack Response: " . $response);
+            return $response;
+        }
     }
 
     public function paymentSuccess($paymentInfo)
@@ -737,6 +770,8 @@ class CartController extends Controller
 
             // Add the first image URL to the order object
             $order->product_image = $productImage;
+
+            $order->total_price_per_item = $order->quantity * $order->grand_price;
         }
 
         return response()->json([
@@ -751,42 +786,45 @@ class CartController extends Controller
 
     //public function getOrderById($orderId)
     public function getOrderById($orderId)
+    //public function getOrdersByOrderId($orderId)
     {
         // Retrieve the authenticated user's ID
         $buyerId = Auth::user()->buyerId;
 
-        // Retrieve the order associated with the authenticated user and the given order ID
-        $order = Order::where('buyerId', $buyerId)
+        // Retrieve all orders associated with the authenticated user and the given order ID, ordered by most recent
+        $orders = Order::where('buyerId', $buyerId)
             ->where('orderId', $orderId)
-            ->first();
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        // Check if the order exists
-        if (!$order) {
+        // Check if any orders exist
+        if ($orders->isEmpty()) {
             return response()->json([
                 'message' => 'No orders found for the authenticated user with the given order ID.',
             ], 404);
         }
 
-        // Retrieve product details for the order
-        $product = Product::where('productId', $order->productId)->first();
-
-        // Extract the first image URL for the product
-        $productImage = null;
-        if ($product && !empty($product->product_image)) {
-            $images = explode(',', $product->product_image);
-            if (!empty($images[0])) {
-                $productImage = asset('uploads/product_images/' . $images[0]);
+        // Map orders to include the product image URL
+        $orders = $orders->map(function ($order) {
+            // Assuming the product image is stored in a column called 'product_image' in the orders table
+            $productImage = null;
+            if (!empty($order->productImage)) {
+                $images = explode(',', $order->productImage);
+                if (!empty($images[0])) {
+                    $productImage = asset('uploads/product_images/' . $images[0]);
+                }
             }
-        }
+            $order->product_image_url = $productImage;
 
-        // Add the first image URL to the order object
-        $order->product_image = $productImage;
+            // Calculate the total price for each item in the order
+        $order->total_price_per_item = $order->quantity * $order->grand_price;
+        
+        return $order;
+        });
 
         return response()->json([
-            'message' => 'Order fetched successfully.',
-            'data' => [
-                'order' => $order,
-            ]
+            'message' => 'Orders fetched successfully.',
+            'data' => $orders,
         ], 200);
     }
 }

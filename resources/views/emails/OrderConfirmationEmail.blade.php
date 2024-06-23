@@ -77,9 +77,9 @@
                             <strong>Payment Information:</strong>
                         </h7>
                         <ul>
-                            <li>Subtotal: N[Subtotal]</li>
-                            <li>Shipping: N[Shipping Cost]</li>
-                            <li>Total: {{  '₦' . number_format($order->grand_price, 2) }}</li>
+                            <li>Subtotal: {{  '₦' . number_format($order->amount * $order->quantity, 2) }}</li>
+                            <li>Shipping Fee: {{  '₦' . number_format($order->shippingFee, 2) }}</li>
+                            <li>Total: {{  '₦' . number_format($order->grand_price + $order->shippingFee, 2) }}</li>
                             <li>Payment Method: {{$order->channel}} | {{$order->paymentMethod}}</li>
                         </ul>
                     </div>

@@ -136,7 +136,7 @@ Route::post('/verifyMailBusiness', [BusinessController::class, 'verifyMailBusine
 
 //Add to cart
 Route::post('/storeCart', [CartController::class, 'storeCart'])->name('showCart');//adding to cart api
-Route::get('/viewCart/{buyerId}', [CartController::class, 'viewCart'])->middleware('auth:sanctum')->name('viewCart');//adding to cart api
+Route::get('/viewCart', [CartController::class, 'viewCart'])->middleware('auth:sanctum')->name('viewCart');//adding to cart api
 Route::post('/addToCart/{productId}', [CartController::class, 'addToCart'])->middleware('auth:sanctum')->name('addToCart');//adding to cart api
 
 Route::delete('/deleteCartItem/{cartId}', [CartController::class, 'deleteCartItem'])->middleware('auth:sanctum')->name('deleteCartItem');//adding to cart api

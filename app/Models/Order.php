@@ -34,6 +34,7 @@ class Order extends Model
         'billing_address',
         'grand_price',
         'phone_number',
+        'sellerId',
         
     ];
 
