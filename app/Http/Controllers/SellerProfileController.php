@@ -7,12 +7,13 @@ use App\Models\Seller;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Mail\addBankAccountEmail;
+use Illuminate\Support\Facades\DB;
 use App\Mail\bankAccountSavedEmail;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
 
 class SellerProfileController extends Controller
 {
@@ -396,57 +397,57 @@ class SellerProfileController extends Controller
 
 
     public function getRecentSales(Request $request)
-{
-    // Get the authenticated seller
-    $sellerId = auth()->user()->sellerId;
+    {
+        // Get the authenticated seller
+        $sellerId = auth()->user()->sellerId;
 
-    // Check if the user is authenticated and is a seller
-    $seller = Seller::where('sellerId', $sellerId)->first();
+        // Check if the user is authenticated and is a seller
+        $seller = Seller::where('sellerId', $sellerId)->first();
 
-    // Ensure the seller exists
-    if (!$seller) {
-        return response()->json([
-            'message' => 'Seller not found.',
-        ], 404);
-    }
-
-    // Fetch recent sales (last 10 orders) for the authenticated seller
-    $recentSales = Order::where('sellerId', $sellerId)
-        ->orderBy('created_at', 'desc')
-        ->take(10)
-        ->get();
-
-    // Prepare the sales data with product images
-    $salesData = $recentSales->map(function ($order) {
-        // Initialize the first product image as null
-        $firstProductImage = null;
-
-        // Split the productImage string into an array
-        $productImages = explode(',', $order->productImage);
-
-        // Check if the array is not empty and set the first product image
-        if (!empty($productImages) && isset($productImages[0]) && $productImages[0] !== '') {
-            $firstProductImage = asset('uploads/product_images/' . $productImages[0]);
+        // Ensure the seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
         }
 
-        return [
-            'order_id' => $order->orderId,
-            'product_id' => $order->productId,
-            'product_name' => $order->productName,
-            'product_image' => $firstProductImage,
-            'quantity' => $order->quantity,
-            'total_price' => $order->grand_price,
-            'order_date' => $order->created_at,
-        ];
-    });
+        // Fetch recent sales (last 10 orders) for the authenticated seller
+        $recentSales = Order::where('sellerId', $sellerId)
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
 
-    return response()->json([
-        'message' => 'Recent sales found.',
-        'data' => [
-            'recent_sales' => $salesData,
-        ]
-    ], 200);
-}
+        // Prepare the sales data with product images
+        $salesData = $recentSales->map(function ($order) {
+            // Initialize the first product image as null
+            $firstProductImage = null;
+
+            // Split the productImage string into an array
+            $productImages = explode(',', $order->productImage);
+
+            // Check if the array is not empty and set the first product image
+            if (!empty($productImages) && isset($productImages[0]) && $productImages[0] !== '') {
+                $firstProductImage = asset('uploads/product_images/' . $productImages[0]);
+            }
+
+            return [
+                'order_id' => $order->orderId,
+                'product_id' => $order->productId,
+                'product_name' => $order->productName,
+                'product_image' => $firstProductImage,
+                'quantity' => $order->quantity,
+                'total_price' => $order->grand_price,
+                'order_date' => $order->created_at,
+            ];
+        });
+
+        return response()->json([
+            'message' => 'Recent sales found.',
+            'data' => [
+                'recent_sales' => $salesData,
+            ]
+        ], 200);
+    }
 
 
 
@@ -475,41 +476,41 @@ class SellerProfileController extends Controller
         $totalProfit = $totalVolme * (1 - 0.08);
 
         // Calculate completed and pending sales
-    $completedSales = $allSales->where('order_status', 'success')->count();
-    $pendingSales = $allSales->where('status', 'pending')->count();
+        $completedSales = $allSales->where('order_status', 'success')->count();
+        $pendingSales = $allSales->where('status', 'pending')->count();
 
-    // Fetch the total number of products uploaded by the seller
-    $totalProducts = Product::where('sellerId', $sellerId)->count();
+        // Fetch the total number of products uploaded by the seller
+        $totalProducts = Product::where('sellerId', $sellerId)->count();
 
 
         // Prepare the sales data with product images
-    $salesData = $allSales->map(function ($order) {
+        $salesData = $allSales->map(function ($order) {
 
-        $firstProductImage = null;
+            $firstProductImage = null;
 
-         // Split the productImage string into an array
-         $productImages = explode(',', $order->productImage);
+            // Split the productImage string into an array
+            $productImages = explode(',', $order->productImage);
 
-// Check if the array is not empty and set the first product image
-        if (!empty($productImages) && isset($productImages[0]) && $productImages[0] !== '') {
-            $firstProductImage = asset('uploads/product_images/' . $productImages[0]);
-        }
+            // Check if the array is not empty and set the first product image
+            if (!empty($productImages) && isset($productImages[0]) && $productImages[0] !== '') {
+                $firstProductImage = asset('uploads/product_images/' . $productImages[0]);
+            }
 
-        //$productImage = json_decode($order->productImage, true);
-        //$firstProductImage = isset($productImage[0]) ? asset('uploads/product_images/' . $productImage[0]) : null;
+            //$productImage = json_decode($order->productImage, true);
+            //$firstProductImage = isset($productImage[0]) ? asset('uploads/product_images/' . $productImage[0]) : null;
 
-        return [
-            'order_id' => $order->orderId,
-            'product_id' => $order->productId,
-            'product_name' => $order->productName,
-            //'product_image' => asset('uploads/product_images/' . $order->productImage[0]),
-            //'product_image' => $order->productImage ? asset('uploads/product_images/' . $order->productImage) : null,
-            'product_image' => $firstProductImage,
-            'quantity' => $order->quantity,
-            'total_price' => $order->grand_price,
-            'order_date' => $order->created_at,
-        ];
-    });
+            return [
+                'order_id' => $order->orderId,
+                'product_id' => $order->productId,
+                'product_name' => $order->productName,
+                //'product_image' => asset('uploads/product_images/' . $order->productImage[0]),
+                //'product_image' => $order->productImage ? asset('uploads/product_images/' . $order->productImage) : null,
+                'product_image' => $firstProductImage,
+                'quantity' => $order->quantity,
+                'total_price' => $order->grand_price,
+                'order_date' => $order->created_at,
+            ];
+        });
 
 
         return response()->json([
@@ -520,120 +521,169 @@ class SellerProfileController extends Controller
                 'total_volume' => $totalVolme,
                 'total_profit' => $totalProfit,
                 'total_products' => $totalProducts,
-            'completed_sales' => $completedSales,
-            'pending_sales' => $pendingSales,
+                'completed_sales' => $completedSales,
+                'pending_sales' => $pendingSales,
             ]
         ], 200);
     }
 
 
     public function getSaleDetails(Request $request, $orderId)
-{
-    // Get the authenticated seller
-    $sellerId = auth()->user()->sellerId;
+    {
+        // Get the authenticated seller
+        $sellerId = auth()->user()->sellerId;
 
-    // Check if the user is authenticated and is a seller
-    $seller = Seller::where('sellerId', $sellerId)->first();
+        // Check if the user is authenticated and is a seller
+        $seller = Seller::where('sellerId', $sellerId)->first();
 
-    // Ensure the seller exists
-    if (!$seller) {
-        return response()->json([
-            'message' => 'Seller not found.',
-        ], 404);
-    }
-
-    // Fetch all sale details for the given orderId and authenticated seller
-    $orders = Order::where('sellerId', $sellerId)
-        ->where('orderId', $orderId)
-        ->get();
-
-    // Ensure orders exist
-    if ($orders->isEmpty()) {
-        return response()->json([
-            'message' => 'Orders not found.',
-        ], 404);
-    }
-
-    // Prepare sale data with product images
-    $saleDetails = $orders->map(function ($order) {
-        // Handle product images
-        $firstProductImage = null;
-        $productImages = explode(',', $order->productImage);
-
-        if (!empty($productImages) && isset($productImages[0]) && $productImages[0] !== '') {
-            $firstProductImage = asset('uploads/product_images/' . $productImages[0]);
+        // Ensure the seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
         }
 
-        return [
-            'order_id' => $order->orderId,
-            'product_id' => $order->productId,
-            'product_name' => $order->productName,
-            'product_image' => $firstProductImage,
-            'quantity' => $order->quantity,
-            'total_price' => $order->grand_price,
-            'order_date' => $order->created_at,
-        ];
-    });
+        // Fetch all sale details for the given orderId and authenticated seller
+        $orders = Order::where('sellerId', $sellerId)
+            ->where('orderId', $orderId)
+            ->get();
 
-    return response()->json([
-        'message' => 'Sale details found.',
-        'data' => $saleDetails
-    ], 200);
-}
+        // Ensure orders exist
+        if ($orders->isEmpty()) {
+            return response()->json([
+                'message' => 'Orders not found.',
+            ], 404);
+        }
 
+        // Prepare sale data with product images
+        $saleDetails = $orders->map(function ($order) {
+            // Handle product images
+            $firstProductImage = null;
+            $productImages = explode(',', $order->productImage);
 
+            if (!empty($productImages) && isset($productImages[0]) && $productImages[0] !== '') {
+                $firstProductImage = asset('uploads/product_images/' . $productImages[0]);
+            }
 
+            return [
+                'order_id' => $order->orderId,
+                'product_id' => $order->productId,
+                'product_name' => $order->productName,
+                'product_image' => $firstProductImage,
+                'quantity' => $order->quantity,
+                'total_price' => $order->grand_price,
+                'order_date' => $order->created_at,
+            ];
+        });
 
-public function getTopSellingProducts(Request $request)
-{
-    // Get the authenticated seller
-    $sellerId = auth()->user()->sellerId;
-
-    // Check if the user is authenticated and is a seller
-    $seller = Seller::where('sellerId', $sellerId)->first();
-
-    // Ensure the seller exists
-    if (!$seller) {
         return response()->json([
-            'message' => 'Seller not found.',
-        ], 404);
+            'message' => 'Sale details found.',
+            'data' => $saleDetails
+        ], 200);
     }
 
-    // Aggregate sales data based on products
-    $topSellingProducts = Order::where('sellerId', $sellerId)
-        ->select('productId', 'productName', 'productImage', DB::raw('SUM(quantity) as total_quantity'))
-        ->groupBy('productId', 'productName', 'productImage')
-        ->orderByDesc('total_quantity')
-        ->take(10)
-        ->get();
 
-    if ($topSellingProducts->isEmpty()) {
+
+
+    public function getTopSellingProducts(Request $request)
+    {
+        // Get the authenticated seller
+        $sellerId = auth()->user()->sellerId;
+
+        // Check if the user is authenticated and is a seller
+        $seller = Seller::where('sellerId', $sellerId)->first();
+
+        // Ensure the seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        // Aggregate sales data based on products
+        $topSellingProducts = Order::where('sellerId', $sellerId)
+            ->select('productId', 'productName', 'productImage', DB::raw('SUM(quantity) as total_quantity'))
+            ->groupBy('productId', 'productName', 'productImage')
+            ->orderByDesc('total_quantity')
+            ->take(10)
+            ->get();
+
+        if ($topSellingProducts->isEmpty()) {
+            return response()->json([
+                'message' => 'No top selling products found.',
+                'data' => [
+                    'top_selling_products' => [],
+                ]
+            ], 200);
+        }
+
+        // Prepare the product details along with total quantity sold
+        $productDetails = $topSellingProducts->map(function ($product) {
+            return [
+                'product_id' => $product->productId,
+                'product_name' => $product->productName,
+                'product_image' => $product->productImage ? asset('uploads/product_images/' . $product->productImage) : null,
+                'total_quantity_sold' => $product->total_quantity,
+            ];
+        });
+
         return response()->json([
-            'message' => 'No top selling products found.',
+            'message' => 'Top selling products found.',
             'data' => [
-                'top_selling_products' => [],
+                'top_selling_products' => $productDetails,
             ]
         ], 200);
     }
 
-    // Prepare the product details along with total quantity sold
-    $productDetails = $topSellingProducts->map(function ($product) {
-        return [
-            'product_id' => $product->productId,
-            'product_name' => $product->productName,
-            'product_image' => $product->productImage ? asset('uploads/product_images/' . $product->productImage) : null,
-            'total_quantity_sold' => $product->total_quantity,
-        ];
-    });
-
-    return response()->json([
-        'message' => 'Top selling products found.',
-        'data' => [
-            'top_selling_products' => $productDetails,
-        ]
-    ], 200);
-}
-
-
-
+    public function deleteSellerAccount(Request $request, $sellerId)
+    {
+        try {
+            // Retrieve the authenticated user's ID
+            $authenticatedSellerId = Auth::user()->sellerId;
+    
+            // Ensure that the user is logged in and matches the requested buyer ID
+            if (!$authenticatedSellerId || $authenticatedSellerId != $sellerId) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Buyer not authenticated or mismatched buyer ID.',
+                ], 401);
+            }
+    
+            // Find the buyer in the database
+            $seller = Seller::where('sellerId', $sellerId)->first();
+    
+            // Check if the buyer exists
+            if (!$seller) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Buyer not found.',
+                ], 404);
+            }
+    
+            // Delete the profile picture from the filesystem if it exists
+            if (!empty($seller->profile_photo)) {
+                $imagePath = public_path('/uploads/profile_images/' . $seller->profile_photo);
+                if (File::exists($imagePath)) {
+                    File::delete($imagePath);
+                }
+            }
+    
+            // Delete any other associated data if needed (e.g., orders, cart items)
+    
+            // Delete the buyer's account
+            $seller->delete();
+    
+            return response()->json([
+                'status' => true,
+                'message' => 'Buyer account deleted successfully.',
+            ], 200);
+        } catch (\Exception $e) {
+            // Handle any exceptions that occur during the deletion process
+            return response()->json([
+                'status' => false,
+                'message' => 'Error deleting buyer account.',
+                'error' => $e->getMessage(), // Include the error message for debugging
+            ], 500);
+        }
+    }
 }

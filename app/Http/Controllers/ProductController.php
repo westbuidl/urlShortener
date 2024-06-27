@@ -253,10 +253,12 @@ class ProductController extends Controller
 
     // Function to fetch all products
     // Function to fetch all products
-    public function allProducts()
+    public function allProducts(Request $request)
     {
+
+        $perPage = $request->query('per_page', 10);
         // Retrieve all products from the database
-        $products = Product::orderByDesc('id')->get();
+        $products = Product::orderByDesc('id')->paginate($perPage);
 
         // Check if any products exist
         if ($products->isEmpty()) {
@@ -282,7 +284,11 @@ class ProductController extends Controller
         return response()->json([
             'message' => 'All products fetched successfully.',
             'data' => [
-                'product' => $products,
+                'products' => $products->items(),
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'per_page' => $products->perPage(),
+                'total' => $products->total(),
             ]
         ], 200);
     }
@@ -291,52 +297,65 @@ class ProductController extends Controller
 
 
     public function searchProducts(Request $request)
-    {
+{
+    try {
         // Retrieve the search query from query parameters
-        //$perPage = $request->input('per_page', 10);
-
-        $search_query = $request->query('search_query', null);
+        $searchQuery = $request->query('search_query', null);
+        $perPage = $request->query('per_page', 10);
 
         // Initialize the query builder for the Product model
         $query = Product::query();
 
         // Search for products with names containing the given substring
-        if ($search_query !== null) {
-            $query->where(function ($query) use ($search_query) {
-                $query->where('productId', $search_query)
-                    ->orWhere('product_name', 'like', '%' . $search_query . '%');
+        if ($searchQuery !== null) {
+            $query->where(function ($query) use ($searchQuery) {
+                $query->where('productId', $searchQuery)
+                      ->orWhere('product_name', 'like', '%' . $searchQuery . '%');
             });
         }
 
         // Execute the query and get the results
-        $products = $query->get();
+        $products = $query->paginate($perPage);
 
         // Check if any products were found
         if ($products->isEmpty()) {
             return response()->json([
                 'message' => 'No products found matching the search criteria.',
             ], 404);
-        } else {
-            // Iterate through each product to fetch its images
-            foreach ($products as $product) {
-                // Extract image URLs for the product
-                $imageURLs = [];
-                if (!empty($product->product_image)) {
-                    foreach (explode(',', $product->product_image) as $image) {
-                        $imageURLs[] = asset('uploads/product_images/' . $image);
-                    }
-                }
+        }
 
-                // Add image URLs to the product object
-                $product->image_urls = $imageURLs;
+        // Iterate through each product to fetch its images
+        foreach ($products as $product) {
+            // Extract image URLs for the product
+            $imageURLs = [];
+            if (!empty($product->product_image)) {
+                foreach (explode(',', $product->product_image) as $image) {
+                    $imageURLs[] = asset('uploads/product_images/' . $image);
+                }
             }
 
-            return response()->json([
-                'message' => 'Product found.',
-                'data' => $products
-            ], 200);
+            // Add image URLs to the product object
+            $product->image_urls = $imageURLs;
         }
+
+        // Return the response with products and their images
+        return response()->json([
+            'message' => 'Products found.',
+            'data' => $products->items(),
+            'current_page' => $products->currentPage(),
+            'last_page' => $products->lastPage(),
+            'per_page' => $products->perPage(),
+            'total' => $products->total(),
+        ], 200);
+    } catch (\Exception $e) {
+        // Handle any exceptions and return an error response
+        return response()->json([
+            'message' => 'Error occurred while searching for products.',
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
+
 
 
 
@@ -728,33 +747,32 @@ class ProductController extends Controller
 
     //Method for Popular products
 
-    public function popularProduct(Request $request)
-    {
-        try {
-            // Query to fetch popular products based on the number of times added to the cart
-            $popularProduct = Product::selectRaw('products.*, COUNT(carts.id) as cart_count')
-                ->leftJoin('carts', 'products.id', '=', 'carts.productId')
-                ->groupBy('products.id')
-                ->orderByDesc('cart_count')
-                ->limit(5) // Limit to the top 5 popular products
-                ->get();
+    
+    public function popularProducts(Request $request)
+{
+    try {
+        $popularProducts = Product::withCount('orders')
+            ->orderByDesc('orders_count')
+            ->take(10)
+            ->get();
 
-            // Iterate over each product to append full image path
-            foreach ($popularProduct as $product) {
-                $product->full_image_path = asset('uploads/product_images/' . $product->product_image);
-            }
+        $popularProducts->each(function ($product) {
+            $product->image_urls = $product->product_image
+                ? array_map(fn($image) => asset('uploads/product_images/' . $image), explode(',', $product->product_image))
+                : [];
+        });
 
-            // Return response with popular products
-            return response()->json([
-                'message' => 'Popular products fetched successfully.',
-                'popular_products' => $popularProduct,
-            ], 200);
-        } catch (\Exception $e) {
-            // Handle any exceptions
-            return response()->json([
-                'message' => 'Error occurred while fetching popular products.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Popular products fetched successfully.',
+            'popular_products' => $popularProducts,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Error occurred while fetching popular products.',
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
+
+
 }

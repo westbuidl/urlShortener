@@ -35,6 +35,9 @@ class Order extends Model
         'grand_price',
         'phone_number',
         'sellerId',
+        'sellerFullname',
+        'sellerEmail',
+        'sellerPhone',
         
     ];
 

@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Buyer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use App\Models\Buyer;
 
 class BuyerProfileController extends Controller
 {
@@ -189,7 +190,58 @@ class BuyerProfileController extends Controller
     }
 
 
-
+    public function deleteBuyerAccount(Request $request, $buyerId)
+    {
+        try {
+            // Retrieve the authenticated user's ID
+            $authenticatedBuyerId = Auth::user()->buyerId;
+    
+            // Ensure that the user is logged in and matches the requested buyer ID
+            if (!$authenticatedBuyerId || $authenticatedBuyerId != $buyerId) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Buyer not authenticated or mismatched buyer ID.',
+                ], 401);
+            }
+    
+            // Find the buyer in the database
+            $buyer = Buyer::where('buyerId', $buyerId)->first();
+    
+            // Check if the buyer exists
+            if (!$buyer) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Buyer not found.',
+                ], 404);
+            }
+    
+            // Delete the profile picture from the filesystem if it exists
+            if (!empty($buyer->profile_photo)) {
+                $imagePath = public_path('/uploads/profile_images/' . $buyer->profile_photo);
+                if (File::exists($imagePath)) {
+                    File::delete($imagePath);
+                }
+            }
+    
+            // Delete any other associated data if needed (e.g., orders, cart items)
+    
+            // Delete the buyer's account
+            $buyer->delete();
+    
+            return response()->json([
+                'status' => true,
+                'message' => 'Buyer account deleted successfully.',
+            ], 200);
+        } catch (\Exception $e) {
+            // Handle any exceptions that occur during the deletion process
+            return response()->json([
+                'status' => false,
+                'message' => 'Error deleting buyer account.',
+                'error' => $e->getMessage(), // Include the error message for debugging
+            ], 500);
+        }
+    }
+    
 
 
 

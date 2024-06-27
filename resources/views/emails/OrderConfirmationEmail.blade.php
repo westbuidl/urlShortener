@@ -8,8 +8,8 @@
 
 
 
-   
-    
+
+
 </head>
 
 <body>
@@ -24,14 +24,14 @@
                         <br> to confirm that your order has been successfully placed. <br> Below are the details of your order for your reference:
                     </p>
 
-                    
+
                     <div class="items-ordered">
                         <h7>
                             <strong>Items Ordered:</strong>
                         </h7>
-                       
-                        
-                            <table class="table">
+
+
+                        <table class="table">
                             <thead>
                                 <tr>
                                     <th scope="col">PRODUCT</th>
@@ -40,24 +40,31 @@
                                     <th scope="col">SUBTOTAL</th>
                                 </tr>
                             </thead>
+                            @php
+                            $subtotal = 0; // Initialize subtotal
+                            @endphp
+
                             @foreach ($orders as $index => $order)
                             <tbody>
                                 <tr>
-                                
-                                    <td><img src="{{  asset ('https://agroease.ng/agroease-api/public/uploads/product_images/'.explode(',',$order->productImage)[0]) }}" alt="Product Image" width="42px" height="41px">  {{$order->productName}}</td>
+
+                                    <td><img src="{{  asset ('https://agroease.ng/agroease-api/public/uploads/product_images/'.explode(',',$order->productImage)[0]) }}" alt="Product Image" width="42px" height="41px"> {{$order->productName}}</td>
                                     <td>
-                                        <p class="top">{{  '₦' . number_format($order->amount, 2) }}</p>
+                                        <p class="top">{{ '₦' . number_format($order->amount, 2) }}</p>
                                     </td>
                                     <td>
                                         <p class="top">x{{$order->quantity}}</p>
                                     </td>
-                                    <td>
-                                        <p class="top">{{  '₦' . number_format($order->amount * $order->quantity, 2) }}</p>
+                                    <td> 
+                                        <p class="top">{{ '₦' . number_format($order->amount * $order->quantity, 2) }}</p>
                                     </td>
                                 </tr>
-                                
+                                @php
+                                $subtotal += $order->amount * $order->quantity; // Add each item's subtotal to the total subtotal
+                                @endphp
+                                @endforeach
                             </tbody>
-                            @endforeach
+
                         </table>
                     </div>
                     <div class="order-summary">
@@ -77,9 +84,9 @@
                             <strong>Payment Information:</strong>
                         </h7>
                         <ul>
-                            <li>Subtotal: {{  '₦' . number_format($order->amount * $order->quantity, 2) }}</li>
-                            <li>Shipping Fee: {{  '₦' . number_format($order->shippingFee, 2) }}</li>
-                            <li>Total: {{  '₦' . number_format($order->grand_price + $order->shippingFee, 2) }}</li>
+                            <li>Subtotal: {{ '₦' . number_format($subtotal, 2) }}</li>
+                            <li>Shipping Fee: {{ '₦' . number_format($order->shippingFee, 2) }}</li>
+                            <li>Total: {{ '₦' . number_format($order->grand_price, 2) }}</li>
                             <li>Payment Method: {{$order->channel}} | {{$order->paymentMethod}}</li>
                         </ul>
                     </div>

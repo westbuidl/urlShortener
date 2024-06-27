@@ -8,8 +8,8 @@
 
 
 
-   
-    
+
+
 </head>
 
 <body>
@@ -21,17 +21,17 @@
                     <p style="color: #828282;  font-weight: 400;" class="f-20">Hello Admin</p>
                     <p style=" font-weight: 600" class="f-20"> Order Notification
                         <strong>For Your Attention!</strong>
-                        
+
                     </p>
 
-                    
+
                     <div class="items-ordered">
                         <h7>
                             <strong>Order Details</strong>
                         </h7>
-                       
-                        
-                            <table class="table">
+
+
+                        <table class="table">
                             <thead>
                                 <tr>
 
@@ -41,22 +41,25 @@
                                     <th scope="col">SUBTOTAL</th>
                                 </tr>
                             </thead>
+                            @php
+                            $subtotal = 0; // Initialize subtotal
+                            @endphp
                             @foreach ($orders as $index => $order)
                             <tbody>
                                 <tr>
-                                
-                                    <td><img src="{{  asset ('https://agroease.ng/agroease-api/public/uploads/product_images/'.explode(',',$order->productImage)[0]) }}" alt="Product Image" width="42px" height="41px">  {{$order->productName}}</td>
+
+                                    <td><img src="{{  asset ('https://agroease.ng/agroease-api/public/uploads/product_images/'.explode(',',$order->productImage)[0]) }}" alt="Product Image" width="42px" height="41px"> {{$order->productName}}</td>
                                     <td>
-                                        <p class="top">{{  '₦' . number_format($order->amount, 2) }}</p>
+                                        <p class="top">{{ '₦' . number_format($order->amount, 2) }}</p>
                                     </td>
                                     <td>
                                         <p class="top">x{{$order->quantity}}</p>
                                     </td>
                                     <td>
-                                        <p class="top">{{  '₦' . number_format($order->amount * $order->quantity, 2) }}</p>
+                                        <p class="top">{{ '₦' . number_format($order->amount * $order->quantity, 2) }}</p>
                                     </td>
                                 </tr>
-                                
+
                             </tbody>
                             @endforeach
                         </table>
@@ -66,25 +69,25 @@
                         <h7>
                             <strong>Buyer Details</strong>
                         </h7>
-                       
-                        
-                            <table class="table">
+
+
+                        <table class="table">
                             <thead>
                                 <tr>
-                                    
+
                                     <th scope="col">Name</th>
                                     <th scope="col">BuyerID</th>
                                     <th scope="col">Shipping Address</th>
                                     <th scope="col">Phone</th>
                                 </tr>
                             </thead>
-                            @foreach ($orders as $index => $order)
+
                             <tbody>
                                 <tr>
-                                
+
                                     <td>
-                                    <p class="top">{{$orders[0]->firstname}}</p>
-                                    
+                                        <p class="top">{{$orders[0]->firstname}}</p>
+
                                     </td>
                                     <td>
                                         <p class="top">{{ $order->buyerId }}</p>
@@ -96,23 +99,23 @@
                                         <p class="top">{{$order->phone_number}}</p>
                                     </td>
                                 </tr>
-                                
+
                             </tbody>
-                            @endforeach
+
                         </table>
                     </div>
 
                     <div class="items-ordered">
                         <h7>
-                            <strong>Seller Details</strong>
+                            <strong>Seller Details (Sellers {{ $index + 1 }})</strong>
                         </h7>
-                       
-                        
-                            <table class="table">
+
+
+                        <table class="table">
                             <thead>
                                 <tr>
-                                    
-                                    <th scope="col">Name</th>
+
+                                    <th scope="col">Fullname</th>
                                     <th scope="col">SellerID</th>
                                     <th scope="col">Email</th>
                                     <th scope="col">Phone</th>
@@ -121,24 +124,26 @@
                             @foreach ($orders as $index => $order)
                             <tbody>
                                 <tr>
-                                
                                     <td>
-                                    <p class="top">{{$firstname}}</p>
-                                    
+                                        <p class="top">{{ $order->sellerFullname}}</p>
                                     </td>
                                     <td>
-                                        <p class="top">{{$order->sellerId}}</p>
+                                        <p class="top">{{ $order->sellerId }}</p>
                                     </td>
                                     <td>
-                                        <p class="top">{{$email}}</p>
+                                        <p class="top">{{ $order->sellerEmail }}</p>
                                     </td>
                                     <td>
-                                        <p class="top">{{$phone}}</p>
+                                        <p class="top">{{ $order->sellerPhone }}</p>
                                     </td>
                                 </tr>
-                                
+                                @php
+                                $subtotal += $order->amount * $order->quantity; // Add each item's subtotal to the total subtotal
+                                @endphp
+                                @endforeach
                             </tbody>
-                            @endforeach
+
+
                         </table>
                     </div>
                     <div class="order-summary">
@@ -158,9 +163,9 @@
                             <strong>Payment Information:</strong>
                         </h7>
                         <ul>
-                            <li>Subtotal: {{  '₦' . number_format($order->amount * $order->quantity, 2) }}</li>
-                            <li>Shipping Fee: {{  '₦' . number_format($order->shippingFee, 2) }}</li>
-                            <li>Total: {{  '₦' . number_format($order->grand_price + $order->shippingFee, 2) }}</li>
+                            <li>Subtotal: {{ '₦' . number_format($subtotal, 2) }}</li>
+                            <li>Shipping Fee: {{ '₦' . number_format($order->shippingFee, 2) }}</li>
+                            <li>Total: {{ '₦' . number_format($order->grand_price, 2) }}</li>
                             <li>Payment Method: {{$order->channel}} | {{$order->paymentMethod}}</li>
                         </ul>
                     </div>

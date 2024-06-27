@@ -18,23 +18,25 @@ class SaleConfirmationEmail extends Mailable
     use Queueable, SerializesModels;
 
     public $orders;
-    public $email;
-    public $phone;
-    public $firstname;
+    //public $sellerEmail;
+    //public $sellerPhone;
+    //public $sellerFirstName;
+    //public $lastname;
     
 
     /**
      * Create a new message instance.
      */
-    public function __construct($orders,$email,$phone,$firstname)
+    public function __construct($orders)
     {
         //
         //$this->order = $order;
         //$this->productName = $productName;
         $this->orders = $orders;
-        $this->email = $email;
-        $this->phone = $phone;
-        $this->firstname = $firstname;
+        //$this->sellerEmail = $sellerEmail;
+        //$this->sellerPhone = $sellerPhone;
+        //$this->sellerFirstName = $sellerFirstName;
+        //$this->lastname = $lastname;
     }
 
 
@@ -48,7 +50,7 @@ class SaleConfirmationEmail extends Mailable
     public function build()
     {
         // Load the view content
-        $htmlContent = view('emails.saleConfirmationEmail', ['orders' => $this->orders,'firstname' => $this->firstname,'email' => $this->email,'phone' => $this->phone])->render();
+        $htmlContent = view('emails.saleConfirmationEmail', ['orders' => $this->orders /*,'sellerFirstName' => $this->sellerFirstName, 'sellerEmail' => $this->sellerEmail,'sellerPhone' => $this->sellerPhone*/])->render();
 
         // Load the CSS
         $cssPath1 = public_path('css/product-confirmed.css');

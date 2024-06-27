@@ -63,5 +63,9 @@ class Product extends Model
     {
     return $this->belongsTo(Seller::class, 'sellerId', 'sellerId');
     }
+    public function orders()
+    {
+    return $this->belongsTo(Order::class, 'sellerId', 'sellerId');
+    }
    
 }

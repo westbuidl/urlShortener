@@ -29,12 +29,12 @@ class CartController extends Controller
 {
     //
 
-    
+
 
 
     public function addToCart(Request $request, $productId)
 
-   
+
     {
         $cartId = 'CART' . rand(100000000, 999999999);
         try {
@@ -172,17 +172,22 @@ class CartController extends Controller
             //$product_quantity__in_cart = Cart::where('user_id', $user->quantity)->count();
 
             $totalPrice = 0; // Initialize total price variable
-            $totalQuantity = 0;
+            $totalQuantity = 0; // Initialize total quantity variable
+            $totalWeight = 0; // Initialize total weight variable
+            $feePerKg = 811; // Define the fee per kg
 
-            // Add image URLs to the product object
-
-            // Calculate total price
+            // Calculate total price, total quantity, and total weight
             foreach ($cartItems as $item) {
                 $totalQuantity += $item->quantity;
                 $totalPrice += $item->selling_price * $item->quantity;
+                $totalWeight += $item->productWeight;
+
                 $product = Product::find($item->productId);
                 $item->product_image_url = asset('uploads/product_images/' . $item->product_image);
             }
+
+            // Calculate total shipping fee
+            $totalShippingFee = $totalWeight * $feePerKg;
 
 
 
@@ -193,8 +198,10 @@ class CartController extends Controller
                 'message' => 'Cart items retrieved successfully.',
                 'cart_items' => $cartItems,
                 'products_in_cart' => $products_in_cart_count,
-                'total_Price' => $totalPrice,
-                'total_Quantity' => $totalQuantity
+                'total_price' => $totalPrice,
+                'total_quantity' => $totalQuantity,
+                'total_weight' => $totalWeight,
+                'total_shipping_fee' => $totalShippingFee
             ], 200);
         } catch (\Exception $e) {
             // Return the error message in the response
@@ -387,7 +394,14 @@ class CartController extends Controller
             }
 
 
-
+            // Calculate the shipping fee
+            $shippingFee = 0;
+            $feePerKg = 811;
+            foreach ($cartItems as $cartItem) {
+                $weight = $cartItem->productWeight;
+                $quantity = $cartItem->quantity;
+                $shippingFee += $weight  * $feePerKg;
+            }
 
             $paymentMethod = $request->input('paymentMethod');
             $shippingData = $request->only(['shipping_address', 'city', 'state']);
@@ -401,7 +415,7 @@ class CartController extends Controller
             // Proceed with payment initialization based on the selected payment method
             if ($paymentMethod === 'paystack') {
                 // Initialize payment using Paystack
-                $initializeResponse = $this->initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address, $phone_number);
+                $initializeResponse = $this->initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $shippingFee, $buyerFirstName, $buyerLastName, $billing_address, $phone_number);
             } elseif ($paymentMethod === 'flutterwave') {
                 // Initialize payment using PayPal (you would implement this method)
                 $initializeResponse = $this->initialize_payOnDelivery($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address);
@@ -440,7 +454,7 @@ class CartController extends Controller
             //dd(Auth::user());
             //$buyerId = 'AGB80406550';
             $buyerId = $paymentDetails['data']['metadata']['buyerId'];
-
+            $shippingFee = $paymentDetails['data']['metadata']['shippingFee'];
 
             $reference = $request->input('reference');
             //$status = request('status');
@@ -478,6 +492,7 @@ class CartController extends Controller
                     $totalAmount = $data['amount'] / 100; // Convert amount back to actual value
                     $platformFee = $totalAmount * 0.08; // Calculate platform fee (8% of total order)
                     $accruedProfit = $totalAmount - $platformFee; // Calculate seller's accrued profit
+                    $grandPrice = $totalAmount; //+ $shippingFee;
 
                     foreach ($cartItems as $cartItem) {
 
@@ -503,17 +518,25 @@ class CartController extends Controller
 
                                 // Save the seller record
                                 $seller->save();
+
+                                // Fetch seller details
+                                $sellerFirstName = $seller->firstname;
+                                $sellerEmail = $seller->email;
+                                $sellerPhone = $seller->phone;
+
+                                // Store seller details in the associative array, keyed by sellerId
+                                $sellerDetails[$seller->sellerId] = [
+                                    'firstname' => $sellerFirstName,
+                                    'email' => $sellerEmail,
+                                    'phone' => $sellerPhone,
+                                ];
                             }
+
 
                             // Update product quantity in stock and quantity sold
                             $product->quantityin_stock -= $cartItem->quantity;
                             $product->quantity_sold += $cartItem->quantity;
                             $product->save();
-
-
-                            // Calculate the shipping fee
-                        $shippingFee = $product->productWeight * $cartItem->quantity * 811;
-
                         }
 
 
@@ -528,7 +551,7 @@ class CartController extends Controller
                         $order->paymentMethod = $paymentDetails['data']['metadata']['paymentMethod']; // Assuming paystack is used
                         $order->paymentReference = $reference;
                         $order->Discount = null;
-                        $order->shippingFee = $shippingFee;
+                        $order->shippingFee = $paymentDetails['data']['metadata']['shippingFee'];
                         $order->order_status = $paymentDetails['data']['status'];
                         $order->currency = $paymentDetails['data']['currency'];
                         $order->channel = $paymentDetails['data']['channel'];
@@ -540,8 +563,11 @@ class CartController extends Controller
                         $order->firstname = $paymentDetails['data']['metadata']['firstname'];
                         $order->lastname = $paymentDetails['data']['metadata']['lastname'];
                         $order->phone_number = $paymentDetails['data']['metadata']['phone_number'];
-                        $order->grand_price = $totalAmount;
+                        $order->grand_price = $grandPrice;
                         $order->sellerId = $product->sellerId;
+                        $order->sellerFullname = $sellerFirstName;
+                        $order->sellerEmail = $sellerEmail;
+                        $order->sellerPhone = $sellerPhone;
                         $order->save();
                         $orders[] = $order;
                     }
@@ -550,14 +576,16 @@ class CartController extends Controller
                     Cart::where('buyerId', $buyerId)->delete();
 
                     $adminEmail1 = 'hyacinth@agroease.ng';
-                    $adminEmail2 = 'etim.precious@agroease.ng';
+                    //$adminEmail2 = 'etim.precious@agroease.ng';
+                    //$adminEmail3 ='larryo@agroease.ng';
 
                     // Send verification email
                     // Mail::to($customer_email)->send(new OrderConfirmationMail($order, $order->productName, $order->firstname, $order->lastname));
                     Mail::to($customer_email)->send(new OrderConfirmationMail($orders));
                     Mail::to($adminEmail1)
-                        ->cc($adminEmail2)
-                        ->send(new SaleConfirmationEmail($orders,$seller->email,$seller->phone,$seller->firstname));
+                        // ->cc($adminEmail2)
+                        //->cc($adminEmail3)
+                        ->send(new SaleConfirmationEmail($orders));
                     //dd($paymentDetails);
 
 
@@ -599,10 +627,10 @@ class CartController extends Controller
 
     private $initialize_url = "https://api.paystack.co/transaction/initialize";
 
-    public function initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address, $phone_number)
+    public function initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $shippingFee, $buyerFirstName, $buyerLastName, $billing_address, $phone_number)
     {
         //$product_name = $cartItems->product_name;
-        $totalPrice = $cartItems->sum('total_price');
+        $totalPrice = $cartItems->sum('total_price') + $shippingFee;
         // $paymentMethod = request($paymentMethod);
 
         // $amount = number_format($request->amount,2);
@@ -615,6 +643,7 @@ class CartController extends Controller
             'phone_number' => $phone_number,
             'firstname' => $buyerFirstName,
             'lastname' => $buyerLastName,
+            'shippingFee' => $shippingFee,
         ];
         $data = array(
             'email' => Auth::user()->email,
@@ -656,7 +685,8 @@ class CartController extends Controller
             'metadata' => [
                 'payment_for' => 'product_name',
                 'paymentMethod' => $paymentMethod,
-                'buyerId' => $buyerId
+                'buyerId' => $buyerId,
+                'shippingFee' => $shippingFee
             ]
         ]);
     }
@@ -817,9 +847,9 @@ class CartController extends Controller
             $order->product_image_url = $productImage;
 
             // Calculate the total price for each item in the order
-        $order->total_price_per_item = $order->quantity * $order->grand_price;
-        
-        return $order;
+            $order->total_price_per_item = $order->quantity * $order->grand_price;
+
+            return $order;
         });
 
         return response()->json([
