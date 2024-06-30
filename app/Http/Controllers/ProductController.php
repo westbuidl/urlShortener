@@ -151,7 +151,7 @@ class ProductController extends Controller
     }
 
     //Function to view products by id begin
-    public function viewProduct(Request $request, string $productId)
+    public function viewProductSeller(Request $request, string $productId)
     {
         // Find the product by its ID
 
@@ -194,6 +194,40 @@ class ProductController extends Controller
         }
     }   //Function to view products ends   //Function to view products ends
 
+
+
+    public function viewProduct(Request $request, string $productId)
+{
+    // Find the product by its ID
+    $product = Product::where('productId', $productId)->first();
+
+    // Check if the product exists
+    if ($product) {
+        // Extract image URLs for the product
+        $imageURLs = [];
+        if (!empty($product->product_image)) {
+            foreach (explode(',', $product->product_image) as $image) {
+                $imageURLs[] = asset('uploads/product_images/' . $image);
+            }
+        }
+
+        // Add image URLs to the product object
+        $product->image_urls = $imageURLs;
+
+        // Return the product data for everyone
+        return response()->json([
+            'message' => 'Product found.',
+            'data' => [
+                'product' => $product,
+            ]
+        ], 200);
+    } else {
+        // If the product is not found, return a 404 error message
+        return response()->json([
+            'message' => 'Product not found.',
+        ], 404);
+    }
+} 
 
     //view product details
     public function productDetails(Request $request, string $productId)

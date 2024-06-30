@@ -174,7 +174,7 @@ class CartController extends Controller
             $totalPrice = 0; // Initialize total price variable
             $totalQuantity = 0; // Initialize total quantity variable
             $totalWeight = 0; // Initialize total weight variable
-            $feePerKg = 811; // Define the fee per kg
+            $feePerKg = 400; // Define the fee per kg
 
             // Calculate total price, total quantity, and total weight
             foreach ($cartItems as $item) {
@@ -396,7 +396,7 @@ class CartController extends Controller
 
             // Calculate the shipping fee
             $shippingFee = 0;
-            $feePerKg = 811;
+            $feePerKg = 400;
             foreach ($cartItems as $cartItem) {
                 $weight = $cartItem->productWeight;
                 $quantity = $cartItem->quantity;
@@ -490,9 +490,12 @@ class CartController extends Controller
                     $costPrice = floatval($request->cost_price);
 
                     $totalAmount = $data['amount'] / 100; // Convert amount back to actual value
-                    $platformFee = $totalAmount * 0.08; // Calculate platform fee (8% of total order)
-                    $accruedProfit = $totalAmount - $platformFee; // Calculate seller's accrued profit
+                    //$platformFee = $totalAmount * 0.08; // Calculate platform fee (8% of total order)
+                    //$accruedProfit = $totalAmount - $platformFee; // Calculate seller's accrued profit
                     $grandPrice = $totalAmount; //+ $shippingFee;
+                    
+                    //Initialize an array to store the sellers record
+                    $sellerTotals = [];
 
                     foreach ($cartItems as $cartItem) {
 
@@ -501,9 +504,20 @@ class CartController extends Controller
                         $product = Product::where('productId', $cartItem->productId)->first();
 
                         if ($product) {
+
+                            $sellerId = $product->sellerId;
+
+                            //Calculate the total price for this item
+                            $itemTotal = $cartItem->selling_price * $cartItem->quantity;
+
                             // Calculate the platform fee and seller's profit
-                            $platformFee = $cartItem->selling_price * 0.08;
-                            $accruedProfit = $cartItem->selling_price - $platformFee;
+                            $itemPlatformFee = $itemTotal * 0.08;
+                            $itemAccruedProfit = $itemTotal - $itemPlatformFee;
+
+
+
+                            
+                            
 
                             // Update seller's profit and platform fee in the database
                             $seller = Seller::where('sellerId', $product->sellerId)->first();
@@ -513,14 +527,16 @@ class CartController extends Controller
                                 $currentPlatformFee = floatval($seller->platform_fee);
 
                                 // Update the values
-                                $seller->accrued_profit = $currentAccruedProfit + $accruedProfit;
-                                $seller->platform_fee = $currentPlatformFee + $platformFee;
+                                $seller->accrued_profit = $currentAccruedProfit + $itemAccruedProfit;
+                                $seller->platform_fee = $currentPlatformFee + $itemPlatformFee;
 
                                 // Save the seller record
                                 $seller->save();
 
                                 // Fetch seller details
                                 $sellerFirstName = $seller->firstname;
+                                $sellerLastName = $seller->lastname;
+                                $sellerFullName = $sellerFirstName .' '. $sellerLastName;
                                 $sellerEmail = $seller->email;
                                 $sellerPhone = $seller->phone;
 
@@ -565,7 +581,7 @@ class CartController extends Controller
                         $order->phone_number = $paymentDetails['data']['metadata']['phone_number'];
                         $order->grand_price = $grandPrice;
                         $order->sellerId = $product->sellerId;
-                        $order->sellerFullname = $sellerFirstName;
+                        $order->sellerFullname = $sellerFullName;
                         $order->sellerEmail = $sellerEmail;
                         $order->sellerPhone = $sellerPhone;
                         $order->save();

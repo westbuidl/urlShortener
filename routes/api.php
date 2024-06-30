@@ -150,7 +150,7 @@ Route::post('/updateCartItem/{cartId}', [CartController::class, 'updatecartItem'
 //--Begin of Product api --//
 //Route::post('/addToCart', [ProductController::class, 'addToCart'])->middleware('auth:sanctum')->name('addToCart');// add to cart
 Route::post('/addProduct', [ProductController::class, 'addProduct'])->middleware('auth:sanctum')->name('addProduct');//profile update endpoint for sellers
-Route::get('/viewProduct/{productId}', [ProductController::class, 'viewProduct'])->middleware('auth:sanctum')->name('viewProduct');//view products
+Route::get('/viewProduct/{productId}', [ProductController::class, 'viewProduct'])->name('viewProduct');//view products
 Route::get('/allProducts', [ProductController::class, 'allProducts'])->name('allProducts');//view products
 Route::get('/productDetails/{productId}', [ProductController::class, 'productDetails'])->name('productDetails');//productDetails
 Route::post('/editProduct/{productId}', [ProductController::class, 'editProduct'])->middleware('auth:sanctum')->name('editProduct');//view products
