@@ -487,7 +487,7 @@ class CartController extends Controller
                     // Proceed with creating the order
                     $orders = []; // Array to store order objects
                     $sellingPrice = floatval($request->selling_price);
-                    $costPrice = floatval($request->cost_price);
+                    $costPrice = floatval($request->cost_price); 
 
                     $totalAmount = $data['amount'] / 100; // Convert amount back to actual value
                     //$platformFee = $totalAmount * 0.08; // Calculate platform fee (8% of total order)
