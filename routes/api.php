@@ -54,7 +54,7 @@ Route::post('/buyerLogout', [BuyerController::class, 'buyerLogout'])->middleware
 Route::post('/verifyBuyerEmail', [BuyerController::class, 'verifyBuyerEmail'])->name('verifyBuyerEmail');//send verification email
 Route::post('/resendBuyerEmailAuth/{email}', [BuyerController::class, 'resendBuyerEmailAuth'])->name('resendBuyerEmailAuth');//resend verification code
 Route::post('/buyerPasswordReset', [BuyerController::class, 'buyerPasswordReset'])->name('buyerPasswordReset');//reset buyer password
-Route::get('/getBuyerProfile/{buyerId}', [BuyerController::class, 'getBuyerProfile'])->middleware(('auth:sanctum')) ->name('getBuyerProfile');//api to get user profile
+Route::get('/getBuyerProfile/{buyerId}', [BuyerProfileController::class, 'getBuyerProfile'])->middleware(('auth:sanctum')) ->name('getBuyerProfile');//api to get user profile
 Route::delete('/deleteBuyerAccount/{buyerId}', [BuyerProfileController::class, 'deleteBuyerAccount'])->middleware(('auth:sanctum')) ->name('deleteBuyerAccount');//api to get user profile
 //End Api routes for Buyer account
 

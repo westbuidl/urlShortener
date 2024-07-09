@@ -44,4 +44,9 @@ class Order extends Model
     public function IndividualAccount(){
         return $this->belongsTo('App\IndividualAccount');
     }
+    public function orderItems()
+{
+    return $this->hasMany(Order::class, 'orderId', 'id');
+}
+   
 }

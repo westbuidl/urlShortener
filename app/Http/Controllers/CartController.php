@@ -830,47 +830,69 @@ class CartController extends Controller
 
 
 
-    //public function getOrderById($orderId)
     public function getOrderById($orderId)
-    //public function getOrdersByOrderId($orderId)
-    {
-        // Retrieve the authenticated user's ID
-        $buyerId = Auth::user()->buyerId;
+{
+    // Retrieve the authenticated user's ID
+    $buyerId = Auth::user()->buyerId;
 
-        // Retrieve all orders associated with the authenticated user and the given order ID, ordered by most recent
-        $orders = Order::where('buyerId', $buyerId)
-            ->where('orderId', $orderId)
-            ->orderBy('created_at', 'desc')
-            ->get();
+    // Retrieve all orders associated with the authenticated user and the given order ID, ordered by most recent
+    $orders = Order::where('buyerId', $buyerId)
+        ->where('orderId', $orderId)
+        ->orderBy('created_at', 'desc')
+        ->get();
 
-        // Check if any orders exist
-        if ($orders->isEmpty()) {
-            return response()->json([
-                'message' => 'No orders found for the authenticated user with the given order ID.',
-            ], 404);
+    // Check if any orders exist
+    if ($orders->isEmpty()) {
+        return response()->json([
+            'message' => 'No orders found for the authenticated user with the given order ID.',
+        ], 404);
+    }
+
+    $subtotal = 0;
+    $shippingFee = 0;
+
+    // Map orders to include the product image URL and calculate prices
+    $orders = $orders->map(function ($order) use (&$subtotal, &$shippingFee) {
+        // Assuming the product image is stored in a column called 'productImage' in the orders table
+        $productImage = null;
+        if (!empty($order->productImage)) {
+            $images = explode(',', $order->productImage);
+            if (!empty($images[0])) {
+                $productImage = asset('uploads/product_images/' . $images[0]);
+            }
+        }
+        $order->product_image_url = $productImage;
+
+        // Calculate the price for each item
+        $order->price_per_item = $order->grand_price; // Assuming grand_price is the price per item
+        $order->total_price_per_item = $order->quantity * $order->price_per_item;
+
+        // Add to subtotal
+        $subtotal += $order->total_price_per_item;
+
+        // Store shipping fee (assuming it's in a column called 'shipping_fee')
+        // We'll only use the shipping fee from the first item since it's calculated once for all items
+        if ($shippingFee == 0) {
+            $shippingFee = $order->shippingFee ?? 0;
         }
 
-        // Map orders to include the product image URL
-        $orders = $orders->map(function ($order) {
-            // Assuming the product image is stored in a column called 'product_image' in the orders table
-            $productImage = null;
-            if (!empty($order->productImage)) {
-                $images = explode(',', $order->productImage);
-                if (!empty($images[0])) {
-                    $productImage = asset('uploads/product_images/' . $images[0]);
-                }
-            }
-            $order->product_image_url = $productImage;
+        return $order;
+    });
 
-            // Calculate the total price for each item in the order
-            $order->total_price_per_item = $order->quantity * $order->grand_price;
+    // Calculate total
+    $total = $subtotal + $shippingFee;
 
-            return $order;
-        });
+    return response()->json([
+        'message' => 'Orders fetched successfully.',
+        'data' => [
+            'orders' => $orders,
+            'subtotal' => $subtotal,
+            'shipping_fee' => $shippingFee,
+            'total' => $total
+        ],
+    ], 200);
+}
+    
+    
 
-        return response()->json([
-            'message' => 'Orders fetched successfully.',
-            'data' => $orders,
-        ], 200);
-    }
 }

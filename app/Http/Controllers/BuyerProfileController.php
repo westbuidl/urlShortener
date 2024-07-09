@@ -79,6 +79,8 @@ class BuyerProfileController extends Controller
     } // End profile update function
 
 
+    
+
     //Begin update account settings function
     public function updateBuyerAccountDetails(Request $request)
     {
@@ -189,6 +191,34 @@ class BuyerProfileController extends Controller
         }
     }
 
+
+    public function getBuyerProfile(Request $request, $buyerId)
+    {
+        // Retrieve the authenticated user
+        // $user = $request->user();
+        //$buyer = Buyer::find($buyerId);
+        $buyer = Buyer::where('buyerId', $buyerId)->first();
+
+        // Check if the user exists
+        //if ($user && $user->id == $userID) 
+        if ($buyer) {
+            // Return user information along with profile picture
+            $profile_picture = asset('uploads/profile_images/' . $buyer->profile_photo);
+            //$profile_picture => asset('uploads/profile_images/' . $user->profile_photo);
+            return response()->json([
+                'message' => 'Buyer profile found.',
+                'data' => [
+                    'buyer' => $buyer,
+                    'profile_picture' => $profile_picture
+                ]
+            ], 200);
+        } else {
+            // If the user is not found, return an error message
+            return response()->json([
+                'message' => 'Buyer not found.',
+            ], 404);
+        }
+    }
 
     public function deleteBuyerAccount(Request $request, $buyerId)
     {
