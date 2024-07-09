@@ -864,13 +864,13 @@ class CartController extends Controller
         $order->product_image_url = $productImage;
 
         // Calculate the price for each item
-        $order->price_per_item = $order->grand_price; // Assuming grand_price is the price per item
+        $order->price_per_item = $order->amount; // Assuming grand_price is the price per item
         $order->total_price_per_item = $order->quantity * $order->price_per_item;
 
         // Add to subtotal
         $subtotal += $order->total_price_per_item;
 
-        // Store shipping fee (assuming it's in a column called 'shipping_fee')
+        // Store shipping fee (assuming it's in a column called 'shippingFee')
         // We'll only use the shipping fee from the first item since it's calculated once for all items
         if ($shippingFee == 0) {
             $shippingFee = $order->shippingFee ?? 0;
@@ -892,6 +892,7 @@ class CartController extends Controller
         ],
     ], 200);
 }
+
     
     
 
