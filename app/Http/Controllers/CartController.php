@@ -8,13 +8,14 @@ use App\Models\Buyer;
 use App\Models\Order;
 use App\Models\Seller;
 use App\Models\Product;
+use App\Models\CompanyBuyer;
 use Illuminate\Http\Request;
 use App\Mail\productSoldEmail;
 use App\Mail\OrderConfirmationMail;
-use App\Http\Controllers\Controller;
 use App\Mail\SaleConfirmationEmail;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Controller;
 //use Unicodeveloper\Paystack\Paystack;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
@@ -46,10 +47,28 @@ class CartController extends Controller
             if (!$buyer) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Buyer not authenticated.',
+                    'message' => 'User not authenticated.',
                 ], 401);
             }
+    
+            // Check if the user is an individual buyer
+        $individualBuyer = Buyer::where('buyerId', $buyer->buyerId)->first();
+        $companyBuyer = CompanyBuyer::where('companyBuyerId', $buyer->companyBuyerId)->first();
 
+            // Determine the buyer type and ID
+            if ($individualBuyer) {
+                $buyerId = $individualBuyer->buyerId;
+                $buyerType = 'individual';
+            } elseif ($companyBuyer) {
+                $buyerId = $companyBuyer->companyBuyerId;
+                $buyerType = 'company';
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid buyer type.',
+                ], 400);
+            }
+    
 
             $product = Product::where('productId', $productId)->first();
 
@@ -76,14 +95,8 @@ class CartController extends Controller
                 ], 400);
             }
 
-
-
-
-
-
-
             // Check if the product already exists in the user's cart
-            $existingCartItem = Cart::where('buyerId',  $buyer->buyerId)
+            $existingCartItem = Cart::where('buyerId', $buyerId)
                 ->where('productId', $productId)
                 ->first();
 
@@ -115,7 +128,8 @@ class CartController extends Controller
                 // Create a new Cart instance and populate it
                 $cart = new Cart;
                 $cart->cartId = $cartId;
-                $cart->buyerId = $buyer->buyerId;
+                $cart->buyerId = $buyerId;
+                $cart->buyerType = $buyerType;
                 $cart->productId = $productId;
                 $cart->product_image = $product->product_image;
                 $cart->product_name = $product->product_name;
@@ -148,27 +162,46 @@ class CartController extends Controller
 
     //View cart
 
-    public function viewCart()
+    public function viewCart(Request $request)
     {
         try {
-            // Retrieve the authenticated user
-            $buyer = Auth::user();
+            // Retrieve the authenticated user's ID
+            //$user_id = Auth::id();
+            $buyer = $request->user();
 
             // Ensure that the user is logged in
-            if (!Auth::check()) {
+            if (!$buyer) {
                 return response()->json([
                     'status' => false,
                     'message' => 'User not authenticated.',
                 ], 401);
             }
+    
+            // Check if the user is an individual buyer
+        $individualBuyer = Buyer::where('buyerId', $buyer->buyerId)->first();
+        $companyBuyer = CompanyBuyer::where('companyBuyerId', $buyer->companyBuyerId)->first();
+
+            // Determine the buyer type and ID
+            if ($individualBuyer) {
+                $buyerId = $individualBuyer->buyerId;
+                $buyerType = 'individual';
+            } elseif ($companyBuyer) {
+                $buyerId = $companyBuyer->companyBuyerId;
+                $buyerType = 'company';
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid buyer type.',
+                ], 400);
+            }
 
             // Retrieve the cart items for the authenticated user
-            $cartItems = Cart::where('buyerId', $buyer->buyerId)
+            $cartItems = Cart::where('buyerId', $buyerId)
                 ->orderByDesc('id')
                 ->get();
             // ->get();
 
-            $products_in_cart_count = Cart::where('buyerId', $buyer->buyerId)->count();
+            $products_in_cart_count = Cart::where('buyerId', $buyerId)->count();
             //$product_quantity__in_cart = Cart::where('user_id', $user->quantity)->count();
 
             $totalPrice = 0; // Initialize total price variable

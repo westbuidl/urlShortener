@@ -20,6 +20,7 @@ class Cart extends Model
         'categoryID',
         'cartId',
         'productWeight',
+        'buyerType',
 
 
         
