@@ -247,18 +247,37 @@ class CartController extends Controller
 
     //Delete cart Item
 
-    public function deleteCartItem($cartId)
+    public function deleteCartItem(Request $request, $cartId)
     {
         try {
-            // Retrieve the authenticated user
-            $buyer = Auth::user();
+            // Retrieve the authenticated user's ID
+            //$user_id = Auth::id();
+            $buyer = $request->user();
 
             // Ensure that the user is logged in
-            if (!Auth::check()) {
+            if (!$buyer) {
                 return response()->json([
                     'status' => false,
                     'message' => 'User not authenticated.',
                 ], 401);
+            }
+    
+            // Check if the user is an individual buyer
+        $individualBuyer = Buyer::where('buyerId', $buyer->buyerId)->first();
+        $companyBuyer = CompanyBuyer::where('companyBuyerId', $buyer->companyBuyerId)->first();
+
+            // Determine the buyer type and ID
+            if ($individualBuyer) {
+                $buyerId = $individualBuyer->buyerId;
+                $buyerType = 'individual';
+            } elseif ($companyBuyer) {
+                $buyerId = $companyBuyer->companyBuyerId;
+                $buyerType = 'company';
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid buyer type.',
+                ], 400);
             }
 
             // Retrieve the cart item
@@ -274,7 +293,7 @@ class CartController extends Controller
             }
 
             // Ensure that the cart item belongs to the authenticated user
-            if ($cartItem->buyerId !== $buyer->buyerId) {
+            if ($cartItem->buyerId !== $buyerId) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Unauthorized.',
@@ -302,15 +321,34 @@ class CartController extends Controller
     public function updateCartItem(Request $request, $cartId)
     {
         try {
-            // Retrieve the authenticated user
-            $buyer = Auth::user();
+            // Retrieve the authenticated user's ID
+            //$user_id = Auth::id();
+            $buyer = $request->user();
 
             // Ensure that the user is logged in
-            if (!Auth::check()) {
+            if (!$buyer) {
                 return response()->json([
                     'status' => false,
                     'message' => 'User not authenticated.',
                 ], 401);
+            }
+    
+            // Check if the user is an individual buyer
+        $individualBuyer = Buyer::where('buyerId', $buyer->buyerId)->first();
+        $companyBuyer = CompanyBuyer::where('companyBuyerId', $buyer->companyBuyerId)->first();
+
+            // Determine the buyer type and ID
+            if ($individualBuyer) {
+                $buyerId = $individualBuyer->buyerId;
+                $buyerType = 'individual';
+            } elseif ($companyBuyer) {
+                $buyerId = $companyBuyer->companyBuyerId;
+                $buyerType = 'company';
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid buyer type.',
+                ], 400);
             }
 
             // Retrieve the cart item
@@ -325,7 +363,7 @@ class CartController extends Controller
             }
 
             // Ensure that the cart item belongs to the authenticated user
-            if ($cartItem->buyerId !== $buyer->buyerId) {
+            if ($cartItem->buyerId !== $buyerId) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Unauthorized.',
