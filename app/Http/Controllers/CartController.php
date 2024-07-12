@@ -50,10 +50,10 @@ class CartController extends Controller
                     'message' => 'User not authenticated.',
                 ], 401);
             }
-    
+
             // Check if the user is an individual buyer
-        $individualBuyer = Buyer::where('buyerId', $buyer->buyerId)->first();
-        $companyBuyer = CompanyBuyer::where('companyBuyerId', $buyer->companyBuyerId)->first();
+            $individualBuyer = Buyer::where('buyerId', $buyer->buyerId)->first();
+            $companyBuyer = CompanyBuyer::where('companyBuyerId', $buyer->companyBuyerId)->first();
 
             // Determine the buyer type and ID
             if ($individualBuyer) {
@@ -68,7 +68,7 @@ class CartController extends Controller
                     'message' => 'Invalid buyer type.',
                 ], 400);
             }
-    
+
 
             $product = Product::where('productId', $productId)->first();
 
@@ -176,10 +176,10 @@ class CartController extends Controller
                     'message' => 'User not authenticated.',
                 ], 401);
             }
-    
+
             // Check if the user is an individual buyer
-        $individualBuyer = Buyer::where('buyerId', $buyer->buyerId)->first();
-        $companyBuyer = CompanyBuyer::where('companyBuyerId', $buyer->companyBuyerId)->first();
+            $individualBuyer = Buyer::where('buyerId', $buyer->buyerId)->first();
+            $companyBuyer = CompanyBuyer::where('companyBuyerId', $buyer->companyBuyerId)->first();
 
             // Determine the buyer type and ID
             if ($individualBuyer) {
@@ -261,10 +261,10 @@ class CartController extends Controller
                     'message' => 'User not authenticated.',
                 ], 401);
             }
-    
+
             // Check if the user is an individual buyer
-        $individualBuyer = Buyer::where('buyerId', $buyer->buyerId)->first();
-        $companyBuyer = CompanyBuyer::where('companyBuyerId', $buyer->companyBuyerId)->first();
+            $individualBuyer = Buyer::where('buyerId', $buyer->buyerId)->first();
+            $companyBuyer = CompanyBuyer::where('companyBuyerId', $buyer->companyBuyerId)->first();
 
             // Determine the buyer type and ID
             if ($individualBuyer) {
@@ -332,10 +332,10 @@ class CartController extends Controller
                     'message' => 'User not authenticated.',
                 ], 401);
             }
-    
+
             // Check if the user is an individual buyer
-        $individualBuyer = Buyer::where('buyerId', $buyer->buyerId)->first();
-        $companyBuyer = CompanyBuyer::where('companyBuyerId', $buyer->companyBuyerId)->first();
+            $individualBuyer = Buyer::where('buyerId', $buyer->buyerId)->first();
+            $companyBuyer = CompanyBuyer::where('companyBuyerId', $buyer->companyBuyerId)->first();
 
             // Determine the buyer type and ID
             if ($individualBuyer) {
@@ -428,10 +428,10 @@ class CartController extends Controller
 
         try {
             // Retrieve the authenticated user's ID
-            $authenticatedBuyerId = Auth::user()->buyerId;
+            $authenticatedBuyerId = Auth::user();
 
             // Ensure that the user is logged in and matches the requested buyer ID
-            if (!$authenticatedBuyerId || $authenticatedBuyerId != $buyerId) {
+            if (!$authenticatedBuyerId) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Buyer not authenticated or mismatched buyer ID.',
@@ -439,11 +439,49 @@ class CartController extends Controller
             }
 
 
-            $buyer = Buyer::where('buyerId', $buyerId)->first();
+            // Check if the user is an individual buyer
+            $individualBuyer = Buyer::where('buyerId', $authenticatedBuyerId->buyerId)->first();
+            $companyBuyer = CompanyBuyer::where('companyBuyerId', $authenticatedBuyerId->companyBuyerId)->first();
+
+
+            // Check which buyer type is authenticated and validate the buyer ID
+            if ($individualBuyer) {
+                if ($individualBuyer->buyerId != $buyerId) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Buyer ID does not match the authenticated individual buyer.',
+                    ], 401);
+                }
+                $buyerType = 'individual';
+                $buyerFirstName = $authenticatedBuyerId->firstname;
+                $buyerLastName = $authenticatedBuyerId->lastname;
+                $billing_address = $authenticatedBuyerId->city . ', ' . $authenticatedBuyerId->state . ', ' . $authenticatedBuyerId->country . ', ' . $authenticatedBuyerId->zipcode;
+                $phone_number = $authenticatedBuyerId->phone_number;
+            } elseif ($companyBuyer) {
+                if ($companyBuyer->companyBuyerId != $buyerId) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Buyer ID does not match the authenticated company buyer.',
+                    ], 401);
+                }
+                $buyerType = 'company';
+                $buyerFirstName = $companyBuyer->companyname; // Assuming company buyer has a companyName field
+                $buyerLastName = ''; // Company buyers might not have a last name
+                $billing_address = $companyBuyer->city . ', ' . $companyBuyer->state . ', ' . $companyBuyer->country . ', ' . $companyBuyer->zipcode;
+                $phone_number = $companyBuyer->companyphone;
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid buyer type.',
+                ], 400);
+            }
+
+
+            /* $buyer = Buyer::where('buyerId', $buyerId)->first();
             $buyerFirstName = $buyer->firstname;
             $buyerLastName = $buyer->lastname;
             $billing_address = $buyer->city . ', ' . $buyer->state . ', ' . $buyer->country . ', ' . $buyer->zipcode;
-            $phone_number = $buyer->phone_number;
+            $phone_number = $buyer->phone_number;*/
 
             $request->validate([
                 'paymentMethod' => 'required|string|min:1', // Minimum quantity is 1
@@ -558,13 +596,13 @@ class CartController extends Controller
                     // Proceed with creating the order
                     $orders = []; // Array to store order objects
                     $sellingPrice = floatval($request->selling_price);
-                    $costPrice = floatval($request->cost_price); 
+                    $costPrice = floatval($request->cost_price);
 
                     $totalAmount = $data['amount'] / 100; // Convert amount back to actual value
                     //$platformFee = $totalAmount * 0.08; // Calculate platform fee (8% of total order)
                     //$accruedProfit = $totalAmount - $platformFee; // Calculate seller's accrued profit
                     $grandPrice = $totalAmount; //+ $shippingFee;
-                    
+
                     //Initialize an array to store the sellers record
                     $sellerTotals = [];
 
@@ -587,8 +625,8 @@ class CartController extends Controller
 
 
 
-                            
-                            
+
+
 
                             // Update seller's profit and platform fee in the database
                             $seller = Seller::where('sellerId', $product->sellerId)->first();
@@ -607,7 +645,7 @@ class CartController extends Controller
                                 // Fetch seller details
                                 $sellerFirstName = $seller->firstname;
                                 $sellerLastName = $seller->lastname;
-                                $sellerFullName = $sellerFirstName .' '. $sellerLastName;
+                                $sellerFullName = $sellerFirstName . ' ' . $sellerLastName;
                                 $sellerEmail = $seller->email;
                                 $sellerPhone = $seller->phone;
 
@@ -858,10 +896,37 @@ class CartController extends Controller
 
     public function getOrders()
     {
-        // Retrieve the authenticated user's ID
-        $buyerId = Auth::user()->buyerId;
 
-        // Retrieve all orders associated with the authenticated user
+        $buyer = Auth::user();
+
+        // Ensure the user is logged in
+        if (!$buyer) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not authenticated.',
+            ], 401);
+        }
+
+        $individualBuyer = Buyer::where('buyerId', $buyer->buyerId)->first();
+        $companyBuyer = CompanyBuyer::where('companyBuyerId', $buyer->companyBuyerId)->first();
+
+        // Determine the buyer type and ID
+        if ($individualBuyer) {
+            $buyerId = $individualBuyer->buyerId;
+            $buyerType = 'individual';
+        } elseif ($companyBuyer) {
+            $buyerId = $companyBuyer->companyBuyerId;
+            $buyerType = 'company';
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid buyer type.',
+            ], 400);
+        }
+
+
+
+
         $orders = Order::where('buyerId', $buyerId)->orderByDesc('created_at')->get();
 
         // Check if any orders exist
@@ -902,69 +967,92 @@ class CartController extends Controller
 
 
     public function getOrderById($orderId)
-{
-    // Retrieve the authenticated user's ID
-    $buyerId = Auth::user()->buyerId;
+    {
+        // Retrieve the authenticated user's ID
+        //$buyerId = Auth::user()->buyerId;
 
-    // Retrieve all orders associated with the authenticated user and the given order ID, ordered by most recent
-    $orders = Order::where('buyerId', $buyerId)
-        ->where('orderId', $orderId)
-        ->orderBy('created_at', 'desc')
-        ->get();
+        $buyer = Auth::user();
 
-    // Check if any orders exist
-    if ($orders->isEmpty()) {
-        return response()->json([
-            'message' => 'No orders found for the authenticated user with the given order ID.',
-        ], 404);
-    }
+        // Ensure the user is logged in
+        if (!$buyer) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not authenticated.',
+            ], 401);
+        }
 
-    $subtotal = 0;
-    $shippingFee = 0;
+        $individualBuyer = Buyer::where('buyerId', $buyer->buyerId)->first();
+        $companyBuyer = CompanyBuyer::where('companyBuyerId', $buyer->companyBuyerId)->first();
 
-    // Map orders to include the product image URL and calculate prices
-    $orders = $orders->map(function ($order) use (&$subtotal, &$shippingFee) {
-        // Assuming the product image is stored in a column called 'productImage' in the orders table
-        $productImage = null;
-        if (!empty($order->productImage)) {
-            $images = explode(',', $order->productImage);
-            if (!empty($images[0])) {
-                $productImage = asset('uploads/product_images/' . $images[0]);
+        // Determine the buyer type and ID
+        if ($individualBuyer) {
+            $buyerId = $individualBuyer->buyerId;
+            $buyerType = 'individual';
+        } elseif ($companyBuyer) {
+            $buyerId = $companyBuyer->companyBuyerId;
+            $buyerType = 'company';
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid buyer type.',
+            ], 400);
+        }
+
+        // Retrieve all orders associated with the authenticated user and the given order ID, ordered by most recent
+        $orders = Order::where('buyerId', $buyerId)
+            ->where('orderId', $orderId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Check if any orders exist
+        if ($orders->isEmpty()) {
+            return response()->json([
+                'message' => 'No orders found for the authenticated user with the given order ID.',
+            ], 404);
+        }
+
+        $subtotal = 0;
+        $shippingFee = 0;
+
+        // Map orders to include the product image URL and calculate prices
+        $orders = $orders->map(function ($order) use (&$subtotal, &$shippingFee) {
+            // Assuming the product image is stored in a column called 'productImage' in the orders table
+            $productImage = null;
+            if (!empty($order->productImage)) {
+                $images = explode(',', $order->productImage);
+                if (!empty($images[0])) {
+                    $productImage = asset('uploads/product_images/' . $images[0]);
+                }
             }
-        }
-        $order->product_image_url = $productImage;
+            $order->product_image_url = $productImage;
 
-        // Calculate the price for each item
-        $order->price_per_item = $order->amount; // Assuming grand_price is the price per item
-        $order->total_price_per_item = $order->quantity * $order->price_per_item;
+            // Calculate the price for each item
+            $order->price_per_item = $order->amount; // Assuming grand_price is the price per item
+            $order->total_price_per_item = $order->quantity * $order->price_per_item;
 
-        // Add to subtotal
-        $subtotal += $order->total_price_per_item;
+            // Add to subtotal
+            $subtotal += $order->total_price_per_item;
 
-        // Store shipping fee (assuming it's in a column called 'shippingFee')
-        // We'll only use the shipping fee from the first item since it's calculated once for all items
-        if ($shippingFee == 0) {
-            $shippingFee = $order->shippingFee ?? 0;
-        }
+            // Store shipping fee (assuming it's in a column called 'shippingFee')
+            // We'll only use the shipping fee from the first item since it's calculated once for all items
+            if ($shippingFee == 0) {
+                $shippingFee = $order->shippingFee ?? 0;
+            }
 
-        return $order;
-    });
+            return $order;
+        });
 
-    // Calculate total
-    $total = $subtotal + $shippingFee;
+        // Calculate total
+        $total = $subtotal + $shippingFee;
 
-    return response()->json([
-        'message' => 'Orders fetched successfully.',
-        'data' => [
-            'orders' => $orders,
-            'subtotal' => $subtotal,
-            'shipping_fee' => $shippingFee,
-            'total' => $total
-        ],
-    ], 200);
-}
-
-    
-    
-
+        return response()->json([
+            'message' => 'Orders fetched successfully.',
+            'data' => [
+                'orders' => $orders,
+                'subtotal' => $subtotal,
+                'shipping_fee' => $shippingFee,
+                'total' => $total
+            ],
+        ], 200);
+    }
 }
