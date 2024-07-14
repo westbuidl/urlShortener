@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 //use Illuminate\Validation\Validator;
 use App\Models\Seller;
 use Illuminate\Http\Request;
+use App\Models\CompanySeller;
 use Illuminate\Support\Carbon;
 use App\Mail\sellerSignupEmail;
 use App\Mail\PasswordResetEmail;
@@ -225,12 +226,18 @@ class SellerController extends Controller
 {
     $seller = $request->user();
 
-    if ($seller) {
+    if ($seller instanceof Seller) {
+        // Revoke all tokens for the buyer
         $seller->tokens()->delete();
 
         return response()->json([
             'message' => 'Seller logged out successfully',
         ], 200);
+    }elseif ($seller instanceof CompanySeller){
+            $seller->tokens()->delete();
+            return response()->json([
+                'message' => 'Company Seller logged out successfully',
+            ], 200);
     } else {
         return response()->json([
             'message' => 'Seller not found',

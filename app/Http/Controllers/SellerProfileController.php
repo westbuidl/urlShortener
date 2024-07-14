@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Mail\addBankAccountEmail;
 use Illuminate\Support\Facades\DB;
 use App\Mail\bankAccountSavedEmail;
+use App\Models\CompanySeller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
@@ -33,17 +34,19 @@ class SellerProfileController extends Controller
             ], 422);
         }
         $seller = $request->user();
-        if (Hash::check($request->old_password, $seller->password)) {
-            $seller->update([
-                'password' => Hash::make($request->password)
-            ]);
-            return response()->json([
-                'message' => 'Password changed'
-            ], 200);
-        } else {
-            return response()->json([
-                'message' => 'Old password does not match'
-            ], 400);
+        if ($seller instanceof Seller || $seller instanceof CompanySeller) {
+            if (Hash::check($request->old_password, $seller->password)) {
+                $seller->update([
+                    'password' => Hash::make($request->password)
+                ]);
+                return response()->json([
+                    'message' => 'Password changed'
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'Old password does not match'
+                ], 400);
+            }
         }
     } // End function to change password
 
@@ -61,28 +64,35 @@ class SellerProfileController extends Controller
             ], 422);
         }
         $seller = $request->user();
-        if ($request->hasFile('profile_photo')) {
-            if ($seller->profile_photo) {
-                $old_path = public_path() . '/uploads/profile_images/' . $seller->profile_photo;
-                if (File::exists($old_path)) {
-                    File::delete($old_path);
+        if ($seller instanceof Seller || $seller instanceof CompanySeller) {
+            if ($request->hasFile('profile_photo')) {
+                if ($seller->profile_photo) {
+                    $old_path = public_path() . '/uploads/profile_images/' . $seller->profile_photo;
+                    if (File::exists($old_path)) {
+                        File::delete($old_path);
+                    }
                 }
+                $image_name = 'profile-image-' . time() . '.' . $request->profile_photo->extension();
+                $request->profile_photo->move(public_path('/uploads/profile_images'), $image_name);
+
+                $seller->update([
+                    'profile_photo' => $image_name
+                ]);
+
+                return response()->json([
+                    'message' => 'Profile Picture successfully updated',
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'No profile photo uploaded',
+                ], 400);
             }
-            $image_name = 'profile-image-' . time() . '.' . $request->profile_photo->extension();
-            $request->profile_photo->move(public_path('/uploads/profile_images'), $image_name);
         } else {
-            $image_name = $seller->profile_photo;
+            return response()->json([
+                'message' => 'Seller not found',
+            ], 404);
         }
-
-        $seller->update([
-            'profile_photo' => $image_name
-
-        ]);
-        return response()->json([
-            'message' => 'Profile Picture successfully updated',
-
-        ], 200);
-    } // End profile update function
+    }
 
 
     //Begin update account settings function
@@ -137,33 +147,39 @@ class SellerProfileController extends Controller
 
             $seller = $request->user();
 
-            // If validation fails, return error response
-
-
-            // Find the buyer in the database
-            //$seller = Seller::findOrFail($request->sellerId);
-            $seller = Seller::where('sellerId', $sellerId)->first();
-
-            // Check if the buyer has a profile picture
-            if (!empty($seller->profile_photo)) {
-                // Delete the profile picture from the filesystem
-                $imagePath = public_path('/uploads/profile_images/' . $seller->profile_photo);
-                if (File::exists($imagePath)) {
-                    File::delete($imagePath);
+            if ($seller instanceof Seller || $seller instanceof CompanySeller) {
+                // Find the buyer in the respective model
+                if ($seller instanceof Seller) {
+                    $seller = Seller::where('sellerId', $sellerId)->first();
+                } else {
+                    $seller = CompanySeller::where('companySellerId', $sellerId)->first();
                 }
 
-                // Update the buyer's profile picture field to null
-                $seller->profile_photo = null;
-                $seller->save();
+                // Check if the buyer has a profile picture
+                if ($seller && !empty($seller->profile_photo)) {
+                    // Delete the profile picture from the filesystem
+                    $imagePath = public_path('/uploads/profile_images/' . $seller->profile_photo);
+                    if (File::exists($imagePath)) {
+                        File::delete($imagePath);
+                    }
+
+                    // Update the buyer's profile picture field to null
+                    $seller->profile_photo = null;
+                    $seller->save();
 
 
-                return response()->json([
-                    'message' => 'Profile picture deleted successfully.',
-                ], 200);
+                    return response()->json([
+                        'message' => 'Profile picture deleted successfully.',
+                    ], 200);
+                } else {
+                    return response()->json([
+                        'message' => 'no profile picture found for this Seller',
+                    ], 400);
+                }
             } else {
                 return response()->json([
-                    'message' => 'no profile picture found for this Seller',
-                ], 400);
+                    'message' => 'Seller not found.',
+                ], 404);
             }
         } catch (\Exception $e) {
             // Handle any exceptions that occur during the deletion process
@@ -177,140 +193,66 @@ class SellerProfileController extends Controller
     public function getSellerProfile(Request $request, $sellerId)
     {
         try {
-            // Retrieve the seller by ID
-            //$seller = Seller::findOrFail($sellerId);
+            $authenticatedSeller = $request->user();
+
+            // Check if the authenticated user is the one being requested
+            if (!($authenticatedSeller->sellerId == $sellerId || $authenticatedSeller->companySellerId == $sellerId)) {
+                return response()->json([
+                    'message' => 'Unauthorized access.',
+                ], 403);
+            }
+
+            // Find the seller in the Seller or CompanySeller models
             $seller = Seller::where('sellerId', $sellerId)->first();
+            if (!$seller) {
+                $seller = CompanySeller::where('companySellerId', $sellerId)->first();
+            }
 
-            // Return seller information along with profile picture
-            $profile_picture = asset('uploads/profile_images/' . $seller->profile_photo);
+            if ($seller) {
+                // Get the profile picture URL
+                $profile_picture = asset('uploads/profile_images/' . $seller->profile_photo);
 
-            return response()->json([
-                'message' => 'Seller profile found.',
-                'data' => [
-                    'seller' => $seller,
-                    'profile_picture' => $profile_picture
-                ]
-            ], 200);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // Handle the case when the seller is not found
-            return response()->json([
-                'message' => 'Error: Seller not found with ID ' . $sellerId,
-            ], 404);
+                return response()->json([
+                    'message' => 'Seller profile found.',
+                    'data' => [
+                        'seller' => $seller,
+                        'profile_picture' => $profile_picture
+                    ]
+                ], 200);
+            } else {
+                // If the seller is not found, return an error message
+                return response()->json([
+                    'message' => 'Seller not found.',
+                ], 404);
+            }
         } catch (\Exception $e) {
-            // Handle any other exceptions that may occur
+            // Handle any exceptions that occur
             return response()->json([
-                'message' => 'Error: Something went wrong.',
-                'error' => $e->getMessage()
+                'message' => 'Error retrieving seller profile.',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
 
-    /* public function addBankAccount(Request $request)
-    {
-        // Get the authenticated seller's ID
-        $sellerId = auth()->user()->sellerId;
-
-       
-
-        $validator = Validator::make($request->all(), [
-            'account_name' => 'required|min:2|max:100',
-            'account_number' => 'required|min:2|max:100',
-            'bank_name' => 'required|min:2|max:100'
-
-
-        ]);
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validations fails',
-                'error' => $validator->errors()
-            ], 422);
-        }
-
-        
-        // Save OTP in the seller's record for verification
-        $seller = Seller::where('sellerId', $sellerId)->first();
-        // $seller = Seller::find($sellerId);
-        //$seller->verification_code = $otp;
-        $seller->save();
-
-        // Send OTP to seller's email
-        Mail::to($seller->email)->send(new addBankAccountEmail($seller, $seller->firstname));
-
-        return response()->json([
-            'message' => 'Account saved.',
-        ], 200);
-    }
-
-    public function verifyBankAccount(Request $request)
-    {
-        // Get the authenticated seller's ID
-        $sellerId = auth()->user()->sellerId;
-
-        // Find the seller by ID
-        $seller = Seller::where('sellerId', $sellerId)->first();
-
-        // Check if seller exists
-        if (!$seller) {
-            return response()->json([
-                'message' => 'Seller not found.',
-            ], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'account_name' => 'required|min:2|max:100',
-            'account_number' => 'required|min:2|max:100',
-            'bank_name' => 'required|min:2|max:100'
-
-
-        ]);
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validations fails',
-                'error' => $validator->errors()
-            ], 422);
-        }
-
-
-        // Verify OTP
-        if ($request->otp != $seller->verification_code) {
-            return response()->json([
-                'message' => 'Invalid OTP. Please try again.',
-            ], 400);
-        }
-
-        // Update seller's bank account information
-        $seller->account_name = $request->account_name;
-        $seller->account_number = $request->account_number;
-        $seller->bank_name = $request->bank_name;
-        $seller->save();
-
-        // Clear OTP after successful verification
-        $seller->verification_code = null;
-        $seller->save();
-
-
-        Mail::to($seller->email)->send(new bankAccountSavedEmail($seller, $seller->firstname));
-        return response()->json([
-            'message' => 'Bank account information successfully added.',
-            'data' => $seller
-        ], 200);
-    }*/
-
     public function addBankAccount(Request $request)
     {
         // Get the authenticated seller's ID
-        $sellerId = auth()->user()->sellerId;
+       // Get the authenticated user's ID
+    $authenticatedUser = auth()->user();
 
-        // Retrieve the authenticated seller
-        $seller = Seller::where('sellerId', $sellerId)->first();
+    // Determine if the user is an individual seller or a company seller
+    $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+    if (!$seller) {
+        $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+    }
 
-        // Ensure the seller exists
-        if (!$seller) {
-            return response()->json([
-                'message' => 'Seller not found.',
-            ], 404);
-        }
+    // Ensure the seller exists
+    if (!$seller) {
+        return response()->json([
+            'message' => 'Seller not found.',
+        ], 404);
+    }
 
         // Validate the request data
         $validator = Validator::make($request->all(), [
@@ -328,11 +270,12 @@ class SellerProfileController extends Controller
         }
 
         // Extract first name and last name from seller's account
-        $sellerFirstName = $seller->firstname;
-        $sellerLastName = $seller->lastname;
+    if ($seller instanceof Seller) {
+        $sellerFullName = $seller->firstname . ' ' . $seller->lastname;
+    } else {
+        $sellerFullName = $seller->companyname;
+    }
 
-        // Concatenate first name and last name
-        $sellerFullName = $sellerFirstName . ' ' . $sellerLastName;
 
         // Check if the entered account name matches the seller's full name
         if ($request->account_name !== $sellerFullName) {
@@ -640,7 +583,7 @@ class SellerProfileController extends Controller
         try {
             // Retrieve the authenticated user's ID
             $authenticatedSellerId = Auth::user()->sellerId;
-    
+
             // Ensure that the user is logged in and matches the requested buyer ID
             if (!$authenticatedSellerId || $authenticatedSellerId != $sellerId) {
                 return response()->json([
@@ -648,10 +591,10 @@ class SellerProfileController extends Controller
                     'message' => 'Buyer not authenticated or mismatched buyer ID.',
                 ], 401);
             }
-    
+
             // Find the buyer in the database
             $seller = Seller::where('sellerId', $sellerId)->first();
-    
+
             // Check if the buyer exists
             if (!$seller) {
                 return response()->json([
@@ -659,7 +602,7 @@ class SellerProfileController extends Controller
                     'message' => 'Buyer not found.',
                 ], 404);
             }
-    
+
             // Delete the profile picture from the filesystem if it exists
             if (!empty($seller->profile_photo)) {
                 $imagePath = public_path('/uploads/profile_images/' . $seller->profile_photo);
@@ -667,12 +610,12 @@ class SellerProfileController extends Controller
                     File::delete($imagePath);
                 }
             }
-    
+
             // Delete any other associated data if needed (e.g., orders, cart items)
-    
+
             // Delete the buyer's account
             $seller->delete();
-    
+
             return response()->json([
                 'status' => true,
                 'message' => 'Buyer account deleted successfully.',
