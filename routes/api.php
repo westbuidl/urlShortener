@@ -96,10 +96,10 @@ Route::get('/deleteSellerAccount/{sellerId}', [SellerProfileController::class, '
 //---Begin Api routes for CompanyBuyer --//
 Route::post('/companyBuyerSignup', [CompanyBuyerController::class, 'companyBuyerSignup'])->name('companyBuyerSignup');//creating account for business
 Route::post('/companyBuyerLogin', [CompanyBuyerController::class, 'companyBuyerLogin'])->name('companyBuyerLogin');//business account login
-Route::post('/companyBuyerLogout', [CompanyBuyerController::class, 'companyBuyerLogout'])->middleware('auth:sanctum')->name('companyBuyerLogout');//
-Route::post('/companyBuyerChangePassword', [CompanyBuyerController::class, 'companyBuyerChangePassword'])->middleware('auth:sanctum')->name('companyBuyerChangePassword');//change password endpoint for sellers
-Route::delete('/deleteCompanyBuyerProfilePicture/{companyBuyerId}', [CompanyBuyerController::class, 'deleteCompanyBuyerProfilePicture'])->middleware('auth:sanctum')->name('deleteCompanyBuyerProfilePicture');//profile image update endpoint
-Route::post('/updateCompanyBuyerProfilePicture', [CompanyBuyerController::class, 'updateCompanyBuyerProfilePicture'])->middleware('auth:sanctum')->name('updateCompanyBuyerProfilePicture');// seller profile image update endpoint 
+//Route::post('/companyBuyerLogout', [CompanyBuyerController::class, 'companyBuyerLogout'])->middleware('auth:sanctum')->name('companyBuyerLogout');//
+//Route::post('/companyBuyerChangePassword', [CompanyBuyerController::class, 'companyBuyerChangePassword'])->middleware('auth:sanctum')->name('companyBuyerChangePassword');//change password endpoint for sellers
+//Route::delete('/deleteCompanyBuyerProfilePicture/{companyBuyerId}', [CompanyBuyerController::class, 'deleteCompanyBuyerProfilePicture'])->middleware('auth:sanctum')->name('deleteCompanyBuyerProfilePicture');//profile image update endpoint
+//Route::post('/updateCompanyBuyerProfilePicture', [CompanyBuyerController::class, 'updateCompanyBuyerProfilePicture'])->middleware('auth:sanctum')->name('updateCompanyBuyerProfilePicture');// seller profile image update endpoint 
 Route::post('/updateCompanyBuyerAccountDetails', [CompanyBuyerController::class, 'updateCompanyBuyerAccountDetails'])->middleware('auth:sanctum')->name('updateCompanyBuyerAccountDetails');//profile update endpoint for sellers
 Route::post('/companyBuyerResetPassword', [CompanyBuyerController::class, 'companyBuyerResetPassword'])->name('companyBuyerResetPassword');//resend verification code
 Route::post('/companyBuyerVerifyMail', [CompanyBuyerController::class, 'companyBuyerVerifyMail'])->name('companyBuyerVerifyMail');//send verification email for business account setup

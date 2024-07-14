@@ -445,36 +445,29 @@ class CartController extends Controller
 
 
             // Check which buyer type is authenticated and validate the buyer ID
-            if ($individualBuyer) {
-                if ($individualBuyer->buyerId != $buyerId) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Buyer ID does not match the authenticated individual buyer.',
-                    ], 401);
-                }
-                $buyerType = 'individual';
-                $buyerFirstName = $authenticatedBuyerId->firstname;
-                $buyerLastName = $authenticatedBuyerId->lastname;
-                $billing_address = $authenticatedBuyerId->city . ', ' . $authenticatedBuyerId->state . ', ' . $authenticatedBuyerId->country . ', ' . $authenticatedBuyerId->zipcode;
-                $phone_number = $authenticatedBuyerId->phone_number;
-            } elseif ($companyBuyer) {
-                if ($companyBuyer->companyBuyerId != $buyerId) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Buyer ID does not match the authenticated company buyer.',
-                    ], 401);
-                }
-                $buyerType = 'company';
-                $buyerFirstName = $companyBuyer->companyname; // Assuming company buyer has a companyName field
-                $buyerLastName = ''; // Company buyers might not have a last name
-                $billing_address = $companyBuyer->city . ', ' . $companyBuyer->state . ', ' . $companyBuyer->country . ', ' . $companyBuyer->zipcode;
-                $phone_number = $companyBuyer->companyphone;
-            } else {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Invalid buyer type.',
-                ], 400);
-            }
+                    // Check which buyer type is authenticated and validate the buyer ID
+        if ($individualBuyer && $individualBuyer->buyerId == $buyerId) {
+            $buyerType = 'individual';
+            $buyerFirstName = $individualBuyer->firstname;
+            $buyerLastName = $individualBuyer->lastname;
+            $billing_address = $individualBuyer->city . ', ' . $individualBuyer->state . ', ' . $individualBuyer->country . ', ' . $individualBuyer->zipcode;
+            $phone_number = $individualBuyer->phone_number;
+            $email = $individualBuyer->email;
+        } elseif ($companyBuyer && $companyBuyer->companyBuyerId == $buyerId) {
+            $buyerType = 'company';
+            $buyerFirstName = $companyBuyer->companyname; // Assuming company buyer has a companyName field
+            $buyerLastName = ''; // Company buyers might not have a last name
+            $billing_address = $companyBuyer->city . ', ' . $companyBuyer->state . ', ' . $companyBuyer->country . ', ' . $companyBuyer->zipcode;
+            $phone_number = $companyBuyer->companyphone;
+            $email = $companyBuyer->companyemail;
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Buyer ID does not match the authenticated buyer.',
+            ], 401);
+        }
+
+
 
 
             /* $buyer = Buyer::where('buyerId', $buyerId)->first();
@@ -524,7 +517,7 @@ class CartController extends Controller
             // Proceed with payment initialization based on the selected payment method
             if ($paymentMethod === 'paystack') {
                 // Initialize payment using Paystack
-                $initializeResponse = $this->initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $shippingFee, $buyerFirstName, $buyerLastName, $billing_address, $phone_number);
+                $initializeResponse = $this->initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $shippingFee, $buyerFirstName, $buyerLastName, $billing_address, $phone_number,$email);
             } elseif ($paymentMethod === 'flutterwave') {
                 // Initialize payment using PayPal (you would implement this method)
                 $initializeResponse = $this->initialize_payOnDelivery($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address);
@@ -752,7 +745,7 @@ class CartController extends Controller
 
     private $initialize_url = "https://api.paystack.co/transaction/initialize";
 
-    public function initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $shippingFee, $buyerFirstName, $buyerLastName, $billing_address, $phone_number)
+    public function initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $shippingFee, $buyerFirstName, $buyerLastName, $billing_address, $phone_number,$email)
     {
         //$product_name = $cartItems->product_name;
         $totalPrice = $cartItems->sum('total_price') + $shippingFee;
@@ -771,7 +764,7 @@ class CartController extends Controller
             'shippingFee' => $shippingFee,
         ];
         $data = array(
-            'email' => Auth::user()->email,
+            'email' => $email,
             'amount' => $totalPrice * 100,
             'currency' => 'NGN',
 

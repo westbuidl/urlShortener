@@ -12,6 +12,7 @@ use App\Mail\ProductAddEmail;
 use App\Mail\productRestockEmail;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\CompanySeller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
@@ -103,6 +104,24 @@ class ProductController extends Controller
             //$productId = IdGenerator::generate($config);
             //$productId = IdGenerator::generate(['products' => 'products', 'length' => 10, 'prefix' =>'AGN-']);
 
+            // Check if the user is an individual buyer
+            $individualSeller = Seller::where('sellerId', $seller->sellerId)->first();
+            $companySeller = CompanySeller::where('companySellerId', $seller->companySellerId)->first();
+
+            // Determine the buyer type and ID
+            if ($individualSeller) {
+                $sellerId = $individualSeller->sellerId;
+                $sellerType = 'individual';
+            } elseif ($companySeller) {
+                $sellerId = $companySeller->companySellerId;
+                $sellerType = 'company';
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid buyer type.',
+                ], 400);
+            }
+
             $product = Product::create([
 
                 //str_rand(6 only digit)->unique;
@@ -111,7 +130,7 @@ class ProductController extends Controller
 
 
                 'productId' => $productId,
-                'sellerId' => $request->user()->sellerId,
+                'sellerId' => $sellerId,
                 'product_name' => $request->product_name,
                 'product_category' => $request->product_category,
                 'categoryID' => $categoryID,
@@ -456,11 +475,41 @@ class ProductController extends Controller
             }
 
             // Check if the authenticated user is the owner of the product
-            if ($request->user()->userID != $product->user_id) {
+           /* if ($request->user()->userID != $product->user_id) {
+                return response()->json([
+                    'message' => 'You are not authorized to delete this product',
+                ], 403);
+            }*/
+
+                // Determine seller type and check ownership
+        $seller = $request->user();
+
+            $individualSeller = Seller::where('sellerId', $seller->sellerId)->first();
+            $companySeller = CompanySeller::where('companySellerId', $seller->companySellerId)->first();
+
+        if ($individualSeller) {
+            // Check if the authenticated individual seller is the owner of the product
+            if ($seller->sellerId != $product->sellerId) {
                 return response()->json([
                     'message' => 'You are not authorized to delete this product',
                 ], 403);
             }
+        } elseif ($companySeller) {
+            // Check if the authenticated company seller is the owner of the product
+            if ($seller->companySellerId != $product->sellerId) {
+                return response()->json([
+                    'message' => 'You are not authorized to delete this product',
+                ], 403);
+            }
+        } else {
+            return response()->json([
+                'message' => 'Invalid seller type',
+            ], 400);
+        }
+
+
+
+
 
             // Check if the product has associated images
             if (!empty($product->product_image)) {

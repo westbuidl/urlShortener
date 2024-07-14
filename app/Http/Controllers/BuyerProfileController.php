@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Buyer;
+use App\Models\CompanyBuyer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -27,7 +28,8 @@ class BuyerProfileController extends Controller
             ], 422);
         }
         $buyer = $request->user();
-        if (Hash::check($request->old_password, $buyer->password)) {
+        if ($buyer instanceof Buyer || $buyer instanceof CompanyBuyer){
+            if (Hash::check($request->old_password, $buyer->password)) {
             $buyer->update([
                 'password' => Hash::make($request->password)
             ]);
@@ -40,44 +42,58 @@ class BuyerProfileController extends Controller
             ], 400);
         }
     } // End function to change password
-
+    }
     // Begin profile picture update function
+    
     public function updateBuyerProfilePicture(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'profile_photo' => 'required|image|mimes:jpg,png,bmp|max:1024',
-
         ]);
+    
         if ($validator->fails()) {
             return response()->json([
-                'message' => 'validations fails',
+                'message' => 'Validations failed',
                 'errors' => $validator->errors()
             ], 422);
         }
+    
         $buyer = $request->user();
-        if ($request->hasFile('profile_photo')) {
-            if ($buyer->profile_photo) {
-                $old_path = public_path() . '/uploads/profile_images/' . $buyer->profile_photo;
-                if (File::exists($old_path)) {
-                    File::delete($old_path);
+    
+        if ($buyer instanceof Buyer || $buyer instanceof CompanyBuyer) {
+            if ($request->hasFile('profile_photo')) {
+                // Delete old profile photo if it exists
+                if ($buyer->profile_photo) {
+                    $old_path = public_path('/uploads/profile_images/' . $buyer->profile_photo);
+                    if (File::exists($old_path)) {
+                        File::delete($old_path);
+                    }
                 }
+    
+                // Save new profile photo
+                $image_name = 'profile-image-' . time() . '.' . $request->profile_photo->extension();
+                $request->profile_photo->move(public_path('/uploads/profile_images'), $image_name);
+    
+                // Update profile photo in the database
+                $buyer->update([
+                    'profile_photo' => $image_name
+                ]);
+    
+                return response()->json([
+                    'message' => 'Profile Picture successfully updated',
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'No profile photo uploaded',
+                ], 400);
             }
-            $image_name = 'profile-image-' . time() . '.' . $request->profile_photo->extension();
-            $request->profile_photo->move(public_path('/uploads/profile_images'), $image_name);
         } else {
-            $image_name = $buyer->profile_photo;
+            return response()->json([
+                'message' => 'Buyer not found',
+            ], 404);
         }
-
-        $buyer->update([
-            'profile_photo' => $image_name
-
-        ]);
-        return response()->json([
-            'message' => 'Profile Picture successfully updated',
-
-        ], 200);
-    } // End profile update function
-
+    }
+    
 
     
 
@@ -154,15 +170,17 @@ class BuyerProfileController extends Controller
 
             $buyer = $request->user();
 
-            // If validation fails, return error response
-
-
-            // Find the buyer in the database
-            //$buyer = Buyer::findOrFail($request->buyerId);
-            $buyer = Buyer::where('buyerId', $buyerId)->first();
+            // Check if the buyer is an instance of Buyer or CompanyBuyer
+        if ($buyer instanceof Buyer || $buyer instanceof CompanyBuyer) {
+            // Find the buyer in the respective model
+            if ($buyer instanceof Buyer) {
+                $buyer = Buyer::where('buyerId', $buyerId)->first();
+            } else {
+                $buyer = CompanyBuyer::where('companyBuyerId', $buyerId)->first();
+            }
 
             // Check if the buyer has a profile picture
-            if (!empty($buyer->profile_photo)) {
+            if ($buyer && !empty($buyer->profile_photo)) {
                 // Delete the profile picture from the filesystem
                 $imagePath = public_path('/uploads/profile_images/' . $buyer->profile_photo);
                 if (File::exists($imagePath)) {
@@ -182,6 +200,11 @@ class BuyerProfileController extends Controller
                     'message' => 'no profile picture found for this buyer',
                 ], 400);
             }
+        } else {
+            return response()->json([
+                'message' => 'Buyer not found.',
+            ], 404);
+        }
         } catch (\Exception $e) {
             // Handle any exceptions that occur during the deletion process
             return response()->json([
@@ -194,13 +217,24 @@ class BuyerProfileController extends Controller
 
     public function getBuyerProfile(Request $request, $buyerId)
     {
-        // Retrieve the authenticated user
-        // $user = $request->user();
-        //$buyer = Buyer::find($buyerId);
+
+
+        // Get the authenticated user
+    $authenticatedBuyer = $request->user();
+
+    // Check if the authenticated user is the one being requested
+    if ($authenticatedBuyer->buyerId != $buyerId && $authenticatedBuyer->companyBuyerId != $buyerId) {
+        return response()->json([
+            'message' => 'Unauthorized access.',
+        ], 403);
+    }
+        
         $buyer = Buyer::where('buyerId', $buyerId)->first();
 
-        // Check if the user exists
-        //if ($user && $user->id == $userID) 
+        if (!$buyer) {
+            $buyer = CompanyBuyer::where('companyBuyerId', $buyerId)->first();
+        }
+
         if ($buyer) {
             // Return user information along with profile picture
             $profile_picture = asset('uploads/profile_images/' . $buyer->profile_photo);
@@ -275,57 +309,5 @@ class BuyerProfileController extends Controller
 
 
 
-    /* public function delete_buyerprofilepicture(Request $request)
-    {
-        try {
-            // Validate request inputs
-            $validator = Validator::make($request->all(), [
-                'buyer_id' => 'required|exists:individual_accounts,id',
-            ]);
-
-            // If validation fails, return error response
-            if ($validator->fails()) {
-                return response()->json([
-                    'message' => 'buyer not found.',
-                    'error' => $validator->errors()->first(),
-                ], 400);
-            }
-
-            // Get the authenticated buyer
-            $authenticatedbuyer = $request->user();
-
-            // Find the buyer in the database by buyer ID
-            $buyer = Buyer::findOrFail($request->buyer_id);
-
-            // Check if the authenticated buyer is the owner of the profile picture
-            if ($authenticatedbuyer->id !== $buyer->id) {
-                return response()->json([
-                    'message' => 'You are not authorized to delete this profile picture.',
-                ], 403);
-            }
-
-            // Check if the buyer has a profile picture
-            if (!empty($buyer->profile_photo)) {
-                // Delete the profile picture from the filesystem
-                $imagePath = public_path('/uploads/profile_images/' . $buyer->profile_photo);
-                if (File::exists($imagePath)) {
-                    File::delete($imagePath);
-                }
-
-                // Update the buyer's profile picture field to null
-                $buyer->profile_photo = null;
-                $buyer->save();
-            }
-
-            return response()->json([
-                'message' => 'Profile picture deleted successfully.',
-            ], 200);
-        } catch (\Exception $e) {
-            // Handle any exceptions that occur during the deletion process
-            return response()->json([
-                'message' => 'Error deleting profile picture.',
-                'error' => $e->getMessage(), // Include the error message for debugging
-            ], 500);
-        }
-    }*/
+   
 }

@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Buyer;
 use Illuminate\Support\Str;
+use App\Models\CompanyBuyer;
 use Illuminate\Http\Request;
 use App\Mail\buyerSignupEmail;
 use Illuminate\Support\Carbon;
 use App\Mail\buyerEmailVerified;
 use App\Mail\PasswordResetEmail;
+use App\Mail\resendBuyerEmailAuth;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Hash;
@@ -17,7 +19,6 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\buyerPasswordResetEmail;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\MailController;
-use App\Mail\resendBuyerEmailAuth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Validator;
@@ -183,12 +184,43 @@ class BuyerController extends Controller
                     'message' => 'Email not verified. Please verify your email first.',
                 ], 400);
             }
+
+            // Check if the email exists in the CompanyBuyer model
+    $companyBuyer = CompanyBuyer::where('companyemail', $request->email)->first();
+
+    if ($companyBuyer) {
+        if ($companyBuyer->email_verified_at) {
+            if (Hash::check($request->password, $companyBuyer->password)) {
+                $token = $companyBuyer->createToken('auth-token')->plainTextToken;
+                // Store user ID in session
+                session(['companyBuyerId' => $companyBuyer->companyBuyerId]);
+                session(['email' => $companyBuyer->companyemail]);
+
+                return response()->json([
+                    'message' => 'Login Successful',
+                    'token' => $token,
+                    'data' => $companyBuyer,
+                    'type' => 'company',
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'Incorrect Credentials',
+                ], 400);
+            }
+        } else {
+            return response()->json([
+                'message' => 'Email not verified. Please verify your email first.',
+            ], 400);
+        }
+    }
+
         } else {
             return response()->json([
                 'message' => 'Incorrect Credentials',
             ], 400);
         }
     }
+    
     //function to fetch user data with bearer tokens
     public function buyer(Request $request)
     {
@@ -198,29 +230,7 @@ class BuyerController extends Controller
         ], 200);
     }
 
-    //function to logout
-    /* public function logout(Request $request)
-{
-    $request->user()->tokens()->delete();
-
-    // Remove user ID from session if you're also using session-based authentication
-    // $request->session()->forget('user_id');
-
-    return response()->json([
-        'message' => 'User logged out successfully.',
-    ], 200);
-} */
-
-
-    /*public function logout(Request $request)
-    {
-        $request->user()->tokens()->delete();
-
-        return response()->json([
-            'message' => 'User logged out',
-
-        ], 200);
-    }*/
+   
 
     public function buyerLogout(Request $request)
 {
@@ -233,13 +243,18 @@ class BuyerController extends Controller
     // Find the buyer using the BuyerId
     //$buyer = Buyer::where('buyerId', $buyer->buyerId)->first();
 
-    if ($buyer) {
+    if ($buyer instanceof Buyer) {
         // Revoke all tokens for the buyer
         $buyer->tokens()->delete();
 
         return response()->json([
-            'message' => 'Buyer logged out successfully',
+            'message' => 'Individual logged out successfully',
         ], 200);
+    }elseif ($buyer instanceof CompanyBuyer){
+            $buyer->tokens()->delete();
+            return response()->json([
+                'message' => 'Company buyer logged out successfully',
+            ], 200);
     } else {
         return response()->json([
             'message' => 'Buyer not found',
@@ -285,14 +300,6 @@ class BuyerController extends Controller
         ], 200);
     }
 
-
-    //function to get user profile
-    
-
-
-
-
-    //End function to get user profile
 
 
 
