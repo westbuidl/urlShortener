@@ -25,6 +25,11 @@ class CompanySeller extends Model
         'zipcode',
         'password',
         'profile_photo',
-        'verification_code'
+        'verification_code',
+        'account_name',
+        'account_number',
+        'bank_name',
+        'accrued_profit',
+        'platform_fee'
     ];
 }

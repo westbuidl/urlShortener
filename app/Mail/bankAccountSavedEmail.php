@@ -13,15 +13,15 @@ class bankAccountSavedEmail extends Mailable
 {
     use Queueable, SerializesModels;
     public $seller;
-    public $firstname;
+    public $name;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($seller, $firstname)
+    public function __construct($seller, $name)
     {
         $this->seller = $seller;
-        $this->firstname = $firstname;
+        $this->name = $name;
         //$this->business = $business;
         //
     }
@@ -34,7 +34,7 @@ class bankAccountSavedEmail extends Mailable
     {
        
         return new Envelope(
-            subject: 'Hello'.'  '.$this->firstname . '  '.'your bank details is saved.' 
+            subject: 'Hello'.'  '.$this->name . '  '.'your bank details is saved.' 
         );
     }
 

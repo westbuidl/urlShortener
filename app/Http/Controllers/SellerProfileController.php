@@ -238,21 +238,21 @@ class SellerProfileController extends Controller
     public function addBankAccount(Request $request)
     {
         // Get the authenticated seller's ID
-       // Get the authenticated user's ID
-    $authenticatedUser = auth()->user();
+        // Get the authenticated user's ID
+        $authenticatedUser = auth()->user();
 
-    // Determine if the user is an individual seller or a company seller
-    $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
-    if (!$seller) {
-        $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
-    }
+        // Determine if the user is an individual seller or a company seller
+        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+        if (!$seller) {
+            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+        }
 
-    // Ensure the seller exists
-    if (!$seller) {
-        return response()->json([
-            'message' => 'Seller not found.',
-        ], 404);
-    }
+        // Ensure the seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
 
         // Validate the request data
         $validator = Validator::make($request->all(), [
@@ -270,11 +270,15 @@ class SellerProfileController extends Controller
         }
 
         // Extract first name and last name from seller's account
-    if ($seller instanceof Seller) {
-        $sellerFullName = $seller->firstname . ' ' . $seller->lastname;
-    } else {
-        $sellerFullName = $seller->companyname;
-    }
+        if ($seller instanceof Seller) {
+            $sellerFullName = $seller->firstname . ' ' . $seller->lastname;
+            $email = $seller->email;
+            $name = $seller->firstname;
+        } else {
+            $sellerFullName = $seller->companyname;
+            $email = $seller->companyemail;
+            $name = $seller->companyname;
+        }
 
 
         // Check if the entered account name matches the seller's full name
@@ -295,7 +299,7 @@ class SellerProfileController extends Controller
         $seller->save();
 
 
-        Mail::to($seller->email)->send(new bankAccountSavedEmail($seller, $seller->firstname));
+        Mail::to($email)->send(new bankAccountSavedEmail($seller, $name));
         return response()->json([
             'message' => 'Bank account information successfully added.',
             'data' => $seller
@@ -305,11 +309,13 @@ class SellerProfileController extends Controller
     public function getBankAccountDetails(Request $request)
     {
         // Get the authenticated seller's ID
-        $sellerId = auth()->user()->sellerId;
+        $authenticatedUser = auth()->user();
 
-        // Find the seller by ID
-        //$seller = Seller::find($sellerId);
-        $seller = Seller::where('sellerId', $sellerId)->first();
+        // Determine if the user is an individual seller or a company seller
+        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+        if (!$seller) {
+            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+        }
 
         // Check if seller exists
         if (!$seller) {
@@ -342,10 +348,14 @@ class SellerProfileController extends Controller
     public function getRecentSales(Request $request)
     {
         // Get the authenticated seller
-        $sellerId = auth()->user()->sellerId;
+        // Get the authenticated user's ID
+        $authenticatedUser = auth()->user();
 
-        // Check if the user is authenticated and is a seller
-        $seller = Seller::where('sellerId', $sellerId)->first();
+        // Determine if the user is an individual seller or a company seller
+        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+        if (!$seller) {
+            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+        }
 
         // Ensure the seller exists
         if (!$seller) {
@@ -355,7 +365,8 @@ class SellerProfileController extends Controller
         }
 
         // Fetch recent sales (last 10 orders) for the authenticated seller
-        $recentSales = Order::where('sellerId', $sellerId)
+        $recentSales = Order::where('sellerId', $authenticatedUser->sellerId)
+            ->orWhere('companySellerId', $authenticatedUser->companySellerId)
             ->orderBy('created_at', 'desc')
             ->take(10)
             ->get();
@@ -397,10 +408,14 @@ class SellerProfileController extends Controller
     public function getAllSales(Request $request)
     {
         // Get the authenticated seller
-        $sellerId = auth()->user()->sellerId;
+        $authenticatedUser = auth()->user();
 
-        // Check if the user is authenticated and is a seller
-        $seller = Seller::where('sellerId', $sellerId)->first();
+        // Determine if the user is an individual seller or a company seller
+        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+        if (!$seller) {
+            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+        }
+
 
         // Ensure the seller exists
         if (!$seller) {
@@ -410,7 +425,8 @@ class SellerProfileController extends Controller
         }
 
         // Fetch all sales for the authenticated seller
-        $allSales = Order::where('sellerId', $sellerId)
+        $allSales = Order::where('sellerId', $authenticatedUser->sellerId)
+            ->orWhere('companySellerId', $authenticatedUser->companySellerId)
             ->orderBy('created_at', 'desc')
             ->get();
         //$TotalSales = Order::where('sellerId', $sellerId)->get();
@@ -423,7 +439,9 @@ class SellerProfileController extends Controller
         $pendingSales = $allSales->where('status', 'pending')->count();
 
         // Fetch the total number of products uploaded by the seller
-        $totalProducts = Product::where('sellerId', $sellerId)->count();
+        $totalProducts = Product::where('sellerId', $authenticatedUser->sellerId)
+            ->orWhere('companySellerId', $authenticatedUser->companySellerId)
+            ->count();
 
 
         // Prepare the sales data with product images
@@ -474,10 +492,14 @@ class SellerProfileController extends Controller
     public function getSaleDetails(Request $request, $orderId)
     {
         // Get the authenticated seller
-        $sellerId = auth()->user()->sellerId;
+        $authenticatedUser = auth()->user();
 
-        // Check if the user is authenticated and is a seller
-        $seller = Seller::where('sellerId', $sellerId)->first();
+        // Determine if the user is an individual seller or a company seller
+        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+        if (!$seller) {
+            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+        }
+
 
         // Ensure the seller exists
         if (!$seller) {
@@ -487,9 +509,13 @@ class SellerProfileController extends Controller
         }
 
         // Fetch all sale details for the given orderId and authenticated seller
-        $orders = Order::where('sellerId', $sellerId)
+        $orders = Order::where(function ($query) use ($authenticatedUser) {
+            $query->where('sellerId', $authenticatedUser->sellerId)
+                ->orWhere('companySellerId', $authenticatedUser->companySellerId);
+        })
             ->where('orderId', $orderId)
             ->get();
+
 
         // Ensure orders exist
         if ($orders->isEmpty()) {
@@ -531,10 +557,13 @@ class SellerProfileController extends Controller
     public function getTopSellingProducts(Request $request)
     {
         // Get the authenticated seller
-        $sellerId = auth()->user()->sellerId;
+        $authenticatedUser = auth()->user();
 
-        // Check if the user is authenticated and is a seller
-        $seller = Seller::where('sellerId', $sellerId)->first();
+        // Determine if the user is an individual seller or a company seller
+        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+        if (!$seller) {
+            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+        }
 
         // Ensure the seller exists
         if (!$seller) {
@@ -542,6 +571,10 @@ class SellerProfileController extends Controller
                 'message' => 'Seller not found.',
             ], 404);
         }
+
+        // Determine the sellerId to use for querying orders
+        $sellerId = $seller instanceof Seller ? $authenticatedUser->sellerId : $authenticatedUser->companySellerId;
+
 
         // Aggregate sales data based on products
         $topSellingProducts = Order::where('sellerId', $sellerId)
@@ -581,31 +614,40 @@ class SellerProfileController extends Controller
     public function deleteSellerAccount(Request $request, $sellerId)
     {
         try {
-            // Retrieve the authenticated user's ID
-            $authenticatedSellerId = Auth::user()->sellerId;
+            // Retrieve the authenticated user's details
+            $authenticatedUser = Auth::user();
 
-            // Ensure that the user is logged in and matches the requested buyer ID
-            if (!$authenticatedSellerId || $authenticatedSellerId != $sellerId) {
+            // Determine if the user is an individual seller or a company seller
+            $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+            if (!$seller) {
+                $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+            }
+
+            // Ensure that the user is authenticated and matches the requested seller ID
+            if (!$seller || ($seller instanceof Seller && $seller->sellerId != $sellerId) || ($seller instanceof CompanySeller && $seller->companySellerId != $sellerId)) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Buyer not authenticated or mismatched buyer ID.',
+                    'message' => 'Seller not authenticated or mismatched seller ID.',
                 ], 401);
             }
 
-            // Find the buyer in the database
-            $seller = Seller::where('sellerId', $sellerId)->first();
+            // Find the seller in the database
+            $sellerToDelete = Seller::where('sellerId', $sellerId)->first();
+            if (!$sellerToDelete) {
+                $sellerToDelete = CompanySeller::where('companySellerId', $sellerId)->first();
+            }
 
-            // Check if the buyer exists
-            if (!$seller) {
+            // Check if the seller exists
+            if (!$sellerToDelete) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Buyer not found.',
+                    'message' => 'Seller not found.',
                 ], 404);
             }
 
             // Delete the profile picture from the filesystem if it exists
-            if (!empty($seller->profile_photo)) {
-                $imagePath = public_path('/uploads/profile_images/' . $seller->profile_photo);
+            if (!empty($sellerToDelete->profile_photo)) {
+                $imagePath = public_path('/uploads/profile_images/' . $sellerToDelete->profile_photo);
                 if (File::exists($imagePath)) {
                     File::delete($imagePath);
                 }
@@ -613,18 +655,18 @@ class SellerProfileController extends Controller
 
             // Delete any other associated data if needed (e.g., orders, cart items)
 
-            // Delete the buyer's account
-            $seller->delete();
+            // Delete the seller's account
+            $sellerToDelete->delete();
 
             return response()->json([
                 'status' => true,
-                'message' => 'Buyer account deleted successfully.',
+                'message' => 'Seller account deleted successfully.',
             ], 200);
         } catch (\Exception $e) {
             // Handle any exceptions that occur during the deletion process
             return response()->json([
                 'status' => false,
-                'message' => 'Error deleting buyer account.',
+                'message' => 'Error deleting seller account.',
                 'error' => $e->getMessage(), // Include the error message for debugging
             ], 500);
         }
