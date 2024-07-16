@@ -58,9 +58,7 @@ class ProductController extends Controller
                 'product_description' => 'required|min:2',
                 'product_image' => 'required|array|min:2|max:5',
                 'product_image.*' => 'image|mimes:jpg,png,bmp'
-                //'product_image' => 'required|image|mimes:jpg,png,bmp'
-                //'password'=>'required|min:6|max:100',
-                //'confirm_password'=>'required|same:password'
+                
 
             ]);
             if ($validator->fails()) {
@@ -93,12 +91,7 @@ class ProductController extends Controller
             $adjustmentFactor = 1 + (0.02 / 100);
             $adjustedSellingPrice = $request->selling_price * $adjustmentFactor;
             $adjustedCostPrice = $request->cost_price * $adjustmentFactor;
-            //$product_imagename = time() . '.' . $request->product_image->extension();
-            //$request->product_image->move(public_path('/uploads/product_images'), $product_imagename);
-            // $productId = str_pad(mt_rand(1, 999999), 6, '0', STR_PAD_LEFT);
-
-            //$productId = IdGenerator::generate($config);
-            //$productId = IdGenerator::generate(['products' => 'products', 'length' => 10, 'prefix' =>'AGN-']);
+           
 
             // Check if the user is an individual buyer
             $individualSeller = Seller::where('sellerId', $seller->sellerId)->first();
@@ -107,9 +100,13 @@ class ProductController extends Controller
             // Determine the buyer type and ID
             if ($individualSeller) {
                 $sellerId = $individualSeller->sellerId;
+                $email = $individualSeller->email;
+                $firstname = $individualSeller->firstname;
                 $sellerType = 'individual';
             } elseif ($companySeller) {
                 $sellerId = $companySeller->companySellerId;
+                $email = $companySeller->companyemail;
+                $firstname = $companySeller->companyname;
                 $sellerType = 'company';
             } else {
                 return response()->json([
@@ -119,11 +116,6 @@ class ProductController extends Controller
             }
 
             $product = Product::create([
-
-                //str_rand(6 only digit)->unique;
-                //'productId' => $request->productId = str_rand(6 only digit)->unique;
-
-
 
                 'productId' => $productId,
                 'sellerId' => $sellerId,
@@ -138,8 +130,7 @@ class ProductController extends Controller
                 'product_description' => $request->product_description,
                 'product_image' => $imageName,
                 'is_active' => 1
-                //'password'=>Hash::make($request->password)
-                //'confirm_password'=>'required|same:password'
+                
 
             ]);
 
@@ -153,11 +144,9 @@ class ProductController extends Controller
             $product->image_urls = $imageURLs;
 
             $product->load('sellers:sellerId', 'products');
-            //$userEmail = IndividualAccount::find($request->user()->id)->email;
+            
 
-            // Mail::to($userEmail)->send(new ProductAddEmail($product));
-
-            Mail::to($sellerEmail)->send(new ProductAddEmail($product, $product, $firstname, $product->product_name, $product->quantityin_stock, $product->productId, $product->productWeight));
+            Mail::to($email)->send(new ProductAddEmail($product, $product, $firstname, $product->product_name, $product->quantityin_stock, $product->productId, $product->productWeight));
             return response()->json([
                 'message' => 'Product Successfully added',
                 'data' => $product
@@ -167,47 +156,54 @@ class ProductController extends Controller
 
     //Function to view products by id begin
     public function viewProductSeller(Request $request, string $productId)
-    {
-        // Find the product by its ID
+{
+    // Find the product by its ID
+    $product = Product::where('productId', $productId)->first();
 
-        //$perPage = $request->input('perPage', 10);
+    // Check if the product exists
+    if ($product) {
+        // Get the authenticated user
+        $seller = $request->user();
 
-        $product = Product::where('productId', $productId)->first();
+        // Check if the authenticated user is the owner of the product
+        $isOwner = false;
 
-        // Check if the product exists
-        if ($product) {
-            // Check if the authenticated user is the owner of the product
-            if ($request->user() && $request->user()->userID == $product->user_id) {
-                // If the user is the owner, return the product data
-
-                // Extract image URLs for the product
-                $imageURLs = [];
-                foreach (explode(',', $product->product_image) as $image) {
-                    $imageURLs[] = asset('uploads/product_images/' . $image);
-                }
-
-                // Add image URLs to the product object
-                $product->image_urls = $imageURLs;
-
-                return response()->json([
-                    'message' => 'Product found.',
-                    'data' => [
-                        'product' => $product,
-                    ]
-                ], 200);
-            } else {
-                // If the user is not the owner, return an error message
-                return response()->json([
-                    'message' => 'You are not authorized to view this product.',
-                ], 403);
-            }
-        } else {
-            // If the product is not found, return a 404 error message
-            return response()->json([
-                'message' => 'Product not found.',
-            ], 404);
+        if ($seller instanceof Seller && $seller->sellerId == $product->sellerId) {
+            $isOwner = true;
+        } elseif ($seller instanceof CompanySeller && $seller->companySellerId == $product->sellerId) {
+            $isOwner = true;
         }
-    }   //Function to view products ends   //Function to view products ends
+
+        if ($isOwner) {
+            // Extract image URLs for the product
+            $imageURLs = [];
+            foreach (explode(',', $product->product_image) as $image) {
+                $imageURLs[] = asset('uploads/product_images/' . $image);
+            }
+
+            // Add image URLs to the product object
+            $product->image_urls = $imageURLs;
+
+            return response()->json([
+                'message' => 'Product found.',
+                'data' => [
+                    'product' => $product,
+                ]
+            ], 200);
+        } else {
+            // If the user is not the owner, return an error message
+            return response()->json([
+                'message' => 'You are not authorized to view this product.',
+            ], 403);
+        }
+    } else {
+        // If the product is not found, return a 404 error message
+        return response()->json([
+            'message' => 'Product not found.',
+        ], 404);
+    }
+}
+   //Function to view products ends
 
 
 
@@ -490,54 +486,6 @@ class ProductController extends Controller
     }
 
 
-
-    /*public function deleteproduct(string $productId)
-    {
-        try {
-            // Find the product in the database
-            $product = Product::where('productId', $productId)->first();
-    
-            // Check if the product exists
-            if (!$product) {
-                return response()->json([
-                    'message' => 'Product not found',
-                ], 404);
-            }
-    
-            // Check if the product has associated images
-            if (!empty($product->product_image)) {
-                // Split the comma-separated image filenames into an array
-                $imageFilenames = explode(',', $product->product_image);
-    
-                // Delete associated images from the filesystem
-                foreach ($imageFilenames as $filename) {
-                    // Assuming images are stored in a folder named 'product_images'
-                    $imagePath = public_path('/uploads/product_images/' . $filename);
-                    if (File::exists($imagePath)) {
-                        File::delete($imagePath);
-                    }
-                }
-            }
-    
-            // Delete the product
-            $product->delete();
-    
-            return response()->json([
-                'message' => 'Product Deleted Successfully',
-            ], 200);
-        } catch (\Exception $e) {
-            // Handle any exceptions that occur during the deletion process
-            return response()->json([
-                'message' => 'Error deleting product',
-                'error' => $e->getMessage(), // Include the error message for debugging
-            ], 500);
-        }
-    } 8*/
-    // End product delete method
-
-
-
-
     //Function to edit product
     public function editProduct(Request $request, string $productId)
     {
@@ -554,20 +502,28 @@ class ProductController extends Controller
 
         // Check if the authenticated user is the owner of the product
        // Get the authenticated user
-    $user = $request->user();
+    // Get the authenticated user
+    $seller = $request->user();
 
-    // Check if the authenticated user is the owner of the product
-    $isOwner = false;
-    if ($user instanceof Seller) {
-        $isOwner = $user->sellerId == $product->sellerId;
-    } elseif ($user instanceof CompanySeller) {
-        $isOwner = $user->companySellerId == $product->companySellerId;
-    }
+    $individualSeller = Seller::where('sellerId', $seller->sellerId)->first();
+    $companySeller = CompanySeller::where('companySellerId', $seller->companySellerId)->first();
 
-    if (!$isOwner) {
+    // Determine the buyer type and ID
+    if ($individualSeller) {
+        $seller = $individualSeller->sellerId ==$product->sellerId;;
+        $email = $individualSeller->email;
+        $firstname = $individualSeller->firstname;
+        $sellerType = 'individual';
+    } elseif ($companySeller) {
+        $seller = $companySeller->companySellerId ==$product->sellerId;;
+        $email = $companySeller->companyemail;
+        $firstname = $companySeller->companyname;
+        $sellerType = 'company';
+    } else {
         return response()->json([
-            'message' => 'You are not authorized to edit this product.',
-        ], 403);
+            'status' => false,
+            'message' => 'Invalid buyer type.',
+        ], 400);
     }
 
         // Validate the request data
@@ -671,22 +627,27 @@ class ProductController extends Controller
         }
     
         // Get the authenticated user
-        $user = $request->user();
-    
-        // Check if the authenticated user is the owner of the product
-        $isOwner = false;
-        if ($user instanceof Seller) {
-            $isOwner = $user->sellerId == $product->sellerId;
-            $email = $user->email;
-        } elseif ($user instanceof CompanySeller) {
-            $isOwner = $user->companySellerId == $product->companySellerId;
-            $email = $user->companyemail;
-        }
-    
-        if (!$isOwner) {
+        $seller = $request->user();
+
+        $individualSeller = Seller::where('sellerId', $seller->sellerId)->first();
+        $companySeller = CompanySeller::where('companySellerId', $seller->companySellerId)->first();
+
+        // Determine the buyer type and ID
+        if ($individualSeller) {
+            $seller = $individualSeller->sellerId;
+            $email = $individualSeller->email;
+            $firstname = $individualSeller->firstname;
+            $sellerType = 'individual';
+        } elseif ($companySeller) {
+            $seller = $companySeller->companySellerId;
+            $email = $companySeller->companyemail;
+            $firstname = $companySeller->companyname;
+            $sellerType = 'company';
+        } else {
             return response()->json([
-                'message' => 'You are not authorized to restock this product.',
-            ], 403);
+                'status' => false,
+                'message' => 'Invalid buyer type.',
+            ], 400);
         }
     
                 // Validate the request data
@@ -711,7 +672,7 @@ class ProductController extends Controller
                     'cost_price' => $request->new_cost_price,
                 ]);
 
-                Mail::to($email)->send(new productRestockEmail($product, $product, $request->firstname, $product->productName, $product->quantityin_stock));
+                Mail::to($email)->send(new productRestockEmail($product, $product, $firstname, $product->productName, $product->quantityin_stock));
                 // Return success response
                 return response()->json([
                     'message' => 'Restock successful',
@@ -729,34 +690,51 @@ class ProductController extends Controller
     {
         // Find the product by its ID
         $product = Product::where('productId', $productId)->first();
-
+    
         // Check if the product exists
-        if ($product) {
-            // Check if the authenticated user is the owner of the product
-            if ($request->user()->sellerId == $product->sellerId) {
-                // Toggle the product state
-                $product->update([
-                    'is_active' => !$product->is_active,
-                ]);
-
-                // Return success response with updated product state
-                return response()->json([
-                    'message' => 'Product state updated successfully',
-                    'is_active' => $product->is_active,
-                ], 200);
-            } else {
-                // If the user is not the owner, return an error message
-                return response()->json([
-                    'message' => 'You are not authorized to update the state of this product.',
-                ], 403);
-            }
-        } else {
-            // If the product is not found, return a 404 error message
+        if (!$product) {
             return response()->json([
                 'message' => 'Product not found.',
             ], 404);
         }
+    
+
+
+
+        $seller = $request->user();
+
+        $individualSeller = Seller::where('sellerId', $seller->sellerId)->first();
+        $companySeller = CompanySeller::where('companySellerId', $seller->companySellerId)->first();
+
+        // Determine the buyer type and ID
+        if ($individualSeller) {
+            $seller = $individualSeller->sellerId ==$product->sellerId;
+            $email = $individualSeller->email;
+            $firstname = $individualSeller->firstname;
+            $sellerType = 'individual';
+        } elseif ($companySeller) {
+            $seller = $companySeller->companySellerId ==$product->sellerId;
+            $email = $companySeller->companyemail;
+            $firstname = $companySeller->companyname;
+            $sellerType = 'company';
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid buyer type.',
+            ], 400);
+        }
+    
+        // Toggle the product state
+        $product->is_active = !$product->is_active;
+        $product->save();
+    
+        // Return success response with updated product state
+        return response()->json([
+            'message' => 'Product state updated successfully',
+            'is_active' => $product->is_active,
+        ], 200);
     }
+    
 
     //Hot deals method
     public function hotDeals(Request $request)
