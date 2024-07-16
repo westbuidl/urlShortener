@@ -553,12 +553,22 @@ class ProductController extends Controller
         }
 
         // Check if the authenticated user is the owner of the product
-        if ($request->user()->sellerId != $product->sellerId) {
-            // If the user is not the owner, return an error message
-            return response()->json([
-                'message' => 'You are not authorized to edit this product.',
-            ], 403);
-        }
+       // Get the authenticated user
+    $user = $request->user();
+
+    // Check if the authenticated user is the owner of the product
+    $isOwner = false;
+    if ($user instanceof Seller) {
+        $isOwner = $user->sellerId == $product->sellerId;
+    } elseif ($user instanceof CompanySeller) {
+        $isOwner = $user->companySellerId == $product->companySellerId;
+    }
+
+    if (!$isOwner) {
+        return response()->json([
+            'message' => 'You are not authorized to edit this product.',
+        ], 403);
+    }
 
         // Validate the request data
         $validator = Validator::make($request->all(), [
@@ -654,13 +664,31 @@ class ProductController extends Controller
         $product = Product::where('productId', $productId)->first();
 
         // Check if the product exists
-        if ($product) {
-
-            // Retrieve the authenticated seller
-            $seller = $request->user();
-
-            // Check if the authenticated user is the owner of the product
-            if ($request->user()->sellerId == $product->sellerId) {
+        if (!$product) {
+            return response()->json([
+                'message' => 'Product not found.',
+            ], 404);
+        }
+    
+        // Get the authenticated user
+        $user = $request->user();
+    
+        // Check if the authenticated user is the owner of the product
+        $isOwner = false;
+        if ($user instanceof Seller) {
+            $isOwner = $user->sellerId == $product->sellerId;
+            $email = $user->email;
+        } elseif ($user instanceof CompanySeller) {
+            $isOwner = $user->companySellerId == $product->companySellerId;
+            $email = $user->companyemail;
+        }
+    
+        if (!$isOwner) {
+            return response()->json([
+                'message' => 'You are not authorized to restock this product.',
+            ], 403);
+        }
+    
                 // Validate the request data
                 $validator = Validator::make($request->all(), [
                     'new_quantityin_stock' => 'required|min:2|max:100',
@@ -683,24 +711,13 @@ class ProductController extends Controller
                     'cost_price' => $request->new_cost_price,
                 ]);
 
-                Mail::to($seller->email)->send(new productRestockEmail($product, $product, $request->firstname, $product->productName, $product->quantityin_stock));
+                Mail::to($email)->send(new productRestockEmail($product, $product, $request->firstname, $product->productName, $product->quantityin_stock));
                 // Return success response
                 return response()->json([
                     'message' => 'Restock successful',
                 ], 200);
-            } else {
-                // If the user is not the owner, return an error message
-                return response()->json([
-                    'message' => 'You are not authorized to restock this product.',
-                ], 403);
             }
-        } else {
-            // If the product is not found, return a 404 error message
-            return response()->json([
-                'message' => 'Product not found.',
-            ], 404);
-        }
-    }
+    
 
 
     //function ends for edit product

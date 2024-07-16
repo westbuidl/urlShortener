@@ -63,8 +63,21 @@ class SellerProfileController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-        $seller = $request->user();
-        if ($seller instanceof Seller || $seller instanceof CompanySeller) {
+        $authenticatedUser = $request->user();
+
+        // Determine if the user is an individual seller or a company seller
+        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+        if (!$seller) {
+            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+        }
+    
+        // Ensure the seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found',
+            ], 404);
+        }
+    
             if ($request->hasFile('profile_photo')) {
                 if ($seller->profile_photo) {
                     $old_path = public_path() . '/uploads/profile_images/' . $seller->profile_photo;
@@ -73,27 +86,21 @@ class SellerProfileController extends Controller
                     }
                 }
                 $image_name = 'profile-image-' . time() . '.' . $request->profile_photo->extension();
-                $request->profile_photo->move(public_path('/uploads/profile_images'), $image_name);
+        $request->profile_photo->move(public_path('/uploads/profile_images'), $image_name);
 
-                $seller->update([
-                    'profile_photo' => $image_name
-                ]);
+        // Update the seller's profile photo
+        $seller->profile_photo = $image_name;
+        $seller->save();
 
-                return response()->json([
-                    'message' => 'Profile Picture successfully updated',
-                ], 200);
-            } else {
-                return response()->json([
-                    'message' => 'No profile photo uploaded',
-                ], 400);
-            }
-        } else {
-            return response()->json([
-                'message' => 'Seller not found',
-            ], 404);
-        }
+        return response()->json([
+            'message' => 'Profile Picture successfully updated',
+        ], 200);
+    } else {
+        return response()->json([
+            'message' => 'No profile photo uploaded',
+        ], 400);
     }
-
+}
 
     //Begin update account settings function
     public function updateSellerAccountDetails(Request $request)
@@ -145,23 +152,35 @@ class SellerProfileController extends Controller
     {
         try {
 
-            $seller = $request->user();
+            $authenticatedUser = $request->user();
 
-            if ($seller instanceof Seller || $seller instanceof CompanySeller) {
-                // Find the buyer in the respective model
-                if ($seller instanceof Seller) {
-                    $seller = Seller::where('sellerId', $sellerId)->first();
-                } else {
-                    $seller = CompanySeller::where('companySellerId', $sellerId)->first();
-                }
+        // Determine if the authenticated user is an individual seller or a company seller
+        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+        if (!$seller) {
+            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+        }
 
-                // Check if the buyer has a profile picture
-                if ($seller && !empty($seller->profile_photo)) {
-                    // Delete the profile picture from the filesystem
-                    $imagePath = public_path('/uploads/profile_images/' . $seller->profile_photo);
-                    if (File::exists($imagePath)) {
-                        File::delete($imagePath);
-                    }
+        // Ensure the authenticated user is the owner of the account being modified
+        if ($authenticatedUser->sellerId != $sellerId && $authenticatedUser->companySellerId != $sellerId) {
+            return response()->json([
+                'message' => 'Unauthorized access.',
+            ], 403);
+        }
+
+        // Ensure the seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        // Check if the seller has a profile picture
+        if (!empty($seller->profile_photo)) {
+            // Delete the profile picture from the filesystem
+            $imagePath = public_path('/uploads/profile_images/' . $seller->profile_photo);
+            if (File::exists($imagePath)) {
+                File::delete($imagePath);
+            }
 
                     // Update the buyer's profile picture field to null
                     $seller->profile_photo = null;
@@ -173,22 +192,17 @@ class SellerProfileController extends Controller
                     ], 200);
                 } else {
                     return response()->json([
-                        'message' => 'no profile picture found for this Seller',
+                        'message' => 'No profile picture found for this seller.',
                     ], 400);
                 }
-            } else {
+            } catch (\Exception $e) {
+                // Handle any exceptions that occur during the deletion process
                 return response()->json([
-                    'message' => 'Seller not found.',
-                ], 404);
+                    'message' => 'Error deleting profile picture.',
+                    'error' => $e->getMessage(), // Include the error message for debugging
+                ], 500);
             }
-        } catch (\Exception $e) {
-            // Handle any exceptions that occur during the deletion process
-            return response()->json([
-                'message' => 'Error deleting profile picture.',
-                'error' => $e->getMessage(), // Include the error message for debugging
-            ], 500);
         }
-    }
 
     public function getSellerProfile(Request $request, $sellerId)
     {
