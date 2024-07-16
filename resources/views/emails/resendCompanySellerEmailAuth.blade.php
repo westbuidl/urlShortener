@@ -30,9 +30,9 @@
                                     <td style="padding:0 35px; ">
                                         <br>
                                         <br>
-                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$seller->firstname}}, </h1><br>
+                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$companyseller->companyname}}, </h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">Welcome to <strong>Agroease!</strong> We're delighted you've chosen to join us. To finalize your registration, please use the following 6-digit verification code:</h1><br>
-                                        <h1 style="background-color:#e0dafb; border-radius: 16px; font-weight:700; margin-top:10px;font-size:16px;font-family:'Gilroy', sans-serif;text-align:center ; line-height:2"><span style="font-weight:700; color:#1a1a1a; font-size:30px;">{{$seller->verification_code}}</span> </h1><br>
+                                        <h1 style="background-color:#e0dafb; border-radius: 16px; font-weight:700; margin-top:10px;font-size:16px;font-family:'Gilroy', sans-serif;text-align:center ; line-height:2"><span style="font-weight:700; color:#1a1a1a; font-size:30px;">{{$companyseller->verification_code}}</span> </h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Important:</strong> <br><br>
                                             <li>Please do not share this code with anyone else.</li>
                                             <li>If you didn 't attempt to register for Agroease, please disregard this email.</li> <br><br>If you encounter any difficulties or have any questions, don't hesitate to reach out to our support team at <a href="mailto:support@agroease.ng"

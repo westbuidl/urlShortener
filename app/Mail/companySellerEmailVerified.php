@@ -13,14 +13,19 @@ class companySellerEmailVerified extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $companySeller;
+   // public $companyname;
+   // public $companyregnumber;
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($companySeller)
     {
+        $this->companySeller = $companySeller;
+       // $this->companyname = $companyname;
+        //$this->companyregnumber = $companyregnumber;
         //
     }
-
     /**
      * Get the message envelope.
      */

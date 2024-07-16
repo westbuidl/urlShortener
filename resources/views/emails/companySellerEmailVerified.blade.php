@@ -31,7 +31,7 @@
                                     <td style="padding:0 35px; ">
                                         <br>
                                         <br>
-                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$companyname}}, </h1><br>
+                                        <h1 style="color:#828282; font-weight:300; margin:0;font-size:15px;font-family:'Gilroy',sans-serif; text-align:start;  ">Dear {{$companySeller->companyname}}, </h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:510; margin-top:10px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px; letter-spacing: normal; ">Congratulations and welcome to <strong>Agroease!</strong> We're thrilled to have you as a new member of our community.</h1><br>
                                         <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Have questions or need assistance?</strong> <br><br> If you have any questions or need assistance at any point, don't hesitate to reach out to our support team at <a href="mailto:support@agroease.ng" style="color: #1d988c; text-decoration: none;"><strong>support@agroease.ng</strong></a>
                                             We're here to help you every step of the way.

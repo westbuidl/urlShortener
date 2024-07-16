@@ -184,50 +184,11 @@ class BuyerController extends Controller
                     'message' => 'Email not verified. Please verify your email first.',
                 ], 400);
             }
-
-            // Check if the email exists in the CompanyBuyer model
-    $companyBuyer = CompanyBuyer::where('companyemail', $request->email)->first();
-
-    if ($companyBuyer) {
-        if ($companyBuyer->email_verified_at) {
-            if (Hash::check($request->password, $companyBuyer->password)) {
-                $token = $companyBuyer->createToken('auth-token')->plainTextToken;
-                // Store user ID in session
-                session(['companyBuyerId' => $companyBuyer->companyBuyerId]);
-                session(['email' => $companyBuyer->companyemail]);
-
-                return response()->json([
-                    'message' => 'Login Successful',
-                    'token' => $token,
-                    'data' => $companyBuyer,
-                    'type' => 'company',
-                ], 200);
-            } else {
-                return response()->json([
-                    'message' => 'Incorrect Credentials',
-                ], 400);
-            }
-        } else {
-            return response()->json([
-                'message' => 'Email not verified. Please verify your email first.',
-            ], 400);
-        }
-    }
-
         } else {
             return response()->json([
                 'message' => 'Incorrect Credentials',
             ], 400);
         }
-    }
-    
-    //function to fetch user data with bearer tokens
-    public function buyer(Request $request)
-    {
-        return response()->json([
-            'message' => 'User successfully fetched',
-            'data' => $request->user()
-        ], 200);
     }
 
    

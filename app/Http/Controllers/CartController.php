@@ -162,7 +162,7 @@ class CartController extends Controller
 
     //View cart
 
-    public function viewCart(Request $request)
+    public function viewCart(Request $request, $buyerId)
     {
         try {
             // Retrieve the authenticated user's ID

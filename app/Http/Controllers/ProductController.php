@@ -82,10 +82,6 @@ class ProductController extends Controller
 
             // Category exists, get its ID
             $categoryID = $category->categoryID;
-
-
-
-
             $product_image = $request->file('product_image');
             $imageName = '';
             foreach ($product_image as $product_images) {
@@ -409,54 +405,6 @@ class ProductController extends Controller
     }
 }
 
-
-
-
-
-
-
-
-    /* public function searchProducts($search_query = null)
-    {
-        $query = Product::query();
-        // Search for products with names containing the given substring
-        if ($search_query !== null) {
-            $query->where(function ($query) use ($search_query) {
-                $query->where('productId', $search_query)
-                    ->orWhere('product_name', 'like', '%' . $search_query . '%');
-            });
-        }
-        $products = $query->get();
-
-        // Check if any products were found
-        if ($products->isEmpty()) {
-            return response()->json([
-                'message' => 'No products found matching the search criteria.',
-
-            ], 404);
-        } else {
-            // Iterate through each product to fetch its images
-            foreach ($products as $product) {
-                // Extract image URLs for the product
-                $imageURLs = [];
-                foreach (explode(',', $product->product_image) as $image) {
-                    $imageURLs[] = asset('uploads/product_images/' . $image);
-                }
-                // Add image URLs to the product object
-                $product->image_urls = $imageURLs;
-            }
-
-            return response()->json([
-                'message' => 'Product found.',
-                'data' => $products
-            ], 200);
-        }
-    }*/
-
-    //Function to view products ends
-
-
-    // Function to add a product to the cart
 
 
     //Function to delete product

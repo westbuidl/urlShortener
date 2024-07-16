@@ -105,7 +105,7 @@ class CompanySellerController extends Controller
             ], 422);
         }
 
-        $companySeller = CompanySeller::where('email', $request->email)->first();
+        $companySeller = CompanySeller::where('companyemail', $request->email)->first();
 
         if ($companySeller) {
             if ($companySeller->email_verified_at) {
@@ -210,7 +210,7 @@ class CompanySellerController extends Controller
     {
 
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email|exists:company_sellers,email',
+            'email' => 'required|email|exists:company_sellers,companyemail',
         ]);
 
         if ($validator->fails()) {
@@ -252,7 +252,7 @@ class CompanySellerController extends Controller
         }
 
         // Retrieve the buyer by email from the database
-        $companyseller = CompanySeller::where('email', $email)->first();
+        $companyseller = CompanySeller::where('companyemail', $email)->first();
 
         // Check if buyer exists
         if (!$companyseller) {
