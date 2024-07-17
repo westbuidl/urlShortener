@@ -439,10 +439,11 @@ class SellerProfileController extends Controller
         }
 
         // Fetch all sales for the authenticated seller
-        $allSales = Order::where('sellerId', $authenticatedUser->sellerId)
-            ->orWhere('companySellerId', $authenticatedUser->companySellerId)
-            ->orderBy('created_at', 'desc')
-            ->get();
+         // Fetch all sales for the authenticated seller
+    $allSales = Order::where('sellerId', $authenticatedUser->sellerId)
+    ->orderBy('created_at', 'desc')
+    ->get();
+
         //$TotalSales = Order::where('sellerId', $sellerId)->get();
         $totalOrders = $allSales->count();
         $totalVolme = $allSales->sum('grand_price');
@@ -454,8 +455,7 @@ class SellerProfileController extends Controller
 
         // Fetch the total number of products uploaded by the seller
         $totalProducts = Product::where('sellerId', $authenticatedUser->sellerId)
-            ->orWhere('companySellerId', $authenticatedUser->companySellerId)
-            ->count();
+                            ->count();
 
 
         // Prepare the sales data with product images
@@ -507,123 +507,114 @@ class SellerProfileController extends Controller
     {
         // Get the authenticated seller
         $authenticatedUser = auth()->user();
-
-        // Determine if the user is an individual seller or a company seller
+    
+        // Ensure the seller exists
         $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
         if (!$seller) {
             $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
         }
-
-
-        // Ensure the seller exists
+    
         if (!$seller) {
             return response()->json([
                 'message' => 'Seller not found.',
             ], 404);
         }
-
-        // Fetch all sale details for the given orderId and authenticated seller
-        $orders = Order::where(function ($query) use ($authenticatedUser) {
-            $query->where('sellerId', $authenticatedUser->sellerId)
-                ->orWhere('companySellerId', $authenticatedUser->companySellerId);
-        })
-            ->where('orderId', $orderId)
-            ->get();
-
-
-        // Ensure orders exist
-        if ($orders->isEmpty()) {
+    
+        // Fetch sale details for the given orderId and authenticated seller
+        $order = Order::where('sellerId', $authenticatedUser->sellerId)
+                      ->where('orderId', $orderId)
+                      ->first();
+    
+        // Ensure the order exists
+        if (!$order) {
             return response()->json([
-                'message' => 'Orders not found.',
+                'message' => 'Order not found.',
             ], 404);
         }
-
+    
         // Prepare sale data with product images
-        $saleDetails = $orders->map(function ($order) {
-            // Handle product images
-            $firstProductImage = null;
-            $productImages = explode(',', $order->productImage);
-
-            if (!empty($productImages) && isset($productImages[0]) && $productImages[0] !== '') {
-                $firstProductImage = asset('uploads/product_images/' . $productImages[0]);
-            }
-
-            return [
-                'order_id' => $order->orderId,
-                'product_id' => $order->productId,
-                'product_name' => $order->productName,
-                'product_image' => $firstProductImage,
-                'quantity' => $order->quantity,
-                'total_price' => $order->grand_price,
-                'order_date' => $order->created_at,
-            ];
-        });
-
+        $productImages = explode(',', $order->productImage);
+        $firstProductImage = !empty($productImages) && isset($productImages[0]) && $productImages[0] !== ''
+                             ? asset('uploads/product_images/' . $productImages[0])
+                             : null;
+    
+        $saleDetails = [
+            'order_id' => $order->orderId,
+            'product_id' => $order->productId,
+            'product_name' => $order->productName,
+            'product_image' => $firstProductImage,
+            'quantity' => $order->quantity,
+            'total_price' => $order->grand_price,
+            'order_date' => $order->created_at,
+        ];
+    
         return response()->json([
             'message' => 'Sale details found.',
             'data' => $saleDetails
         ], 200);
     }
+    
 
 
 
 
     public function getTopSellingProducts(Request $request)
-    {
-        // Get the authenticated seller
-        $authenticatedUser = auth()->user();
+{
+    // Get the authenticated seller
+    $authenticatedUser = auth()->user();
 
-        // Determine if the user is an individual seller or a company seller
-        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
-        if (!$seller) {
-            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
-        }
+    // Determine if the user is an individual seller or a company seller
+    $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+    if (!$seller) {
+        $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+    }
 
-        // Ensure the seller exists
-        if (!$seller) {
-            return response()->json([
-                'message' => 'Seller not found.',
-            ], 404);
-        }
-
-        // Determine the sellerId to use for querying orders
-        $sellerId = $seller instanceof Seller ? $authenticatedUser->sellerId : $authenticatedUser->companySellerId;
-
-
-        // Aggregate sales data based on products
-        $topSellingProducts = Order::where('sellerId', $sellerId)
-            ->select('productId', 'productName', 'productImage', DB::raw('SUM(quantity) as total_quantity'))
-            ->groupBy('productId', 'productName', 'productImage')
-            ->orderByDesc('total_quantity')
-            ->take(10)
-            ->get();
-
-        if ($topSellingProducts->isEmpty()) {
-            return response()->json([
-                'message' => 'No top selling products found.',
-                'data' => [
-                    'top_selling_products' => [],
-                ]
-            ], 200);
-        }
-
-        // Prepare the product details along with total quantity sold
-        $productDetails = $topSellingProducts->map(function ($product) {
-            return [
-                'product_id' => $product->productId,
-                'product_name' => $product->productName,
-                'product_image' => $product->productImage ? asset('uploads/product_images/' . $product->productImage) : null,
-                'total_quantity_sold' => $product->total_quantity,
-            ];
-        });
-
+    // Ensure the seller exists
+    if (!$seller) {
         return response()->json([
-            'message' => 'Top selling products found.',
+            'message' => 'Seller not found.',
+        ], 404);
+    }
+
+    // Use the sellerId for querying orders
+    $sellerId = $authenticatedUser->sellerId;
+
+    // Aggregate sales data based on products
+    $topSellingProducts = Order::where('sellerId', $sellerId)
+        ->select('productId', 'productName', 'productImage', DB::raw('SUM(quantity) as total_quantity'))
+        ->groupBy('productId', 'productName', 'productImage')
+        ->orderByDesc('total_quantity')
+        ->take(10)
+        ->get();
+
+    // Check if there are any top selling products
+    if ($topSellingProducts->isEmpty()) {
+        return response()->json([
+            'message' => 'No top selling products found.',
             'data' => [
-                'top_selling_products' => $productDetails,
+                'top_selling_products' => [],
             ]
         ], 200);
     }
+
+    // Prepare the product details along with total quantity sold
+    $productDetails = $topSellingProducts->map(function ($product) {
+        return [
+            'product_id' => $product->productId,
+            'product_name' => $product->productName,
+            'product_image' => $product->productImage ? asset('uploads/product_images/' . $product->productImage) : null,
+            'total_quantity_sold' => $product->total_quantity,
+        ];
+    });
+
+    return response()->json([
+        'message' => 'Top selling products found.',
+        'data' => [
+            'top_selling_products' => $productDetails,
+        ]
+    ], 200);
+}
+
 
     public function deleteSellerAccount(Request $request, $sellerId)
     {
