@@ -108,37 +108,70 @@ class SellerProfileController extends Controller
         $validator = Validator::make($request->all(), [
             'firstname' => 'nullable|max:100',
             'lastname' => 'nullable|max:100',
-            //'email' => 'nullable|max:100',
             'phone' => 'nullable|max:100',
             'country' => 'nullable|max:100',
+            'product' => 'nullable|max:100',
             'state' => 'nullable|max:100',
             'city' => 'nullable|max:100',
-            'zipcode' => 'nullable|max:100'
+            'zipcode' => 'nullable|max:100',
+            'business_address' => 'nullable|max:100',
         ]);
+
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validations failed',
                 'error' => $validator->errors()
             ], 422);
         }
-        $seller = $request->user();
-        $seller->update([
-            'firstname' => $request->firstname,
-            'lastname' => $request->lastname,
-            //'email' => $request->email,
-            'phone' => $request->phone,
-            'country' => $request->country,
-            'state' => $request->state,
-            'city' => $request->city,
-            'zipcode' => $request->zipcode
 
+        // Get the authenticated user
+        $authenticatedUser = $request->user();
 
-        ]);
+        // Determine if the user is an individual seller or a company seller
+        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+        $isIndividualSeller = true;
+
+        if (!$seller) {
+            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+            $isIndividualSeller = false;
+        }
+
+        // Ensure the seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        // Update the seller details
+        if ($isIndividualSeller) {
+            $seller->update([
+                'firstname' => $request->firstname,
+                'lastname' => $request->lastname,
+                'phone' => $request->phone,
+                'country' => $request->country,
+                'product' => $request->product,
+                'state' => $request->state,
+                'city' => $request->city,
+                'zipcode' => $request->zipcode,
+            ]);
+        } else {
+            $seller->update([
+                'companyname' => $request->firstname,
+                'phone' => $request->phone,
+                'country' => $request->country,
+                'state' => $request->state,
+                'city' => $request->city,
+                'zipcode' => $request->zipcode,
+                'companyaddress' => $request->businessaddress,
+            ]);
+        }
 
         return response()->json([
-            'message' => 'Seller Contact information Changed',
+            'message' => 'Seller account information updated successfully.',
         ], 200);
-    } //End update account settings function
+    }
+
 
 
 
