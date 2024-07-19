@@ -260,11 +260,15 @@ class ProductController extends Controller
 
                 // Add image URLs and category name to the product object
                 $product->image_urls = $imageURLs;
-                $product->category_name = $category ? $category->categoryName : null;
+                $product->category_name = $category ? $category->categoryname : null;
 
                 // Fetch the seller's name and address
                 $seller = Seller::where('sellerId', $product->sellerId)->first();
-                $sellerName = $seller ? $seller->firstname : null; // Adjust according to your Seller model
+                if (!$seller) {
+                    $seller = CompanySeller::where('companySellerId', $product->sellerId)->first();
+                }
+
+                $sellerName = $seller ? $seller->firstname ?? $seller->companyname : null; // Adjust according to your Seller model
                 $sellerAddress = $seller ? $seller->state : null;  // Adjust according to your Seller model
 
                 return response()->json([

@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BuyerController;
 use App\Http\Controllers\ProfileContoller;
 use App\Http\Controllers\SellerController;
@@ -11,11 +12,11 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PaystackController;
+use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\BuyerProfileController;
 use App\Http\Controllers\CompanyBuyerController;
 use App\Http\Controllers\CompanySellerController;
 use App\Http\Controllers\SellerProfileController;
-use App\Http\Controllers\WishlistController;
 
 /*
 |--------------------------------------------------------------------------
@@ -110,15 +111,15 @@ Route::get('/getCompanyBuyerProfile/{companyBuyerId}', [CompanyBuyerController::
 //---Begin Api routes for CompanySeller --//
 Route::post('/companySellerSignup', [CompanySellerController::class, 'companySellerSignup'])->name('companySellerSignup');//creating account for business
 Route::post('/companySellerLogin', [CompanySellerController::class, 'companySellerLogin'])->name('companySellerLogin');//business account login
-Route::post('/companySellerLogout', [CompanySellerController::class, 'companySellerLogout'])->middleware('auth:sanctum')->name('companySellerLogout');//business account login
-Route::post('/companySellerChangePassword', [CompanySellerController::class, 'companySellerChangePassword'])->middleware('auth:sanctum')->name('companySellerChangePassword');//change password endpoint for sellers
-Route::delete('/deleteCompanySellerProfilePicture/{companySellerId}', [CompanySellerController::class, 'deleteCompanySellerProfilePicture'])->middleware('auth:sanctum')->name('deleteCompanySellerProfilePicture');//profile image update endpoint
+//Route::post('/companySellerLogout', [CompanySellerController::class, 'companySellerLogout'])->middleware('auth:sanctum')->name('companySellerLogout');//business account login
+//Route::post('/companySellerChangePassword', [CompanySellerController::class, 'companySellerChangePassword'])->middleware('auth:sanctum')->name('companySellerChangePassword');//change password endpoint for sellers
+//Route::delete('/deleteCompanySellerProfilePicture/{companySellerId}', [CompanySellerController::class, 'deleteCompanySellerProfilePicture'])->middleware('auth:sanctum')->name('deleteCompanySellerProfilePicture');//profile image update endpoint
 Route::post('/companySellerUpdateProfile', [CompanySellerController::class, 'companySellerUpdateProfile'])->middleware('auth:sanctum')->name('companySellerUpdateProfile');// seller profile image update endpoint 
 Route::post('/companySellerAccountSetting', [CompanySellerController::class, 'companySellerAccountSetting'])->middleware('auth:sanctum')->name('companySellerAccountSetting');//profile update endpoint for sellers
 Route::post('/companySellerResetPassword', [CompanySellerController::class, 'companySellerResetPassword'])->name('companySellerResetPassword');//resend verification code
 Route::post('/companySellerVerifyMail', [CompanySellerController::class, 'companySellerVerifyMail'])->name('companySellerVerifyMail');//send verification email for business account setup
 Route::post('/resendCompanySellerEmailAuth/{email}', [CompanySellerController::class, 'resendCompanySellerEmailAuth'])->name('resendCompanySellerEmailAuth');//resend verification code
-Route::get('/getCompanySellerProfile/{companySellerId}', [CompanySellerController::class, 'getCompanySellerProfile'])->name('getCompanySellerProfile');//resend verification code
+//Route::get('/getCompanySellerProfile/{companySellerId}', [CompanySellerController::class, 'getCompanySellerProfile'])->name('getCompanySellerProfile');//resend verification code
 //---Begin Api routes for Business account functions --//
 
 
@@ -204,14 +205,10 @@ Route::post('/editCategory/{categoryID}', [CategoryController::class, 'editCateg
 
 //--End of Category api --//
 
-//--Begin of Buyer Admin API--//
-
-Route::get('/getBuyers/{categoryID}', [CategoryController::class, 'categoryDetails'])->name('categoryDetails');//get category details
-Route::post('/addCategory', [CategoryController::class, 'addCategory'])->name('addCategory');//add categories
-Route::delete('/deleteCategory/{categoryID}', [CategoryController::class, 'deleteCategory'])->name('deleteCategory');//delete categories
-Route::get('/viewAllcategory', [CategoryController::class, 'viewAllcategory'])->name('viewAllcategory');//view all categories
-Route::get('/viewCategory/{categoryID}', [CategoryController::class, 'viewCategory'])->name('viewCategory');//view all categories
-Route::get('/popularCategories', [CategoryController::class, 'popularCategories'])->name('popularCategories');//view all categories
-Route::post('/editCategory/{categoryID}', [CategoryController::class, 'editCategory'])->name('editCategory');//view all categories
-
+//--Begin of Admin API--//
+Route::post('/admin/login', [AdminController::class, 'login'])->name('login');
+Route::post('/admin/logout', [AdminController::class, 'logout'])->middleware('auth:api');
+Route::get('/admin/sellers', [AdminController::class, 'getAllSellers']);
+Route::get('/admin/buyers', [AdminController::class, 'getAllBuyers']);
+Route::get('/admin/buyer-counts-by-category', [AdminController::class, 'getBuyerCountsByCategory']);
 //--End of Buyer Admin API--//
