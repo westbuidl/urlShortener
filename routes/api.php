@@ -162,6 +162,10 @@ Route::delete('/deleteProduct/{productId}', [ProductController::class, 'deletePr
 Route::post('/toggleProductState/{productId}', [ProductController::class, 'toggleProductState'])->middleware('auth:sanctum')->name('toggleProductState');//toggle product state
 Route::get('/hotDeals', [ProductController::class, 'hotDeals'])->name('hotDeals');//toggle product state
 Route::get('/popularProducts', [ProductController::class, 'popularProducts'])->name('popularProducts');//toggle product state
+Route::get('/product/{productId}', [ProductController::class, 'show'])->middleware('track.views');
+Route::middleware('auth:api')->group(function () {
+    Route::get('/seller/product-views', [SellerController::class, 'getProductViews'])->name('getProductViews');
+});
 //Route::post('/checkout/{buyerId}', [ProductController::class, 'checkout'])->middleware('auth:sanctum')->name('checkout');// add to cart
 //--End of Product api-/-//
 

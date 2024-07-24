@@ -154,6 +154,7 @@ class SellerProfileController extends Controller
                 'state' => $request->state,
                 'city' => $request->city,
                 'zipcode' => $request->zipcode,
+                'address' => $request->business_address,
             ]);
         } else {
             $seller->update([
@@ -162,8 +163,9 @@ class SellerProfileController extends Controller
                 'country' => $request->country,
                 'state' => $request->state,
                 'city' => $request->city,
+                'product' => $request->product,
                 'zipcode' => $request->zipcode,
-                'companyaddress' => $request->businessaddress,
+                'companyaddress' => $request->business_address,
             ]);
         }
 

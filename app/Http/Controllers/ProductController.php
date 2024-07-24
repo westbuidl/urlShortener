@@ -803,4 +803,47 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    public function show(Request $request, string $productId)
+    {
+        $product = Product::find($productId);
+
+        if (!$product) {
+            return response()->json([
+                'message' => 'Product not found.',
+            ], 404);
+        }
+
+        // Extract image URLs for the product
+        $imageURLs = [];
+        foreach (explode(',', $product->product_image) as $image) {
+            $imageURLs[] = asset('uploads/product_images/' . $image);
+        }
+
+        $product->image_urls = $imageURLs;
+
+        // Fetch the seller's name and address
+        $seller = Seller::where('sellerId', $product->sellerId)->first();
+        if (!$seller) {
+            $seller = CompanySeller::where('companySellerId', $product->sellerId)->first();
+        }
+        $sellerName = $seller ? ($seller->firstname ?? $seller->company_name) : null;
+        $sellerAddress = $seller ? $seller->state : null;
+
+        return response()->json([
+            'message' => 'Product found.',
+            'data' => [
+                'product' => $product,
+                'views' => $product->views,
+                'seller_info' => [
+                    'name' => $sellerName,
+                    'address' => $sellerAddress,
+                ]
+            ]
+        ], 200);
+    }
+
+   
+
+
 }

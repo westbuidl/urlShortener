@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 //use Illuminate\Http\Request;
 //use Illuminate\Validation\Validator;
 use App\Models\Seller;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Models\CompanySeller;
 use Illuminate\Support\Carbon;
@@ -320,4 +321,18 @@ class SellerController extends Controller
             'message' => 'Verification code sent to the provided email address.',
         ], 200);
     }
+    public function getProductViews(Request $request)
+    {
+        $seller = $request->user();
+
+        $products = Product::where('sellerId', $seller->sellerId)
+            ->orWhere('companySellerId', $seller->companySellerId)
+            ->get(['productId', 'productName', 'views']);
+
+        return response()->json([
+            'message' => 'Product views retrieved successfully.',
+            'data' => $products,
+        ], 200);
+    }
+
 }
