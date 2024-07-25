@@ -66,9 +66,11 @@ class Kernel extends HttpKernel
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        
     ];
     protected $routeMiddleware = [
         // ...
         'track.views' => \App\Http\Middleware\TrackProductView::class,
+        'auth.admin' => \App\Http\Middleware\AdminMiddleware::class,
     ];
 }

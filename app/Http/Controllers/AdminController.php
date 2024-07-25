@@ -3,30 +3,43 @@
 namespace App\Http\Controllers;
 
 use App\Models\Buyer;
+use App\Models\Admin;
 use App\Models\Seller;
 use App\Models\Category;
 use App\Models\CompanyBuyer;
 use Illuminate\Http\Request;
 use App\Models\CompanySeller;
+//use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Middleware\AdminMiddleware;
 
 class AdminController extends Controller
 {
     /**
      * View all sellers
      */
-    public function getAllSellers()
+    public function getAllSellers(Request $request)
     {
         try {
+            // Fetch individual sellers
             $sellers = Seller::all();
+            // Fetch company sellers
             $companySellers = CompanySeller::all();
+
+            // Calculate total numbers
+            $totalIndividualSellers = $sellers->count();
+            $totalCompanySellers = $companySellers->count();
 
             return response()->json([
                 'message' => 'Sellers retrieved successfully.',
                 'data' => [
                     'individual_sellers' => $sellers,
                     'company_sellers' => $companySellers,
+                    'total_individual_sellers' => $totalIndividualSellers,
+                    'total_company_sellers' => $totalCompanySellers,
                 ]
             ], 200);
         } catch (\Exception $e) {
@@ -36,6 +49,7 @@ class AdminController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * View all buyers
@@ -94,13 +108,15 @@ class AdminController extends Controller
     }
 
 
-    public function login(Request $request)
+    public function adminLogin(Request $request)
     {
+        // Validate the incoming request
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|string|min:6',
         ]);
 
+        // Return validation errors if validation fails
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed.',
@@ -108,12 +124,15 @@ class AdminController extends Controller
             ], 422);
         }
 
-        $credentials = $request->only('email', 'password');
+        // Retrieve the admin by email
+        $admin = Admin::where('email', $request->email)->first();
 
-        if (Auth::attempt($credentials)) {
-            $admin = Auth::user();
-            $token = $admin->createToken('AdminToken')->accessToken;
+        // Check if the admin exists and password is correct
+        if ($admin && Hash::check($request->password, $admin->password)) {
+            // Create a new token for the admin
+            $token = $admin->createToken('AdminToken')->plainTextToken;
 
+            // Return success response with admin data and token
             return response()->json([
                 'message' => 'Login successful.',
                 'data' => [
@@ -122,18 +141,33 @@ class AdminController extends Controller
                 ]
             ], 200);
         } else {
+            // Return error response for invalid credentials
             return response()->json([
                 'message' => 'Invalid email or password.',
             ], 401);
         }
     }
 
+    
+
+
     /**
      * Admin Logout
      */
-    public function logout(Request $request)
+    public function adminLogout(Request $request)
     {
-        $request->user()->token()->revoke();
+        // Retrieve the authenticated admin
+        $admin = $request->user('admin');
+        
+        // Check if an admin is authenticated
+        if (!$admin) {
+            return response()->json([
+                'message' => 'No authenticated admin found.',
+            ], 401);
+        }
+
+        // Revoke all tokens for the authenticated admin
+        $admin->tokens()->delete();
 
         return response()->json([
             'message' => 'Logout successful.',

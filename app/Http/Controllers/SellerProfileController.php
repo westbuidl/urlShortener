@@ -159,7 +159,7 @@ class SellerProfileController extends Controller
         } else {
             $seller->update([
                 'companyname' => $request->firstname,
-                'phone' => $request->phone,
+                'companyphone' => $request->phone,
                 'country' => $request->country,
                 'state' => $request->state,
                 'city' => $request->city,

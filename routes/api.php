@@ -164,7 +164,7 @@ Route::get('/hotDeals', [ProductController::class, 'hotDeals'])->name('hotDeals'
 Route::get('/popularProducts', [ProductController::class, 'popularProducts'])->name('popularProducts');//toggle product state
 Route::get('/product/{productId}', [ProductController::class, 'show'])->middleware('track.views');
 Route::middleware('auth:api')->group(function () {
-    Route::get('/seller/product-views', [SellerController::class, 'getProductViews'])->name('getProductViews');
+    Route::get('/product-views', [SellerController::class, 'getProductViews'])->name('getProductViews');
 });
 //Route::post('/checkout/{buyerId}', [ProductController::class, 'checkout'])->middleware('auth:sanctum')->name('checkout');// add to cart
 //--End of Product api-/-//
@@ -210,9 +210,16 @@ Route::post('/editCategory/{categoryID}', [CategoryController::class, 'editCateg
 //--End of Category api --//
 
 //--Begin of Admin API--//
-Route::post('/admin/login', [AdminController::class, 'login'])->name('login');
-Route::post('/admin/logout', [AdminController::class, 'logout'])->middleware('auth:api');
-Route::get('/admin/sellers', [AdminController::class, 'getAllSellers']);
-Route::get('/admin/buyers', [AdminController::class, 'getAllBuyers']);
-Route::get('/admin/buyer-counts-by-category', [AdminController::class, 'getBuyerCountsByCategory']);
+Route::post('/testAdminCanViewAllSellers', [AdminController::class, 'testAdminCanViewAllSellers'])->name('testAdminCanViewAllSellers');
+Route::post('/adminLogin', [AdminController::class, 'adminLogin'])->name('adminLogin');
+
+Route::middleware(['auth.admin'])->group(function () {
+    Route::get('/sellers', [AdminController::class, 'getAllSellers']);
+    Route::post('/adminLogout', [AdminController::class, 'adminLogout']);
+    Route::get('/sellers', [AdminController::class, 'getAllSellers']);
+    Route::get('/admin/buyers', [AdminController::class, 'getAllBuyers']);
+    Route::get('/admin/buyer-counts-by-category', [AdminController::class, 'getBuyerCountsByCategory']);
+
+
+});
 //--End of Buyer Admin API--//

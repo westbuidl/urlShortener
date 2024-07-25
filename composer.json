@@ -10,6 +10,7 @@
         "haruncpi/laravel-id-generator": "^1.1",
         "ichtrojan/laravel-otp": "^2.0",
         "laravel/framework": "^10.10",
+        "laravel/passport": "^12.2",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
         "tijsverkoyen/css-to-inline-styles": "^2.2",
