@@ -19,4 +19,9 @@ class Wishlist extends Model
         'selling_price',
         'categoryID',
     ];
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'productId', 'productId');
+    }
 }

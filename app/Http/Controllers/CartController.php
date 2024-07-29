@@ -244,7 +244,58 @@ class CartController extends Controller
             ], 500);
         }
     }
+    
 
+    public function getCartQuantity(Request $request)
+    {
+        try {
+            // Retrieve the authenticated user's ID
+            $buyer = $request->user();
+    
+            // Ensure that the user is logged in
+            if (!$buyer) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User not authenticated.',
+                ], 401);
+            }
+    
+            // Check if the user is an individual buyer
+            $individualBuyer = Buyer::where('buyerId', $buyer->buyerId)->first();
+            $companyBuyer = CompanyBuyer::where('companyBuyerId', $buyer->companyBuyerId)->first();
+    
+            // Determine the buyer type and ID
+            if ($individualBuyer) {
+                $buyerId = $individualBuyer->buyerId;
+                $buyerType = 'individual';
+            } elseif ($companyBuyer) {
+                $buyerId = $companyBuyer->companyBuyerId;
+                $buyerType = 'company';
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid buyer type.',
+                ], 400);
+            }
+    
+            // Retrieve the quantity of items in the cart for the authenticated user
+            $cartQuantity = Cart::where('buyerId', $buyerId)->sum('quantity');
+    
+            // Return the cart quantity
+            return response()->json([
+                'status' => true,
+                'message' => 'Cart quantity retrieved successfully.',
+                'total_quantity' => $cartQuantity,
+            ], 200);
+        } catch (\Exception $e) {
+            // Return the error message in the response
+            return response()->json([
+                'status' => false,
+                'message' => 'An error occurred while retrieving cart quantity: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+    
     //Delete cart Item
 
     public function deleteCartItem(Request $request, $cartId)
@@ -498,7 +549,7 @@ class CartController extends Controller
 
             // Calculate the shipping fee
             $shippingFee = 0;
-            $feePerKg = 400;
+            $feePerKg = 100;
             foreach ($cartItems as $cartItem) {
                 $weight = $cartItem->productWeight;
                 $quantity = $cartItem->quantity;

@@ -144,6 +144,7 @@ Route::post('/addToCart/{productId}', [CartController::class, 'addToCart'])->mid
 
 Route::delete('/deleteCartItem/{cartId}', [CartController::class, 'deleteCartItem'])->middleware('auth:sanctum')->name('deleteCartItem');//adding to cart api
 Route::post('/updateCartItem/{cartId}', [CartController::class, 'updatecartItem'])->middleware('auth:sanctum')->name('updatecartItem');//adding to cart api
+Route::get('/getCartQuantity', [CartController::class, 'getCartQuantity'])->middleware('auth:sanctum')->name('getCartQuantity');//adding to cart api
 //End adding product to cart endpoints
 
 

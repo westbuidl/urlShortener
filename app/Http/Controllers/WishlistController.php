@@ -197,7 +197,7 @@ class WishlistController extends Controller
             }
 
             // Retrieve the wishlist items for the authenticated user
-            $wishlistItems = Wishlist::where('buyerId', $buyerId)->get();
+            $wishlistItems = Wishlist::where('buyerId', $buyerId)->with('product')->get();
 
             // Check if there are any items in the wishlist
             if ($wishlistItems->isEmpty()) {
@@ -207,12 +207,18 @@ class WishlistController extends Controller
                     'data' => [],
                 ], 404);
             }
-
-            // Add the full URL to the product images
+    
+            // Add the full URL to the product images and fetch stock status
             $wishlistItems->each(function ($item) {
-                $item->product_image_url = $item->product_image ? asset('uploads/product_images/' . $item->product_image) : null;
+                if ($item->product) {
+                    $item->product_image_url = $item->product->product_image ? asset('uploads/product_images/' . $item->product->product_image) : null;
+                    $item->stock_status = $item->product->quantityin_stock > 0 ? 'In Stock' : 'Out of Stock'; // Calculate stock status
+                } else {
+                    $item->product_image_url = null;
+                    $item->stock_status = 'Unknown'; // Handle the case where the product is not found
+                }
             });
-
+    
             // Return the wishlist items
             return response()->json([
                 'message' => 'Wishlist items retrieved successfully.',

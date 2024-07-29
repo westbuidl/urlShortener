@@ -67,5 +67,8 @@ class Product extends Model
     {
     return $this->belongsTo(Order::class, 'sellerId', 'sellerId');
     }
-   
+    public function wishlistItems()
+    {
+        return $this->hasMany(Wishlist::class, 'productId', 'productId');
+    }
 }
