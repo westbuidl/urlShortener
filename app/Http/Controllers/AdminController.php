@@ -21,34 +21,90 @@ class AdminController extends Controller
     /**
      * View all sellers
      */
-    public function getAllSellers(Request $request)
-    {
-        try {
-            // Fetch individual sellers
-            $sellers = Seller::all();
-            // Fetch company sellers
-            $companySellers = CompanySeller::all();
 
-            // Calculate total numbers
-            $totalIndividualSellers = $sellers->count();
-            $totalCompanySellers = $companySellers->count();
+     public function adminLogin(Request $request)
+     {
+         // Validate the incoming request
+         $validator = Validator::make($request->all(), [
+             'email' => 'required|email',
+             'password' => 'required|string|min:6',
+         ]);
+     
+         // Return validation errors if validation fails
+         if ($validator->fails()) {
+             return response()->json([
+                 'message' => 'Validation failed.',
+                 'errors' => $validator->errors(),
+             ], 422);
+         }
+     
+         // Retrieve the admin by email
+         $admin = Admin::where('email', $request->email)->first();
+     
+         // Check if the admin exists and password is correct
+         if ($admin && Hash::check($request->password, $admin->password)) {
+             // Create a new token for the admin
+             $token = $admin->createToken('AdminToken')->plainTextToken;
+     
+             // Return success response with admin data and token
+             return response()->json([
+                 'message' => 'Login successful.',
+                 'data' => [
+                     'admin' => [
+                         'id' => $admin->id,
+                         'name' => $admin->name,
+                         'email' => $admin->email,
+                     ],
+                     'token' => $token,
+                 ]
+             ], 200);
+         } else {
+             // Log the failed login attempt
+             Log::warning('Failed login attempt', ['email' => $request->email]);
+     
+             // Return error response for invalid credentials
+             return response()->json([
+                 'message' => 'Invalid email or password.',
+             ], 401);
+         }
+     }
 
-            return response()->json([
-                'message' => 'Sellers retrieved successfully.',
-                'data' => [
-                    'individual_sellers' => $sellers,
-                    'company_sellers' => $companySellers,
-                    'total_individual_sellers' => $totalIndividualSellers,
-                    'total_company_sellers' => $totalCompanySellers,
-                ]
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Error occurred while fetching sellers.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
+
+
+
+     public function getAllSellers(Request $request)
+     {
+         try {
+             // Fetch individual sellers with potential relationships
+             $sellers = Seller::with('related_model')->get(); // Replace 'related_model' with actual relationships if needed
+ 
+             // Fetch company sellers with potential relationships
+             $companySellers = CompanySeller::with('related_model')->get(); // Replace 'related_model' with actual relationships if needed
+ 
+             // Calculate total numbers
+             $totalIndividualSellers = $sellers->count();
+             $totalCompanySellers = $companySellers->count();
+ 
+             return response()->json([
+                 'message' => 'Sellers retrieved successfully.',
+                 'data' => [
+                     'individual_sellers' => $sellers,
+                     'company_sellers' => $companySellers,
+                     'total_individual_sellers' => $totalIndividualSellers,
+                     'total_company_sellers' => $totalCompanySellers,
+                 ]
+             ], 200);
+         } catch (\Exception $e) {
+             // Log the error for debugging
+             Log::error('Error occurred while fetching sellers: ' . $e->getMessage());
+ 
+             return response()->json([
+                 'message' => 'Error occurred while fetching sellers.',
+                 'error' => 'Something went wrong, please try again later.',
+             ], 500);
+         }
+     }
+ 
 
 
     /**
@@ -108,45 +164,8 @@ class AdminController extends Controller
     }
 
 
-    public function adminLogin(Request $request)
-    {
-        // Validate the incoming request
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|string|min:6',
-        ]);
+   
 
-        // Return validation errors if validation fails
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed.',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        // Retrieve the admin by email
-        $admin = Admin::where('email', $request->email)->first();
-
-        // Check if the admin exists and password is correct
-        if ($admin && Hash::check($request->password, $admin->password)) {
-            // Create a new token for the admin
-            $token = $admin->createToken('AdminToken')->plainTextToken;
-
-            // Return success response with admin data and token
-            return response()->json([
-                'message' => 'Login successful.',
-                'data' => [
-                    'admin' => $admin,
-                    'token' => $token,
-                ]
-            ], 200);
-        } else {
-            // Return error response for invalid credentials
-            return response()->json([
-                'message' => 'Invalid email or password.',
-            ], 401);
-        }
-    }
 
     
 
@@ -173,4 +192,5 @@ class AdminController extends Controller
             'message' => 'Logout successful.',
         ], 200);
     }
+
 }

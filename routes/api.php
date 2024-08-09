@@ -213,14 +213,11 @@ Route::post('/editCategory/{categoryID}', [CategoryController::class, 'editCateg
 //--Begin of Admin API--//
 Route::post('/testAdminCanViewAllSellers', [AdminController::class, 'testAdminCanViewAllSellers'])->name('testAdminCanViewAllSellers');
 Route::post('/adminLogin', [AdminController::class, 'adminLogin'])->name('adminLogin');
-
-Route::middleware(['auth.admin'])->group(function () {
-    Route::get('/sellers', [AdminController::class, 'getAllSellers']);
-    Route::post('/adminLogout', [AdminController::class, 'adminLogout']);
-    Route::get('/sellers', [AdminController::class, 'getAllSellers']);
-    Route::get('/admin/buyers', [AdminController::class, 'getAllBuyers']);
-    Route::get('/admin/buyer-counts-by-category', [AdminController::class, 'getBuyerCountsByCategory']);
+Route::get('/getAllSellers', [AdminController::class, 'getAllSellers'])->middleware('auth:sanctum')->name('getAllSellers');
+Route::post('/adminLogout', [AdminController::class, 'adminLogout'])->middleware('auth:sanctum')->name('adminLogout');
+Route::get('/sellers', [AdminController::class, 'getAllSellers']);
+Route::get('/admin/buyers', [AdminController::class, 'getAllBuyers']);
+Route::get('/admin/buyer-counts-by-category', [AdminController::class, 'getBuyerCountsByCategory']);
 
 
-});
 //--End of Buyer Admin API--//
