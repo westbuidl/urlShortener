@@ -213,10 +213,11 @@ Route::post('/editCategory/{categoryID}', [CategoryController::class, 'editCateg
 //--Begin of Admin API--//
 Route::post('/testAdminCanViewAllSellers', [AdminController::class, 'testAdminCanViewAllSellers'])->name('testAdminCanViewAllSellers');
 Route::post('/adminLogin', [AdminController::class, 'adminLogin'])->name('adminLogin');
-Route::get('/getAllSellers', [AdminController::class, 'getAllSellers'])->middleware('auth:sanctum')->name('getAllSellers');
+Route::get('/getAllSellers', [AdminController::class, 'getAllSellers'])->name('getAllSellers');
+Route::get('/getAllBuyers', [AdminController::class, 'getAllBuyers'])->name('getAllBuyers');
 Route::post('/adminLogout', [AdminController::class, 'adminLogout'])->middleware('auth:sanctum')->name('adminLogout');
-Route::get('/sellers', [AdminController::class, 'getAllSellers']);
-Route::get('/admin/buyers', [AdminController::class, 'getAllBuyers']);
+Route::get('/getAllProducts', [AdminController::class, 'getAllProducts'])->name('getAllProducts');
+Route::get('/getAllOrders', [AdminController::class, 'getAllOrders'])->name('getAllOrders');
 Route::get('/admin/buyer-counts-by-category', [AdminController::class, 'getBuyerCountsByCategory']);
 
 

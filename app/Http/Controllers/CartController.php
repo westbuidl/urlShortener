@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use Log;
 use App\Models\Cart;
 use App\Models\Buyer;
 use App\Models\Order;
@@ -13,8 +14,8 @@ use Illuminate\Http\Request;
 use App\Mail\productSoldEmail;
 use App\Mail\OrderConfirmationMail;
 use App\Mail\SaleConfirmationEmail;
-use App\Http\Controllers\Controller;
 //use Unicodeveloper\Paystack\Paystack;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -207,7 +208,7 @@ class CartController extends Controller
             $totalPrice = 0; // Initialize total price variable
             $totalQuantity = 0; // Initialize total quantity variable
             $totalWeight = 0; // Initialize total weight variable
-            $feePerKg = 400; // Define the fee per kg
+            $feePerKg = 100; // Define the fee per kg
 
             // Calculate total price, total quantity, and total weight
             foreach ($cartItems as $item) {
@@ -781,7 +782,7 @@ class CartController extends Controller
             }
         } catch (\Exception $e) {
             // Log the exception
-            \Log::error('An error occurred during payment callback: ' . $e->getMessage());
+            Log::error('An error occurred during payment callback: ' . $e->getMessage());
 
             // Return error message
             return response()->json([
