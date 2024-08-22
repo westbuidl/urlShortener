@@ -496,7 +496,7 @@ class CartController extends Controller
             $companyBuyer = CompanyBuyer::where('companyBuyerId', $authenticatedBuyerId->companyBuyerId)->first();
 
 
-            
+            // Check which buyer type is authenticated and validate the buyer ID
             // Check which buyer type is authenticated and validate the buyer ID
             if ($individualBuyer && $individualBuyer->buyerId == $buyerId) {
                 $buyerType = 'individual';
@@ -594,165 +594,393 @@ class CartController extends Controller
         }
     }
 
+    /*Helper functions
 
-    public function paymentCallback(Request $request)
-{
-    $paymentDetails = Paystack::getPaymentData();
+    private function getCartItems($buyerId)
+    {
+        return Cart::where('buyerId', $buyerId)->get();
+    }
 
-    try {
-        $buyerId = $paymentDetails['data']['metadata']['buyerId'];
-        $shippingFee = $paymentDetails['data']['metadata']['shippingFee'];
+    private function generateOrderId()
+    {
+        return rand(1000000000, 9999999999);
+    }
 
-        $reference = $request->input('reference');
-        $paymentMethod = request('paymentMethod');
-        $customer_email = $paymentDetails['data']['customer']['email'];
-        $paymentInfo = $paymentDetails['data']['id'];
+    private function createOrder($orderId, $cartItems, $paymentDetails, $shippingFee)
+    {
+        foreach ($cartItems as $cartItem) {
+            $product = $this->getProduct($cartItem->productId);
+            $sellerId = $product->sellerId;
 
-        $paymentResponse = $this->paymentSuccess($paymentInfo);
+            $itemTotal = $cartItem->selling_price * $cartItem->quantity;
+            $itemPlatformFee = $itemTotal * 0.08;
+            $itemAccruedProfit = $itemTotal - $itemPlatformFee;
 
-        $response = json_decode($this->verifyPayment($reference), true);
+            $this->updateSellerDetails($sellerId, $itemAccruedProfit, $itemPlatformFee);
 
-        if ($response && isset($response['status']) && $response['status']) {
-            $data = $response['data'];
+            $this->updateProductDetails($product, $cartItem->quantity);
 
-            if ($paymentDetails['data']['status'] === 'success') {
-                $orderId = rand(1000000000, 9999999999);
-                $cartItems = Cart::where('buyerId', $buyerId)->get();
+            $order = new Order();
+            $order->buyerId = $paymentDetails['data']['metadata']['buyerId'];
+            $order->productId = $cartItem->productId;
+            $order->orderId = $orderId;
+            $order->productName = $cartItem->product_name;
+            $order->productImage = $cartItem->product_image;
+            $order->amount = $cartItem->selling_price;
+            $order->quantity = $cartItem->quantity;
+            $order->paymentMethod = $paymentDetails['data']['metadata']['paymentMethod'];
+            $order->paymentReference = $paymentDetails['data']['reference'];
+            $order->Discount = null;
+            $order->shippingFee = $shippingFee;
+            $order->order_status = $paymentDetails['data']['status'];
+            $order->currency = $paymentDetails['data']['currency'];
+            $order->channel = $paymentDetails['data']['channel'];
+            $order->payment_id = $paymentDetails['data']['id'];
+            $order->country_code = $paymentDetails['data']['authorization']['country_code'];
+            $order->customer_email = $paymentDetails['data']['customer']['email'];
+            $order->shipping_address = $paymentDetails['data']['metadata']['shipping_address'];
+            $order->billing_address = $paymentDetails['data']['metadata']['billing_address'];
+            $order->firstname = $paymentDetails['data']['metadata']['firstname'];
+            $order->lastname = $paymentDetails['data']['metadata']['lastname'];
+            $order->phone_number = $paymentDetails['data']['metadata']['phone_number'];
+            $order->grand_price = $paymentDetails['data']['amount'] / 100 + $shippingFee;
+            $order->sellerId = $sellerId;
+            $order->sellerFullname = $this->getSellerFullName($sellerId);
+            $order->sellerEmail = $this->getSellerEmail($sellerId);
+            $order->sellerPhone = $this->getSellerPhone($sellerId);
+            $order->save();
+        }
+    }
 
-                if ($cartItems->isEmpty()) {
-                    return redirect()->route('cart')->withError('Cart is empty. Please add items to the cart first.');
+    private function clearCart($buyerId)
+    {
+        Cart::where('buyerId', $buyerId)->delete();
+    }
+
+    private function sendOrderConfirmationEmail($customerEmail, $orderId, $cartItems)
+    {
+        Mail::to($customerEmail)->send(new OrderConfirmationMail($cartItems, $orderId));
+    }
+
+    private function sendSaleConfirmationEmail($orderId, $cartItems)
+    {
+        $adminEmail1 = 'hyacinth@agroease.ng';
+        Mail::to($adminEmail1)->send(new SaleConfirmationEmail($cartItems, $orderId));
+    }
+
+    private function getProduct($productId)
+    {
+        return Product::where('productId', $productId)->first();
+    }
+
+    private function updateSellerDetails($sellerId, $itemAccruedProfit, $itemPlatformFee)
+    {
+        $isSeller = Seller::where('sellerId', $sellerId)->first();
+        if ($isSeller) {
+            $isSeller->accrued_profit += $itemAccruedProfit;
+            $isSeller->platform_fee += $itemPlatformFee;
+            $isSeller->save();
+        } else {
+            $companySeller = CompanySeller::where('companySellerId', $sellerId)->first();
+            if ($companySeller) {
+                $companySeller->accrued_profit += $itemAccruedProfit;
+                $companySeller->platform_fee += $itemPlatformFee;
+                $companySeller->save();
+            }
+        }
+    }
+
+    private function updateProductDetails($product, $quantity)
+    {
+        $product->quantityin_stock -= $quantity;
+        $product->quantity_sold += $quantity;
+        $product->save();
+    }
+
+    private function getSellerFullName($sellerId)
+    {
+        $isSeller = Seller::where('sellerId', $sellerId)->first();
+        if ($isSeller) {
+            return $isSeller->firstname . ' ' . $isSeller->lastname;
+        } else {
+            $companySeller = CompanySeller::where('companySellerId', $sellerId)->first();
+            if ($companySeller) {
+                return $companySeller->companyname;
+            }
+        }
+        return '';
+    }
+
+    private function getSellerEmail($sellerId)
+    {
+        $isSeller = Seller::where('sellerId', $sellerId)->first();
+        if ($isSeller) {
+            return $isSeller->email;
+        } else {
+            $companySeller = CompanySeller::where('companySellerId', $sellerId)->first();
+            if ($companySeller) {
+                return $companySeller->companyemail;
+            }
+        }
+        return '';
+    }
+
+    private function getSellerPhone($sellerId)
+    {
+        $isSeller = Seller::where('sellerId', $sellerId)->first();
+        if ($isSeller) {
+            return $isSeller->phone;
+        } else {
+            $companySeller = CompanySeller::where('companySellerId', $sellerId)->first();
+            if ($companySeller) {
+                return $companySeller->companyphone;
+            }
+        }
+        return '';
+    }
+            //End of helper functions
+   
+     /*   public function handleWebhook(Request $request)
+    {
+
+
+
+
+        try {
+            $paymentDetails = Paystack::getPaymentData();
+
+
+
+            // Extract relevant data from the payment details
+            $buyerId = $paymentDetails['data']['metadata']['buyerId'];
+            $shippingFee = $paymentDetails['data']['metadata']['shippingFee'];
+            $reference = $request->input('reference');
+            $paymentMethod = $request->input('paymentMethod');
+            $customerEmail = $paymentDetails['data']['customer']['email'];
+            $paymentInfo = $paymentDetails['data']['id'];
+
+            // Verify the payment
+            $response = json_decode($this->verifyPayment($reference), true);
+
+            if ($response && isset($response['status']) && $response['status']) {
+                $data = $response['data'];
+
+                // Check if payment was successful
+                if ($paymentDetails['data']['status'] === 'success') {
+                    // Payment was successful, proceed to create an order
+                    $orderId = $this->generateOrderId();
+
+                    // Retrieve the cart items for the authenticated buyer
+                    $cartItems = $this->getCartItems($buyerId);
+
+                    // Check if cart items are retrieved successfully and if the cart is not empty
+                    if ($cartItems->isEmpty()) {
+                        return redirect()->route('cart')->withError('Cart is empty. Please add items to the cart first.');
+                    }
+
+                    // Proceed with creating the order
+                    $this->createOrder($orderId, $cartItems, $paymentDetails, $shippingFee);
+
+                    // Clear the cart after successful checkout
+                    $this->clearCart($buyerId);
+
+                    // Send verification email
+                    $this->sendOrderConfirmationEmail($customerEmail, $orderId, $cartItems);
+                    $this->sendSaleConfirmationEmail($orderId, $cartItems);
+                    
+                    Log::info('Paystack Webhook Request Method: ' . $request->method());
+
+                    Log::info('Paystack Webhook Request Data: ' . json_encode($request->all()));
+                    // Return success response
+                    return response()->json([
+                        'status' => true,
+                        'message' => 'Webhook processed successfully',
+                    ], 200);
+                   // return view('payment.callback-successful')->with(compact('data'));
+                } else {
+                    // Payment was not successful, handle accordingly
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Payment was not successful: ' . $data['message'],
+                    ], 500);
                 }
-
-                $orders = []; 
-                $totalAmount = $data['amount'] / 100;
-                $grandPrice = $totalAmount;
-
-                $sellerTotals = [];
-
-                foreach ($cartItems as $cartItem) {
-                    $product = Product::where('productId', $cartItem->productId)->first();
-
-                    if ($product) {
-                        $sellerId = $product->sellerId;
-                        $itemTotal = $cartItem->selling_price * $cartItem->quantity;
-                        $itemPlatformFee = $itemTotal * 0.08;
-                        $itemAccruedProfit = $itemTotal - $itemPlatformFee;
-
-                        // Check if the seller is an individual or a company
-                        $isSeller = Seller::where('sellerId', $product->sellerId)->first();
-                        if ($isSeller) {
-                            // Update individual seller's accrued profit and platform fee
-                            $currentAccruedProfit = floatval($isSeller->accrued_profit);
-                            $currentPlatformFee = floatval($isSeller->platform_fee);
-
-                            $isSeller->accrued_profit = $currentAccruedProfit + $itemAccruedProfit;
-                            $isSeller->platform_fee = $currentPlatformFee + $itemPlatformFee;
-                            $isSeller->save();
-
-                            // Fetch seller details
-                            $sellerFirstName = $isSeller->firstname;
-                            $sellerLastName = $isSeller->lastname;
-                            $sellerFullName = $sellerFirstName . ' ' . $sellerLastName;
-                            $sellerEmail = $isSeller->email;
-                            $sellerPhone = $isSeller->phone;
-
-                            $sellerDetails[$isSeller->sellerId] = [
-                                'firstname' => $sellerFirstName,
-                                'email' => $sellerEmail,
-                                'phone' => $sellerPhone,
-                                'is_company' => false,
-                            ];
-                        } else {
-                            $companySeller = CompanySeller::where('companySellerId', $product->sellerId)->first();
-                            if ($companySeller) {
-                                // Update company seller's accrued profit and platform fee
-                                $companySeller->accrued_profit += $itemAccruedProfit;
-                                $companySeller->platform_fee += $itemPlatformFee;
-                                $companySeller->save();
-
+            } else {
+                // Error occurred or invalid response, handle accordingly
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Something went wrong: ' . $e->getMessage(),
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            // Log the exception
+            Log::error('Error in Paystack Webhook: ' . $e->getMessage());
+    
+            // Return an error response
+            return response()->json([
+                'status' => false,
+                'message' => 'An error occurred during the Paystack webhook: ' . $e->getMessage(),
+            ], 500);
+        }
+    }*/
+    public function paymentCallback(Request $request)
+    {
+        $paymentDetails = Paystack::getPaymentData();
+    
+        try {
+            $buyerId = $paymentDetails['data']['metadata']['buyerId'];
+            $shippingFee = $paymentDetails['data']['metadata']['shippingFee'];
+    
+            $reference = $request->input('reference');
+            $paymentMethod = request('paymentMethod');
+            $customer_email = $paymentDetails['data']['customer']['email'];
+            $paymentInfo = $paymentDetails['data']['id'];
+    
+            $paymentResponse = $this->paymentSuccess($paymentInfo);
+    
+            $response = json_decode($this->verify_payment($reference), true);
+    
+            if ($response && isset($response['status']) && $response['status']) {
+                $data = $response['data'];
+    
+                if ($paymentDetails['data']['status'] === 'success') {
+                    $orderId = rand(1000000000, 9999999999);
+                    $cartItems = Cart::where('buyerId', $buyerId)->get();
+    
+                    if ($cartItems->isEmpty()) {
+                        return redirect()->route('cart')->withError('Cart is empty. Please add items to the cart first.');
+                    }
+    
+                    $orders = []; 
+                    $totalAmount = $data['amount'] / 100;
+                    $grandPrice = $totalAmount;
+    
+                    $sellerTotals = [];
+    
+                    foreach ($cartItems as $cartItem) {
+                        $product = Product::where('productId', $cartItem->productId)->first();
+    
+                        if ($product) {
+                            $sellerId = $product->sellerId;
+                            $itemTotal = $cartItem->selling_price * $cartItem->quantity;
+                            $itemPlatformFee = $itemTotal * 0.08;
+                            $itemAccruedProfit = $itemTotal - $itemPlatformFee;
+    
+                            // Check if the seller is an individual or a company
+                            $isSeller = Seller::where('sellerId', $product->sellerId)->first();
+                            if ($isSeller) {
+                                // Update individual seller's accrued profit and platform fee
+                                $currentAccruedProfit = floatval($isSeller->accrued_profit);
+                                $currentPlatformFee = floatval($isSeller->platform_fee);
+    
+                                $isSeller->accrued_profit = $currentAccruedProfit + $itemAccruedProfit;
+                                $isSeller->platform_fee = $currentPlatformFee + $itemPlatformFee;
+                                $isSeller->save();
+    
                                 // Fetch seller details
-                                $sellerFirstName = $companySeller->companyname;
-                                $sellerEmail = $companySeller->companyemail;
-                                $sellerPhone = $companySeller->companyphone;
-
-                                $sellerDetails[$companySeller->sellerId] = [
+                                $sellerFirstName = $isSeller->firstname;
+                                $sellerLastName = $isSeller->lastname;
+                                $sellerFullName = $sellerFirstName . ' ' . $sellerLastName;
+                                $sellerEmail = $isSeller->email;
+                                $sellerPhone = $isSeller->phone;
+    
+                                $sellerDetails[$isSeller->sellerId] = [
                                     'firstname' => $sellerFirstName,
                                     'email' => $sellerEmail,
                                     'phone' => $sellerPhone,
-                                    'is_company' => true,
+                                    'is_company' => false,
                                 ];
+                            } else {
+                                $companySeller = CompanySeller::where('sellerId', $product->sellerId)->first();
+                                if ($companySeller) {
+                                    // Update company seller's accrued profit and platform fee
+                                    $companySeller->accrued_profit += $itemAccruedProfit;
+                                    $companySeller->platform_fee += $itemPlatformFee;
+                                    $companySeller->save();
+    
+                                    // Fetch seller details
+                                    $sellerFirstName = $companySeller->company_name;
+                                    $sellerEmail = $companySeller->email;
+                                    $sellerPhone = $companySeller->phone;
+    
+                                    $sellerDetails[$companySeller->sellerId] = [
+                                        'firstname' => $sellerFirstName,
+                                        'email' => $sellerEmail,
+                                        'phone' => $sellerPhone,
+                                        'is_company' => true,
+                                    ];
+                                }
                             }
+    
+                            $product->quantityin_stock -= $cartItem->quantity;
+                            $product->quantity_sold += $cartItem->quantity;
+                            $product->save();
                         }
-
-                        $product->quantityin_stock -= $cartItem->quantity;
-                        $product->quantity_sold += $cartItem->quantity;
-                        $product->save();
+    
+                        $order = new Order();
+                        $order->buyerId = $buyerId;
+                        $order->productId = $cartItem->productId;
+                        $order->orderId = $orderId;
+                        $order->productName = $cartItem->product_name;
+                        $order->productImage = $cartItem->product_image;
+                        $order->amount = $cartItem->selling_price;
+                        $order->quantity = $cartItem->quantity;
+                        $order->paymentMethod = $paymentDetails['data']['metadata']['paymentMethod'];
+                        $order->paymentReference = $reference;
+                        $order->Discount = null;
+                        $order->shippingFee = $paymentDetails['data']['metadata']['shippingFee'];
+                        $order->order_status = $paymentDetails['data']['status'];
+                        $order->currency = $paymentDetails['data']['currency'];
+                        $order->channel = $paymentDetails['data']['channel'];
+                        $order->payment_id = $paymentDetails['data']['id'];
+                        $order->country_code = $paymentDetails['data']['authorization']['country_code'];
+                        $order->customer_email = $paymentDetails['data']['customer']['email'];
+                        $order->shipping_address = $paymentDetails['data']['metadata']['shipping_address'];
+                        $order->billing_address = $paymentDetails['data']['metadata']['billing_address'];
+                        $order->firstname = $paymentDetails['data']['metadata']['firstname'];
+                        $order->lastname = $paymentDetails['data']['metadata']['lastname'];
+                        $order->phone_number = $paymentDetails['data']['metadata']['phone_number'];
+                        $order->grand_price = $grandPrice;
+                        $order->sellerId = $product->sellerId;
+                        $order->sellerFullname = $sellerDetails[$product->sellerId]['firstname'];
+                        $order->sellerEmail = $sellerDetails[$product->sellerId]['email'];
+                        $order->sellerPhone = $sellerDetails[$product->sellerId]['phone'];
+                        $order->is_company_seller = $sellerDetails[$product->sellerId]['is_company'];
+                        $order->save();
+                        $orders[] = $order;
                     }
-
-                    $order = new Order();
-                    $order->buyerId = $buyerId;
-                    $order->productId = $cartItem->productId;
-                    $order->orderId = $orderId;
-                    $order->productName = $cartItem->product_name;
-                    $order->productImage = $cartItem->product_image;
-                    $order->amount = $cartItem->selling_price;
-                    $order->quantity = $cartItem->quantity;
-                    $order->paymentMethod = $paymentDetails['data']['metadata']['paymentMethod'];
-                    $order->paymentReference = $reference;
-                    $order->Discount = null;
-                    $order->shippingFee = $paymentDetails['data']['metadata']['shippingFee'];
-                    $order->order_status = $paymentDetails['data']['status'];
-                    $order->currency = $paymentDetails['data']['currency'];
-                    $order->channel = $paymentDetails['data']['channel'];
-                    $order->payment_id = $paymentDetails['data']['id'];
-                    $order->country_code = $paymentDetails['data']['authorization']['country_code'];
-                    $order->customer_email = $paymentDetails['data']['customer']['email'];
-                    $order->shipping_address = $paymentDetails['data']['metadata']['shipping_address'];
-                    $order->billing_address = $paymentDetails['data']['metadata']['billing_address'];
-                    $order->firstname = $paymentDetails['data']['metadata']['firstname'];
-                    $order->lastname = $paymentDetails['data']['metadata']['lastname'];
-                    $order->phone_number = $paymentDetails['data']['metadata']['phone_number'];
-                    $order->grand_price = $grandPrice;
-                    $order->sellerId = $product->sellerId;
-                    $order->sellerFullname = $sellerFirstName;
-                    $order->sellerEmail = $sellerEmail;
-                    $order->sellerPhone = $sellerPhone;
-                    $order->save();
-                    $orders[] = $order;
+    
+                    Cart::where('buyerId', $buyerId)->delete();
+    
+                    $adminEmail1 = 'hyacinth@agroease.ng';
+    
+                    Mail::to($customer_email)->send(new OrderConfirmationMail($orders));
+                    Mail::to($adminEmail1)->send(new SaleConfirmationEmail($orders));
+    
+                    return view('payment.callback-successful')->with(compact('data'));
+                } else {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Payment was not successful' . $data['message'],
+                    ], 500);
                 }
-
-                Cart::where('buyerId', $buyerId)->delete();
-
-                $adminEmail1 = 'hyacinth@agroease.ng';
-
-                Mail::to($customer_email)->send(new OrderConfirmationMail($orders));
-                Mail::to($adminEmail1)->send(new SaleConfirmationEmail($orders));
-
-                return view('payment.callback-successful')->with(compact('data'));
             } else {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Payment was not successful' . $data['message'],
+                    'message' => 'Something went wrong' . $e->getMessage(),
                 ], 500);
             }
-        } else {
+        } catch (\Exception $e) {
+            \Log::error('An error occurred during payment callback: ' . $e->getMessage());
             return response()->json([
                 'status' => false,
-                'message' => 'Something went wrong' . $e->getMessage(),
+                'message' => 'An error occurred during payment callback' . $e->getMessage(),
             ], 500);
         }
-    } catch (\Exception $e) {
-        \Log::error('An error occurred during payment callback: ' . $e->getMessage());
-        return response()->json([
-            'status' => false,
-            'message' => 'An error occurred during payment callback' . $e->getMessage(),
-        ], 500);
     }
-}
 
 
 
-
+   
 
     private $initialize_url = "https://api.paystack.co/transaction/initialize";
 
