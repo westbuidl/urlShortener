@@ -185,10 +185,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 Route::post('/confirmOrder/{buyerId}', [CartController::class, 'confirmOrder'])->middleware('auth:sanctum')->name('confirmOrder');//adding to cart api
-Route::get('/pay/callback', [CartController::class, 'paymentCallback'])->name('pay.callback');
+Route::get('/paymentCallback', [CartController::class, 'paymentCallback'])->name('paymentCallback');
 Route::get('/paymentSuccess',  [CartController::class, 'paymentSuccess'])->name('paymentSuccess');
-//Route::post('/webhook/paystack', [CartController::class, "handleWebhook"])->name('handleWebhook');
-//Route::get('/pay/callback', [CartController::class, 'payment_callback'])->name('pay.callback');
+Route::post('/webhook/paystack', [CartController::class, "handleWebhook"]);
 
 Route::get('/pay', [CartController::class, 'pay']);
 Route::post('/pay', [CartController::class, 'make_payment'])->name('pay');

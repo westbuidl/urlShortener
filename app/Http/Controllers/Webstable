@@ -594,41 +594,26 @@ class CartController extends Controller
         }
     }
 
-    
 
-
-    /*public function paymentCallback(Request $request)
+    public function paymentCallback(Request $request)
     {
         $payLoad = Paystack::getPaymentData();
-        //$reference = $request->query('reference');
 
         try {
             $buyerId = $payLoad['data']['metadata']['buyerId'];
             $shippingFee = $payLoad['data']['metadata']['shippingFee'];
 
-            //$reference = $request->input('reference');
-            //$reference = $payLoad['data']['reference']; // Use the reference from the payload
-
             $reference = $request->input('reference');
-        if (!$reference) {
-            throw new \Exception('No reference provided in the callback');
-        }
             $paymentMethod = request('paymentMethod');
             $customer_email = $payLoad['data']['customer']['email'];
             $paymentInfo = $payLoad['data']['id'];
 
-            //$paymentResponse = $this->paymentSuccess($paymentInfo);
-            //$response = json_decode($this->verifyPayment($reference), true);
+            $paymentResponse = $this->paymentSuccess($paymentInfo);
 
+            $response = json_decode($this->verifyPayment($reference), true);
 
-            $verificationResponse = $this->verifyPayment($reference);
-            $paymentData = json_decode($verificationResponse, true);
-
-            \Log::info('Payment Verification Response', ['response' => $paymentData]);
-
-
-            if ($verificationResponse && isset($verificationResponse['status']) && $verificationResponse['status']) {
-                $data = $verificationResponse['data'];
+            if ($response && isset($response['status']) && $response['status']) {
+                $data = $response['data'];
 
                 if ($payLoad['data']['status'] === 'success') {
                     $orderId = rand(1000000000, 9999999999);
@@ -769,137 +754,18 @@ class CartController extends Controller
                 'message' => 'An error occurred during payment callback' . $e->getMessage(),
             ], 500);
         }
-    }*/
-
-    private function createOrder($paymentData, $buyerId, $shippingFee)
-    {
-        $orderId = rand(1000000000, 9999999999);
-        $cartItems = Cart::where('buyerId', $buyerId)->get();
-    
-        if ($cartItems->isEmpty()) {
-            throw new \Exception('Cart is empty. Unable to create order.');
-        }
-    
-        $totalAmount = $paymentData['amount'] / 100;
-        $grandPrice = $totalAmount;
-    
-        foreach ($cartItems as $cartItem) {
-            $product = Product::where('productId', $cartItem->productId)->first();
-    
-            if (!$product) {
-                throw new \Exception("Product not found: {$cartItem->productId}");
-            }
-    
-            // Update product stock and sales
-            $product->quantityin_stock -= $cartItem->quantity;
-            $product->quantity_sold += $cartItem->quantity;
-            $product->save();
-    
-            // Create order
-            $order = new Order([
-                'buyerId' => $buyerId,
-                'productId' => $cartItem->productId,
-                'orderId' => $orderId,
-                'productName' => $cartItem->product_name,
-                'productImage' => $cartItem->product_image,
-                'amount' => $cartItem->selling_price,
-                'quantity' => $cartItem->quantity,
-                'paymentMethod' => $paymentData['channel'],
-                'paymentReference' => $paymentData['reference'],
-                'shippingFee' => $shippingFee,
-                'order_status' => $paymentData['status'],
-                'currency' => $paymentData['currency'],
-                'channel' => $paymentData['channel'],
-                'payment_id' => $paymentData['id'],
-                'country_code' => $paymentData['authorization']['country_code'] ?? null,
-                'customer_email' => $paymentData['customer']['email'],
-                'shipping_address' => $paymentData['metadata']['shipping_address'] ?? null,
-                'billing_address' => $paymentData['metadata']['billing_address'] ?? null,
-                'firstname' => $paymentData['metadata']['firstname'] ?? null,
-                'lastname' => $paymentData['metadata']['lastname'] ?? null,
-                'phone_number' => $paymentData['metadata']['phone_number'] ?? null,
-                'grand_price' => $grandPrice,
-                'sellerId' => $product->sellerId,
-                // Add seller details here
-            ]);
-    
-            $order->save();
-        }
-    
-        // Clear the cart
-        Cart::where('buyerId', $buyerId)->delete();
-    
-        // Send emails
-        $this->sendOrderConfirmationEmails($orderId);
-    
-        return $orderId;
     }
-    
-    private function sendOrderConfirmationEmails($orderId)
-    {
-        $orders = Order::where('orderId', $orderId)->get();
-        $customerEmail = $orders->first()->customer_email;
-    
-        Mail::to($customerEmail)->send(new OrderConfirmationMail($orders));
-        Mail::to('hyacinth@agroease.ng')->send(new SaleConfirmationEmail($orders));
-    }
-    
-    
 
 
 
-
-    public function paymentCallback(Request $request)
-{
-    \Log::info('Paystack Callback Received', ['request' => $request->all()]);
-
-    try {
-        $reference = $request->input('reference');
-        if (!$reference) {
-            throw new \Exception('No reference provided in the callback');
-        }
-
-        $verificationResponse = $this->verifyPayment($reference);
-        $paymentData = json_decode($verificationResponse, true);
-
-        \Log::info('Payment Verification Response', ['response' => $paymentData]);
-
-        if (!isset($paymentData['status']) || $paymentData['status'] !== true) {
-            throw new \Exception('Payment verification failed: ' . ($paymentData['message'] ?? 'Unknown error'));
-        }
-
-        $data = $paymentData['data'];
-
-        if ($data['status'] === 'success') {
-            $buyerId = $data['metadata']['buyerId'] ?? null;
-            $shippingFee = $data['metadata']['shippingFee'] ?? 0;
-
-            if (!$buyerId) {
-                throw new \Exception('Buyer ID not found in payment metadata');
-            }
-
-            $orderId = $this->createOrder($data, $buyerId, $shippingFee);
-
-            return view('payment.callback-successful')->with(compact('data', 'orderId'));
-        } else {
-            throw new \Exception('Payment was not successful: ' . $data['gateway_response']);
-        }
-    } catch (\Exception $e) {
-        \Log::error('An error occurred during payment callback: ' . $e->getMessage());
-        return response()->json([
-            'status' => false,
-            'message' => 'An error occurred during payment callback: ' . $e->getMessage(),
-        ], 500);
-    }
-}
 
 
     private $initialize_url = "https://api.paystack.co/transaction/initialize";
 
     public function initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $shippingFee, $buyerFirstName, $buyerLastName, $billing_address, $phone_number, $email)
     {
-        //$secretKey = 'sk_live_bbc1ffec498f8a1342de5e8a9eac582cb4f83367';
-        $secretKey = env('PAYSTACK_SECRET_KEY');
+        $secretKey = 'sk_test_49b7380c069b1bfd301e255c28d6145084db3e25';
+        //$secretKey = env('PAYSTACK_SECRET_KEY');
         //$product_name = $cartItems->product_name;
         $totalPrice = $cartItems->sum('total_price') + $shippingFee;
         // $paymentMethod = request($paymentMethod);
@@ -909,7 +775,6 @@ class CartController extends Controller
         $metadata = [
             'paymentMethod' => $paymentMethod,
             'buyerId' => $buyerId,
-            //'orderId' => $orderId,
             'shipping_address' => $shipping_address,
             'billing_address' => $billing_address,
             'phone_number' => $phone_number,
@@ -964,8 +829,8 @@ class CartController extends Controller
     public function verifyPayment($reference)
     {
 
-        $secretKey = env('PAYSTACK_SECRET_KEY');
-        //$secretKey = 'sk_live_bbc1ffec498f8a1342de5e8a9eac582cb4f83367';
+        //$secretKey = env('PAYSTACK_SECRET_KEY');
+        $secretKey = 'sk_test_49b7380c069b1bfd301e255c28d6145084db3e25';
 
         $maxAttempts = 5;
         $delay = 2; // 2 seconds delay between attempts
@@ -1024,8 +889,8 @@ class CartController extends Controller
         'payment Info' => $paymentInfo
     ]);*/
 
-        //$secretKey = 'sk_live_bbc1ffec498f8a1342de5e8a9eac582cb4f83367';
-        $secretKey = env('PAYSTACK_SECRET_KEY');
+        $secretKey = 'sk_test_49b7380c069b1bfd301e255c28d6145084db3e25';
+        //$secretKey = env('PAYSTACK_SECRET_KEY');
 
         $curl = curl_init();
 
