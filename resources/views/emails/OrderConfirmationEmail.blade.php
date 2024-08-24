@@ -20,8 +20,9 @@
                 <div class="text-area">
                     <p style="color: #828282;  font-weight: 400;" class="f-20">Dear {{$orders[0]->firstname}},</p>
                     <p style=" font-weight: 600" class="f-20"> Thank you for your purchase on
-                        <strong>Agroease!</strong> We are delighted
-                        <br> to confirm that your order has been successfully placed. <br> Below are the details of your order for your reference:
+                        <strong>Agroease!</strong> <br><br>
+                        We are delighted
+                         to confirm that your order has been successfully placed. <br> Below are the details of your order for your reference:
                     </p>
 
 
@@ -68,7 +69,7 @@
                         </table>
                     </div>
                     <div class="order-summary">
-                        <h7>
+                        <h7><br>
                             <strong>Order Summary:</strong>
                         </h7>
                         <ul>
@@ -96,7 +97,7 @@
                             <img src="https://agroease.ng/agroease-api/resources/views/emails/img/tracking-info.png" alt="">
                         </div>
                         <p>You can track your order using the following link: [Tracking Link]</p>
-                        <p>Estimated delivery date: Between 10th, May 2024 - 21st, May 2024</p>
+                        
                     </div>
                     <div class="assistance">
                         <h7><strong>Need Assistance?</strong></h7>

@@ -785,15 +785,69 @@ class CartController extends Controller
     
         foreach ($cartItems as $cartItem) {
             $product = Product::where('productId', $cartItem->productId)->first();
+
+            if ($product) {
+                $sellerId = $product->sellerId;
+                $itemTotal = $cartItem->selling_price * $cartItem->quantity;
+                $itemPlatformFee = $itemTotal * 0.08;
+                $itemAccruedProfit = $itemTotal - $itemPlatformFee;
+
+                // Check if the seller is an individual or a company
+                $isSeller = Seller::where('sellerId', $product->sellerId)->first();
+                if ($isSeller) {
+                    // Update individual seller's accrued profit and platform fee
+                    $currentAccruedProfit = floatval($isSeller->accrued_profit);
+                    $currentPlatformFee = floatval($isSeller->platform_fee);
+
+                    $isSeller->accrued_profit = $currentAccruedProfit + $itemAccruedProfit;
+                    $isSeller->platform_fee = $currentPlatformFee + $itemPlatformFee;
+                    $isSeller->save();
+
+                    // Fetch seller details
+                    $sellerFirstName = $isSeller->firstname;
+                    $sellerLastName = $isSeller->lastname;
+                    $sellerFullName = $sellerFirstName . ' ' . $sellerLastName;
+                    $sellerEmail = $isSeller->email;
+                    $sellerPhone = $isSeller->phone;
+
+                    $sellerDetails[$isSeller->sellerId] = [
+                        'firstname' => $sellerFirstName,
+                        'email' => $sellerEmail,
+                        'phone' => $sellerPhone,
+                        'is_company' => false,
+                    ];
+                } else {
+                    $companySeller = CompanySeller::where('companySellerId', $product->sellerId)->first();
+                    if ($companySeller) {
+                        // Update company seller's accrued profit and platform fee
+                        $companySeller->accrued_profit += $itemAccruedProfit;
+                        $companySeller->platform_fee += $itemPlatformFee;
+                        $companySeller->save();
+
+                        // Fetch seller details
+                        $sellerFirstName = $companySeller->companyname;
+                        $sellerEmail = $companySeller->companyemail;
+                        $sellerPhone = $companySeller->companyphone;
+
+                        $sellerDetails[$companySeller->sellerId] = [
+                            'firstname' => $sellerFirstName,
+                            'email' => $sellerEmail,
+                            'phone' => $sellerPhone,
+                            'is_company' => true,
+                        ];
+                    }
+                }
+
+                $product->quantityin_stock -= $cartItem->quantity;
+                $product->quantity_sold += $cartItem->quantity;
+                $product->save();
+            }
     
             if (!$product) {
                 throw new \Exception("Product not found: {$cartItem->productId}");
             }
     
-            // Update product stock and sales
-            $product->quantityin_stock -= $cartItem->quantity;
-            $product->quantity_sold += $cartItem->quantity;
-            $product->save();
+            
     
             // Create order
             $order = new Order([
@@ -820,6 +874,9 @@ class CartController extends Controller
                 'phone_number' => $paymentData['metadata']['phone_number'] ?? null,
                 'grand_price' => $grandPrice,
                 'sellerId' => $product->sellerId,
+                'sellerFullname' => $sellerFirstName,
+                'sellerEmail' => $sellerEmail,
+                'sellerPhone' => $sellerPhone,
                 // Add seller details here
             ]);
     
@@ -836,12 +893,24 @@ class CartController extends Controller
     }
     
     private function sendOrderConfirmationEmails($orderId)
+
+    
     {
+        $adminEmails = [
+            'hyacinth@agroease.ng',
+            'larryo@agroease.ng',
+            'kpakpando@agroease.ng',
+            'sandra@agroease.ng'
+        ];
+        
         $orders = Order::where('orderId', $orderId)->get();
         $customerEmail = $orders->first()->customer_email;
     
         Mail::to($customerEmail)->send(new OrderConfirmationMail($orders));
-        Mail::to('hyacinth@agroease.ng')->send(new SaleConfirmationEmail($orders));
+        // Send email to all admin emails
+            Mail::to($adminEmails[0])
+             ->cc(array_slice($adminEmails, 1))
+             ->send(new SaleConfirmationEmail($orders));
     }
     
     
