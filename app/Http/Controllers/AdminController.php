@@ -76,42 +76,46 @@ class AdminController extends Controller
 
 
     public function getAllSellers(Request $request)
-{
-    // Ensure that only authenticated admins can access this endpoint
-    $this->middleware('auth:admin');
+    {
+        // Check if the authenticated user is an admin
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        
+        }
 
-    try {
-        // Fetch individual sellers
-        $sellers = Seller::all();
+        try {
+            // Fetch individual sellers
+            $sellers = Seller::all();
 
-        // Fetch company sellers
-        $companySellers = CompanySeller::all();
+            // Fetch company sellers
+            $companySellers = CompanySeller::all();
 
-        // Calculate totals
-        $totalIndividualSellers = $sellers->count();
-        $totalCompanySellers = $companySellers->count();
-        $totalSellers = $totalIndividualSellers + $totalCompanySellers;
+            // Calculate totals
+            $totalIndividualSellers = $sellers->count();
+            $totalCompanySellers = $companySellers->count();
+            $totalSellers = $totalIndividualSellers + $totalCompanySellers;
 
-        return response()->json([
-            'message' => 'Sellers retrieved successfully.',
-            'data' => [
-                'individual_sellers' => $sellers,
-                'company_sellers' => $companySellers,
-                'total_individual_sellers' => $totalIndividualSellers,
-                'total_company_sellers' => $totalCompanySellers,
-                'total_sellers' => $totalSellers,
-            ]
-        ], 200);
-    } catch (\Exception $e) {
-        // Log the error for debugging
-        Log::error('Error occurred while fetching sellers: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Sellers retrieved successfully.',
+                'data' => [
+                    'individual_sellers' => $sellers,
+                    'company_sellers' => $companySellers,
+                    'total_individual_sellers' => $totalIndividualSellers,
+                    'total_company_sellers' => $totalCompanySellers,
+                    'total_sellers' => $totalSellers,
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            Log::error('Error occurred while fetching sellers: ' . $e->getMessage());
 
-        return response()->json([
-            'message' => 'Error occurred while fetching sellers.',
-            'error' => 'Something went wrong, please try again later.',
-        ], 500);
+            return response()->json([
+                'message' => 'Error occurred while fetching sellers.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
     }
-}
+
 
 
 
@@ -121,125 +125,289 @@ class AdminController extends Controller
      * View all buyers
      */
     public function getAllBuyers(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        try {
+            $buyers = Buyer::all();
+            $companyBuyers = CompanyBuyer::all();
+
+            $totalIndividualBuyers = $buyers->count();
+            $totalCompanyBuyers = $companyBuyers->count();
+            $totalBuyers = $totalIndividualBuyers + $totalCompanyBuyers;
+
+            return response()->json([
+                'message' => 'Buyers retrieved successfully.',
+                'data' => [
+                    'individual_buyers' => $buyers,
+                    'company_buyers' => $companyBuyers,
+                    'total_individual_buyers' => $totalIndividualBuyers,
+                    'total_company_buyers' => $totalCompanyBuyers,
+                    'total_buyers' => $totalBuyers,
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while fetching buyers: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while fetching buyers.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
+
+    //Edit buyer
+    public function editBuyer(Request $request, $buyerId)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        try {
+            $buyer = Buyer::find($buyerId) ?? CompanyBuyer::find($buyerId);
+
+            if (!$buyer) {
+                return response()->json(['message' => 'Buyer not found'], 404);
+            }
+
+            $validatedData = $request->validate([
+                'name' => 'sometimes|string|max:255',
+                'email' => 'sometimes|email|unique:buyers,email,' . $buyerId . ',buyerID|unique:company_buyers,email,' . $buyerId . ',buyerID',
+                // Add other fields as needed
+            ]);
+
+            $buyer->update($validatedData);
+
+            return response()->json([
+                'message' => 'Buyer updated successfully',
+                'data' => $buyer
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while editing buyer: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while editing buyer.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
+//End edit buyer
+
+//Start delete buyer
+
+public function deleteBuyer($buyerId)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        try {
+            $buyer = Buyer::find($buyerId) ?? CompanyBuyer::find($buyerId);
+
+            if (!$buyer) {
+                return response()->json(['message' => 'Buyer not found'], 404);
+            }
+
+            $buyer->delete();
+
+            return response()->json([
+                'message' => 'Buyer deleted successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while deleting buyer: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while deleting buyer.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
+
+//End Delete buyer
+
+//Start get Buyer Details
+public function getBuyerDetails($buyerId)
 {
-    // Ensure that only authenticated admins can access this endpoint
-    $this->middleware('auth:admin');
+    if (!$this->isAdmin()) {
+        return $this->unauthorizedResponse();
+    }
 
     try {
-        // Fetch individual buyers
-        $buyers = Buyer::all();
+        $buyer = $this->findBuyer($buyerId);
 
-        // Fetch company buyers
-        $companyBuyers = CompanyBuyer::all();
-
-        // Calculate totals
-        $totalIndividualBuyers = $buyers->count();
-        $totalCompanyBuyers = $companyBuyers->count();
-        $totalBuyers = $totalIndividualBuyers + $totalCompanyBuyers;
+        if (!$buyer) {
+            return response()->json(['message' => 'Buyer not found'], 404);
+        }
 
         return response()->json([
-            'message' => 'Buyers retrieved successfully.',
-            'data' => [
-                'individual_buyers' => $buyers,
-                'company_buyers' => $companyBuyers,
-                'total_individual_buyers' => $totalIndividualBuyers,
-                'total_company_buyers' => $totalCompanyBuyers,
-                'total_buyers' => $totalBuyers,
-            ]
+            'message' => 'Buyer details retrieved successfully',
+            'data' => $buyer
         ], 200);
     } catch (\Exception $e) {
-        // Log the error for debugging
-        Log::error('Error occurred while fetching buyers: ' . $e->getMessage());
-
+        Log::error('Error occurred while fetching buyer details: ' . $e->getMessage());
         return response()->json([
-            'message' => 'Error occurred while fetching buyers.',
+            'message' => 'Error occurred while fetching buyer details.',
             'error' => 'Something went wrong, please try again later.',
         ], 500);
     }
 }
 
+public function editSeller(Request $request, $sellerId)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
 
+        try {
+            $seller = $this->findSeller($sellerId);
 
-public function getAllProducts(Request $request)
-{
-    // Ensure that only authenticated admins can access this endpoint
-    $this->middleware('auth:admin');
+            if (!$seller) {
+                return response()->json(['message' => 'Seller not found'], 404);
+            }
 
-    try {
-        // Fetch all products
-        $products = Product::all();
+            $validatedData = $request->validate([
+                'name' => 'sometimes|string|max:255',
+                'email' => 'sometimes|email|unique:sellers,email,' . $sellerId . ',' . $this->getSellerIdColumnName($seller) . '|unique:company_sellers,email,' . $sellerId . ',' . $this->getSellerIdColumnName($seller),
+                // Add other fields as needed
+            ]);
 
-        // Calculate total products
-        $totalProducts = $products->count();
+            $seller->update($validatedData);
 
-        return response()->json([
-            'message' => 'Products retrieved successfully.',
-            'data' => [
-                'products' => $products,
-                'total_products' => $totalProducts,
-            ]
-        ], 200);
-    } catch (\Exception $e) {
-        // Log the error for debugging
-        Log::error('Error occurred while fetching products: ' . $e->getMessage());
-
-        return response()->json([
-            'message' => 'Error occurred while fetching products.',
-            'error' => 'Something went wrong, please try again later.',
-        ], 500);
+            return response()->json([
+                'message' => 'Seller updated successfully',
+                'data' => $seller
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while editing seller: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while editing seller.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
     }
-}
 
-public function getAllOrders(Request $request)
-{
-    // Ensure that only authenticated admins can access this endpoint
-    $this->middleware('auth:admin');
+    public function deleteSeller($sellerId)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
 
-    try {
-        // Fetch all orders
-        $orders = Order::all();
+        try {
+            $seller = $this->findSeller($sellerId);
 
-        // Calculate total orders
-        $totalOrders = $orders->count();
+            if (!$seller) {
+                return response()->json(['message' => 'Seller not found'], 404);
+            }
 
-        // Calculate the number of orders by status
-        $successfulOrders = $orders->where('order_status', 'success')->count();
-        $pendingOrders = $orders->where('order_status', 'pending')->count();
-        $failedOrders = $orders->where('order_status', 'failed')->count();
+            $seller->delete();
 
-        // Calculate the total quantity of products and total order amount
-        $totalQuantity = $orders->sum('quantity'); // Assumes there's a 'quantity' field in the Order model
-        $totalOrderAmount = $orders->sum('grand_price'); // Assumes there's a 'total_amount' field in the Order model
-
-        return response()->json([
-            'message' => 'Orders retrieved successfully.',
-            'data' => [
-                'orders' => $orders,
-                'total_orders' => $totalOrders,
-                'successful_orders' => $successfulOrders,
-                'pending_orders' => $pendingOrders,
-                'failed_orders' => $failedOrders,
-                'total_quantity' => $totalQuantity,
-                'total_order_amount' => $totalOrderAmount,
-            ]
-        ], 200);
-    } catch (\Exception $e) {
-        // Log the error for debugging
-        Log::error('Error occurred while fetching orders: ' . $e->getMessage());
-
-        return response()->json([
-            'message' => 'Error occurred while fetching orders.',
-            'error' => 'Something went wrong, please try again later.',
-        ], 500);
+            return response()->json([
+                'message' => 'Seller deleted successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while deleting seller: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while deleting seller.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
     }
-}
+
+    public function getSellerDetails($sellerId)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        try {
+            $seller = $this->findSeller($sellerId);
+
+            if (!$seller) {
+                return response()->json(['message' => 'Seller not found'], 404);
+            }
+
+            return response()->json([
+                'message' => 'Seller details retrieved successfully',
+                'data' => $seller
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while fetching seller details: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while fetching seller details.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
 
 
-    /**
-     * Get count of buyers in each category
-     */
+
+    public function getAllProducts(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        try {
+            $products = Product::all();
+            $totalProducts = $products->count();
+
+            return response()->json([
+                'message' => 'Products retrieved successfully.',
+                'data' => [
+                    'products' => $products,
+                    'total_products' => $totalProducts,
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while fetching products: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while fetching products.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
+
+    public function getAllOrders(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        try {
+            $orders = Order::all();
+            $totalOrders = $orders->count();
+            $successfulOrders = $orders->where('order_status', 'success')->count();
+            $pendingOrders = $orders->where('order_status', 'pending')->count();
+            $failedOrders = $orders->where('order_status', 'failed')->count();
+            $totalQuantity = $orders->sum('quantity');
+            $totalOrderAmount = $orders->sum('grand_price');
+
+            return response()->json([
+                'message' => 'Orders retrieved successfully.',
+                'data' => [
+                    'orders' => $orders,
+                    'total_orders' => $totalOrders,
+                    'successful_orders' => $successfulOrders,
+                    'pending_orders' => $pendingOrders,
+                    'failed_orders' => $failedOrders,
+                    'total_quantity' => $totalQuantity,
+                    'total_order_amount' => $totalOrderAmount,
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while fetching orders: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while fetching orders.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
+
     public function getBuyerCountsByCategory()
     {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
         try {
             $categories = Category::all();
             $buyerCounts = [];
@@ -260,11 +428,44 @@ public function getAllOrders(Request $request)
                 'data' => $buyerCounts,
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Error occurred while fetching buyer counts by category: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Error occurred while fetching buyer counts by category.',
-                'error' => $e->getMessage(),
+                'error' => 'Something went wrong, please try again later.',
             ], 500);
         }
+    }
+
+    private function isAdmin()
+    {
+        return Auth::guard('sanctum')->check() && Auth::guard('sanctum')->user() instanceof Admin;
+    }
+
+    private function unauthorizedResponse()
+    {
+        return response()->json([
+            'message' => 'Unauthorized. Admin access required.',
+        ], 403);
+    }
+
+    private function findBuyer($buyerId)
+    {
+        return Buyer::where('buyerID', $buyerId)->first() ?? CompanyBuyer::where('companyBuyerID', $buyerId)->first();
+    }
+
+    private function findSeller($sellerId)
+    {
+        return Seller::where('sellerID', $sellerId)->first() ?? CompanySeller::where('companySellerID', $sellerId)->first();
+    }
+
+    private function getBuyerIdColumnName($buyer)
+    {
+        return $buyer instanceof Buyer ? 'buyerID' : 'companyBuyerID';
+    }
+
+    private function getSellerIdColumnName($seller)
+    {
+        return $seller instanceof Seller ? 'sellerID' : 'companySellerID';
     }
 
 

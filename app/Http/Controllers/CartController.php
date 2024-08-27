@@ -825,12 +825,12 @@ class CartController extends Controller
                         $companySeller->save();
 
                         // Fetch seller details
-                        $sellerFirstName = $companySeller->companyname;
+                        $sellerFullName = $companySeller->companyname;
                         $sellerEmail = $companySeller->companyemail;
                         $sellerPhone = $companySeller->companyphone;
 
                         $sellerDetails[$companySeller->sellerId] = [
-                            'firstname' => $sellerFirstName,
+                            'firstname' => $sellerFullName,
                             'email' => $sellerEmail,
                             'phone' => $sellerPhone,
                             'is_company' => true,
@@ -874,7 +874,7 @@ class CartController extends Controller
                 'phone_number' => $paymentData['metadata']['phone_number'] ?? null,
                 'grand_price' => $grandPrice,
                 'sellerId' => $product->sellerId,
-                'sellerFullname' => $sellerFirstName,
+                'sellerFullname' => $sellerFullName,
                 'sellerEmail' => $sellerEmail,
                 'sellerPhone' => $sellerPhone,
                 // Add seller details here

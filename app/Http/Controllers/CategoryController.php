@@ -2,15 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 
 class CategoryController extends Controller
 {
     // Method to display all categories
+    public function __construct()
+    {
+        // Apply admin authentication middleware to all methods except index and viewAllcategory
+        $this->middleware('auth:admin')->except(['index', 'viewAllcategory', 'viewCategory', 'categoryDetails', 'popularCategories']);
+    }
+
+
+
+
     public function index()
     {
         $categories = Category::all();
@@ -21,6 +31,12 @@ class CategoryController extends Controller
     public function addCategory(Request $request)
     {
 
+
+        // Check if the user is an admin
+        if (!Auth::guard('admin')->check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        
         $categoryID = 'AGC' . rand(100, 999);
 
         $validator = Validator::make($request->all(), [
@@ -68,6 +84,10 @@ class CategoryController extends Controller
     // Method to display a specific category
     public function viewAllcategory()
     {
+        // Check if the user is an admin
+        if (!Auth::guard('admin')->check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
         try {
             $categories = Category::all();
             $categories = Category::orderByDesc('id')->get();
@@ -96,6 +116,9 @@ class CategoryController extends Controller
     // Method to display a specific category
     public function viewCategory(Request $request, string $categoryID)
     {
+        if (!Auth::guard('admin')->check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
         try {
             // Find the category by the user-defined categoryID
 
@@ -131,6 +154,9 @@ class CategoryController extends Controller
     //method to display category details
     public function categoryDetails(Request $request, string $categoryID)
     {
+        if (!Auth::guard('admin')->check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
         try {
             // Find the category by ID
             $category = Category::where('categoryID', $categoryID)->first();
@@ -182,6 +208,9 @@ class CategoryController extends Controller
     // Method to update a category
     public function update(Request $request, $categoryID)
     {
+        if (!Auth::guard('admin')->check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
         $category = Category::findOrFail($categoryID);
 
         $request->validate([
@@ -202,6 +231,9 @@ class CategoryController extends Controller
     {
         // Find the category by ID
         //$category = Category::find($categoryID);
+        if (!Auth::guard('admin')->check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
         $category = Category::where('categoryID', $categoryID)->first();
 
         // If the category exists
@@ -268,6 +300,10 @@ class CategoryController extends Controller
     {
         // Find the category by ID
         //$category = Category::find($categoryID);
+
+        if (!Auth::guard('admin')->check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
         $category = Category::where('categoryID', $categoryID)->first();
 
         // Check if category exists
