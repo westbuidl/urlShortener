@@ -213,7 +213,9 @@ Route::post('/editCategory/{categoryID}', [CategoryController::class, 'editCateg
 
 //--Begin of Admin API--//
 Route::post('/testAdminCanViewAllSellers', [AdminController::class, 'testAdminCanViewAllSellers'])->name('testAdminCanViewAllSellers');
+
 Route::post('/adminLogin', [AdminController::class, 'adminLogin'])->name('adminLogin');
+//Rote::middleware('auth:sanctum')->group(function () {
 Route::post('/adminLogout', [AdminController::class, 'adminLogout'])->middleware('auth:sanctum')->name('adminLogout');
 //Admin Sellers
 Route::get('/getAllSellers', [AdminController::class, 'getAllSellers'])->name('getAllSellers');
@@ -226,6 +228,7 @@ Route::get('/getAllBuyers', [AdminController::class, 'getAllBuyers'])->name('get
 Route::get('/getBuyerDetails/{buyerId}', [AdminController::class, 'getBuyerDetails'])->name('getBuyerDetails');
 Route::get('/deleteBuyer/{buyerId}', [AdminController::class, 'deleteBuyer'])->name('deleteBuyer');
 Route::post('/editBuyer/{buyerId}', [AdminController::class, 'editBuyer'])->name('editBuyer');
+//});
 
 //Admin Products
 Route::get('/getAllProducts', [AdminController::class, 'getAllProducts'])->name('getAllProducts');
@@ -235,6 +238,7 @@ Route::get('/deleteProduct/{productId}', [AdminController::class, 'deleteProduct
 
 //Admin Orders
 Route::get('/getAllOrders', [AdminController::class, 'getAllOrders'])->name('getAllOrders');
+Route::get('/getOrderDetails/{orderId}', [AdminController::class, 'getOrderDetails'])->name('getOrderDetails');
 Route::get('/admin/buyer-counts-by-category', [AdminController::class, 'getBuyerCountsByCategory']);
 
 

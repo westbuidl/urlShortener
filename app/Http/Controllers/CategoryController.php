@@ -85,9 +85,7 @@ class CategoryController extends Controller
     public function viewAllcategory()
     {
         // Check if the user is an admin
-        if (!Auth::guard('admin')->check()) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
+        
         try {
             $categories = Category::all();
             $categories = Category::orderByDesc('id')->get();
@@ -116,9 +114,7 @@ class CategoryController extends Controller
     // Method to display a specific category
     public function viewCategory(Request $request, string $categoryID)
     {
-        if (!Auth::guard('admin')->check()) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
+        
         try {
             // Find the category by the user-defined categoryID
 
@@ -154,9 +150,7 @@ class CategoryController extends Controller
     //method to display category details
     public function categoryDetails(Request $request, string $categoryID)
     {
-        if (!Auth::guard('admin')->check()) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
+       
         try {
             // Find the category by ID
             $category = Category::where('categoryID', $categoryID)->first();
@@ -301,7 +295,7 @@ class CategoryController extends Controller
         // Find the category by ID
         //$category = Category::find($categoryID);
 
-        if (!Auth::guard('admin')->check()) {
+         if (!Auth::guard('admin')->check()) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
         $category = Category::where('categoryID', $categoryID)->first();

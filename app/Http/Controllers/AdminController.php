@@ -441,6 +441,7 @@ public function editSeller(Request $request, $sellerId)
         return Auth::guard('sanctum')->check() && Auth::guard('sanctum')->user() instanceof Admin;
     }
 
+
     private function unauthorizedResponse()
     {
         return response()->json([
@@ -480,18 +481,7 @@ public function editSeller(Request $request, $sellerId)
      */
     public function adminLogout(Request $request)
     {
-        // Retrieve the authenticated admin
-        $admin = $request->user('admin');
-
-        // Check if an admin is authenticated
-        if (!$admin) {
-            return response()->json([
-                'message' => 'No authenticated admin found.',
-            ], 401);
-        }
-
-        // Revoke all tokens for the authenticated admin
-        $admin->tokens()->delete();
+        $request->user()->currentAccessToken()->delete();
 
         return response()->json([
             'message' => 'Logout successful.',
