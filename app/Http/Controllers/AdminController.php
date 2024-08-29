@@ -352,7 +352,7 @@ public function editSeller(Request $request, $sellerId)
 
             return response()->json([
                 'message' => 'Products retrieved successfully.',
-                'data' => [
+                'data' => [ 
                     'products' => $products,
                     'total_products' => $totalProducts,
                 ]
@@ -361,6 +361,79 @@ public function editSeller(Request $request, $sellerId)
             Log::error('Error occurred while fetching products: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Error occurred while fetching products.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
+
+    public function getProductDetails($productId)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        try {
+            $product = Product::where('productID', $productId)
+                              ->with(['category', 'seller'])
+                              ->first();
+
+            if (!$product) {
+                return response()->json([
+                    'message' => 'Product not found.',
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => 'Product details retrieved successfully.',
+                'data' => $product
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while fetching product details: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while fetching product details.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
+
+    public function editProduct(Request $request, $productId)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        try {
+            $product = Product::find($productId);
+
+            if (!$product) {
+                return response()->json(['message' => 'Product not found'], 404);
+            }
+
+            $validatedData = $request->validate([
+                'name' => 'sometimes|string|max:255',
+                'description' => 'sometimes|string',
+                'price' => 'sometimes|numeric|min:0',
+                'categoryID' => 'sometimes|exists:categories,categoryID',
+                'images.*' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+
+            $product->update($validatedData);
+
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store('product_images', 'public');
+                    $product->images()->create(['image_path' => $path]);
+                }
+            }
+
+            return response()->json([
+                'message' => 'Product updated successfully',
+                'data' => $product->load('images')
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while editing product: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while editing product.',
                 'error' => 'Something went wrong, please try again later.',
             ], 500);
         }
@@ -402,6 +475,40 @@ public function editSeller(Request $request, $sellerId)
         }
     }
 
+    public function getOrderDetails($orderId)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        try {
+            $order = Order::where('orderId', $orderId)
+                          //->with(['buyer', 'seller', 'product'])
+                          ->first();
+
+            if (!$order) {
+                return response()->json([
+                    'message' => 'Order not found.',
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => 'Order details retrieved successfully.',
+                'data' => $order
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while fetching order details: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while fetching order details.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
+
+    
+
+
+
     public function getBuyerCountsByCategory()
     {
         if (!$this->isAdmin()) {
@@ -435,6 +542,231 @@ public function editSeller(Request $request, $sellerId)
             ], 500);
         }
     }
+
+    public function search(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        $query = $request->query('q');
+
+        $buyers = Buyer::where('name', 'LIKE', "%{$query}%")
+            ->orWhere('email', 'LIKE', "%{$query}%")
+            ->get();
+
+        $companyBuyers = CompanyBuyer::where('name', 'LIKE', "%{$query}%")
+            ->orWhere('email', 'LIKE', "%{$query}%")
+            ->get();
+
+        $sellers = Seller::where('name', 'LIKE', "%{$query}%")
+            ->orWhere('email', 'LIKE', "%{$query}%")
+            ->get();
+
+        $companySellers = CompanySeller::where('name', 'LIKE', "%{$query}%")
+            ->orWhere('email', 'LIKE', "%{$query}%")
+            ->get();
+
+        $products = Product::where('name', 'LIKE', "%{$query}%")
+            ->orWhere('description', 'LIKE', "%{$query}%")
+            ->get();
+
+        $orders = Order::where('orderId', 'LIKE', "%{$query}%")
+            ->orWhereHas('product', function ($q) use ($query) {
+                $q->where('name', 'LIKE', "%{$query}%");
+            })
+            ->get();
+
+        $categories = Category::where('categoryName', 'LIKE', "%{$query}%")
+            ->get();
+
+        return response()->json([
+            'buyers' => $buyers,
+            'companyBuyers' => $companyBuyers,
+            'sellers' => $sellers,
+            'companySellers' => $companySellers,
+            'products' => $products,
+            'orders' => $orders,
+            'categories' => $categories,
+        ]);
+    }
+
+
+    public function searchBuyers(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        $query = Buyer::query();
+
+        if ($request->has('name')) {
+            $query->where('name', 'LIKE', "%{$request->name}%");
+        }
+        if ($request->has('buyerId')) {
+            $query->where('buyerID', $request->buyerId);
+        }
+        if ($request->has('email')) {
+            $query->where('email', 'LIKE', "%{$request->email}%");
+        }
+        if ($request->has('phone')) {
+            $query->where('phone', 'LIKE', "%{$request->phone}%");
+        }
+
+        $buyers = $query->get();
+
+        return response()->json([
+            'buyers' => $buyers,
+        ]);
+    }
+
+    public function searchCompanyBuyers(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        $query = CompanyBuyer::query();
+
+        if ($request->has('name')) {
+            $query->where('name', 'LIKE', "%{$request->name}%");
+        }
+        if ($request->has('buyerId')) {
+            $query->where('companyBuyerID', $request->buyerId);
+        }
+        if ($request->has('email')) {
+            $query->where('email', 'LIKE', "%{$request->email}%");
+        }
+        if ($request->has('phone')) {
+            $query->where('phone', 'LIKE', "%{$request->phone}%");
+        }
+
+        $companyBuyers = $query->get();
+
+        return response()->json([
+            'companyBuyers' => $companyBuyers,
+        ]);
+    }
+
+    public function searchSellers(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        $query = Seller::query();
+
+        if ($request->has('name')) {
+            $query->where('name', 'LIKE', "%{$request->name}%");
+        }
+        if ($request->has('sellerId')) {
+            $query->where('sellerID', $request->sellerId);
+        }
+        if ($request->has('email')) {
+            $query->where('email', 'LIKE', "%{$request->email}%");
+        }
+        if ($request->has('phone')) {
+            $query->where('phone', 'LIKE', "%{$request->phone}%");
+        }
+
+        $sellers = $query->get();
+
+        return response()->json([
+            'sellers' => $sellers,
+        ]);
+    }
+
+    public function searchCompanySellers(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        $query = CompanySeller::query();
+
+        if ($request->has('name')) {
+            $query->where('name', 'LIKE', "%{$request->name}%");
+        }
+        if ($request->has('sellerId')) {
+            $query->where('companySellerID', $request->sellerId);
+        }
+        if ($request->has('email')) {
+            $query->where('email', 'LIKE', "%{$request->email}%");
+        }
+        if ($request->has('phone')) {
+            $query->where('phone', 'LIKE', "%{$request->phone}%");
+        }
+
+        $companySellers = $query->get();
+
+        return response()->json([
+            'companySellers' => $companySellers,
+        ]);
+    }
+
+    public function searchProducts(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        $query = Product::query();
+
+        if ($request->has('name')) {
+            $query->where('name', 'LIKE', "%{$request->name}%");
+        }
+        if ($request->has('productId')) {
+            $query->where('productID', $request->productId);
+        }
+        if ($request->has('category')) {
+            $query->whereHas('category', function ($q) use ($request) {
+                $q->where('categoryName', 'LIKE', "%{$request->category}%");
+            });
+        }
+
+        $products = $query->get();
+
+        return response()->json([
+            'products' => $products,
+        ]);
+    }
+
+    public function searchOrders(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        $query = Order::query();
+
+        if ($request->has('orderId')) {
+            $query->where('orderID', $request->orderId);
+        }
+        if ($request->has('productName')) {
+            $query->whereHas('product', function ($q) use ($request) {
+                $q->where('name', 'LIKE', "%{$request->productName}%");
+            });
+        }
+        if ($request->has('productId')) {
+            $query->where('productID', $request->productId);
+        }
+        if ($request->has('sellerName')) {
+            $query->whereHas('seller', function ($q) use ($request) {
+                $q->where('name', 'LIKE', "%{$request->sellerName}%");
+            });
+        }
+        if ($request->has('sellerId')) {
+            $query->where('sellerID', $request->sellerId);
+        }
+
+        $orders = $query->get();
+
+        return response()->json([
+            'orders' => $orders,
+        ]);
+    }
+
+
 
     private function isAdmin()
     {

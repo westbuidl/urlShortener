@@ -208,6 +208,7 @@ Route::get('/viewAllcategory', [CategoryController::class, 'viewAllcategory'])->
 Route::get('/viewCategory/{categoryID}', [CategoryController::class, 'viewCategory'])->name('viewCategory');//view all categories
 Route::get('/popularCategories', [CategoryController::class, 'popularCategories'])->name('popularCategories');//view all categories
 Route::post('/editCategory/{categoryID}', [CategoryController::class, 'editCategory'])->name('editCategory');//view all categories
+Route::get('/searchCategories', [CategoryController::class, 'searchCategories'])->name('searchCategories');//view all categories
 
 //--End of Category api --//
 
@@ -228,6 +229,8 @@ Route::get('/getAllBuyers', [AdminController::class, 'getAllBuyers'])->name('get
 Route::get('/getBuyerDetails/{buyerId}', [AdminController::class, 'getBuyerDetails'])->name('getBuyerDetails');
 Route::get('/deleteBuyer/{buyerId}', [AdminController::class, 'deleteBuyer'])->name('deleteBuyer');
 Route::post('/editBuyer/{buyerId}', [AdminController::class, 'editBuyer'])->name('editBuyer');
+Route::get('/searchBuyers', [AdminController::class, 'searchBuyers'])->name('searchBuyers');
+Route::get('/searchSellers', [AdminController::class, 'searchSellers'])->name('searchSellers');
 //});
 
 //Admin Products
@@ -235,6 +238,7 @@ Route::get('/getAllProducts', [AdminController::class, 'getAllProducts'])->name(
 Route::get('/getProductDetails/{productId}', [AdminController::class, 'getProductDetails'])->name('getProductDetails');
 Route::post('/editProduct/{productId}', [AdminController::class, 'editProduct'])->name('editProduct');
 Route::get('/deleteProduct/{productId}', [AdminController::class, 'deleteProduct'])->name('deleteProduct');
+Route::get('/search', [AdminController::class, 'search'])->name('search');
 
 //Admin Orders
 Route::get('/getAllOrders', [AdminController::class, 'getAllOrders'])->name('getAllOrders');

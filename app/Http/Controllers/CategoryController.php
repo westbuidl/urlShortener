@@ -348,4 +348,22 @@ class CategoryController extends Controller
             'data' => $category
         ], 200);
     }
+    public function searchCategories(Request $request)
+    {
+        if (!Auth::guard('admin')->check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $query = Category::query();
+
+        if ($request->has('name')) {
+            $query->where('categoryName', 'LIKE', "%{$request->name}%");
+        }
+
+        $categories = $query->get();
+
+        return response()->json([
+            'categories' => $categories,
+        ]);
+    }
 }
