@@ -598,110 +598,46 @@ public function editSeller(Request $request, $sellerId)
             return $this->unauthorizedResponse();
         }
 
-        $query = Buyer::query();
+        try {
+            $searchQuery = $request->query('search_query', null);
+            $perPage = $request->query('per_page', 10);
 
-        if ($request->has('name')) {
-            $query->where('name', 'LIKE', "%{$request->name}%");
-        }
-        if ($request->has('buyerId')) {
-            $query->where('buyerID', $request->buyerId);
-        }
-        if ($request->has('email')) {
-            $query->where('email', 'LIKE', "%{$request->email}%");
-        }
-        if ($request->has('phone')) {
-            $query->where('phone', 'LIKE', "%{$request->phone}%");
-        }
+            $query = Buyer::query();
 
-        $buyers = $query->get();
+            if ($searchQuery !== null) {
+                $query->where(function ($q) use ($searchQuery) {
+                    $q->where('buyerID', $searchQuery)
+                      ->orWhere('name', 'like', '%' . $searchQuery . '%')
+                      ->orWhere('email', 'like', '%' . $searchQuery . '%')
+                      ->orWhere('phone', 'like', '%' . $searchQuery . '%');
+                });
+            }
 
-        return response()->json([
-            'buyers' => $buyers,
-        ]);
-    }
+            $buyers = $query->paginate($perPage);
 
-    public function searchCompanyBuyers(Request $request)
-    {
-        if (!$this->isAdmin()) {
-            return $this->unauthorizedResponse();
+            if ($buyers->isEmpty()) {
+                return response()->json([
+                    'message' => 'No buyers found matching the given criteria.',
+                    'data' => []
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => 'Buyers retrieved successfully.',
+                'data' => $buyers->items(),
+                'current_page' => $buyers->currentPage(),
+                'last_page' => $buyers->lastPage(),
+                'per_page' => $buyers->perPage(),
+                'total' => $buyers->total(),
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Error occurred while searching buyers: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'An error occurred while searching for buyers.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
         }
-
-        $query = CompanyBuyer::query();
-
-        if ($request->has('name')) {
-            $query->where('name', 'LIKE', "%{$request->name}%");
-        }
-        if ($request->has('buyerId')) {
-            $query->where('companyBuyerID', $request->buyerId);
-        }
-        if ($request->has('email')) {
-            $query->where('email', 'LIKE', "%{$request->email}%");
-        }
-        if ($request->has('phone')) {
-            $query->where('phone', 'LIKE', "%{$request->phone}%");
-        }
-
-        $companyBuyers = $query->get();
-
-        return response()->json([
-            'companyBuyers' => $companyBuyers,
-        ]);
-    }
-
-    public function searchSellers(Request $request)
-    {
-        if (!$this->isAdmin()) {
-            return $this->unauthorizedResponse();
-        }
-
-        $query = Seller::query();
-
-        if ($request->has('name')) {
-            $query->where('name', 'LIKE', "%{$request->name}%");
-        }
-        if ($request->has('sellerId')) {
-            $query->where('sellerID', $request->sellerId);
-        }
-        if ($request->has('email')) {
-            $query->where('email', 'LIKE', "%{$request->email}%");
-        }
-        if ($request->has('phone')) {
-            $query->where('phone', 'LIKE', "%{$request->phone}%");
-        }
-
-        $sellers = $query->get();
-
-        return response()->json([
-            'sellers' => $sellers,
-        ]);
-    }
-
-    public function searchCompanySellers(Request $request)
-    {
-        if (!$this->isAdmin()) {
-            return $this->unauthorizedResponse();
-        }
-
-        $query = CompanySeller::query();
-
-        if ($request->has('name')) {
-            $query->where('name', 'LIKE', "%{$request->name}%");
-        }
-        if ($request->has('sellerId')) {
-            $query->where('companySellerID', $request->sellerId);
-        }
-        if ($request->has('email')) {
-            $query->where('email', 'LIKE', "%{$request->email}%");
-        }
-        if ($request->has('phone')) {
-            $query->where('phone', 'LIKE', "%{$request->phone}%");
-        }
-
-        $companySellers = $query->get();
-
-        return response()->json([
-            'companySellers' => $companySellers,
-        ]);
     }
 
     public function searchProducts(Request $request)
@@ -710,25 +646,199 @@ public function editSeller(Request $request, $sellerId)
             return $this->unauthorizedResponse();
         }
 
-        $query = Product::query();
+        try {
+            $searchQuery = $request->query('search_query', null);
+            $perPage = $request->query('per_page', 10);
 
-        if ($request->has('name')) {
-            $query->where('name', 'LIKE', "%{$request->name}%");
+            $query = Product::query();
+
+            if ($searchQuery !== null) {
+                $query->where(function ($q) use ($searchQuery) {
+                    $q->where('productID', $searchQuery)
+                      ->orWhere('name', 'like', '%' . $searchQuery . '%');
+                });
+            }
+
+            $products = $query->paginate($perPage);
+
+            if ($products->isEmpty()) {
+                return response()->json([
+                    'message' => 'No products found matching the given criteria.',
+                    'data' => []
+                ], 404);
+            }
+
+            foreach ($products as $product) {
+                $imageURLs = [];
+                if (!empty($product->product_image)) {
+                    foreach (explode(',', $product->product_image) as $image) {
+                        $imageURLs[] = asset('uploads/product_images/' . $image);
+                    }
+                }
+                $product->image_urls = $imageURLs;
+            }
+
+            return response()->json([
+                'message' => 'Products retrieved successfully.',
+                'data' => $products->items(),
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'per_page' => $products->perPage(),
+                'total' => $products->total(),
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Error occurred while searching products: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'An error occurred while searching for products.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
         }
-        if ($request->has('productId')) {
-            $query->where('productID', $request->productId);
-        }
-        if ($request->has('category')) {
-            $query->whereHas('category', function ($q) use ($request) {
-                $q->where('categoryName', 'LIKE', "%{$request->category}%");
-            });
+    }
+
+
+    public function searchCompanyBuyers(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
         }
 
-        $products = $query->get();
+        try {
+            $searchQuery = $request->query('search_query', null);
+            $perPage = $request->query('per_page', 10);
 
-        return response()->json([
-            'products' => $products,
-        ]);
+            $query = CompanyBuyer::query();
+
+            if ($searchQuery !== null) {
+                $query->where(function ($q) use ($searchQuery) {
+                    $q->where('companyBuyerID', $searchQuery)
+                      ->orWhere('name', 'like', '%' . $searchQuery . '%')
+                      ->orWhere('email', 'like', '%' . $searchQuery . '%')
+                      ->orWhere('phone', 'like', '%' . $searchQuery . '%');
+                });
+            }
+
+            $companyBuyers = $query->paginate($perPage);
+
+            if ($companyBuyers->isEmpty()) {
+                return response()->json([
+                    'message' => 'No company buyers found matching the given criteria.',
+                    'data' => []
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => 'Company buyers retrieved successfully.',
+                'data' => $companyBuyers->items(),
+                'current_page' => $companyBuyers->currentPage(),
+                'last_page' => $companyBuyers->lastPage(),
+                'per_page' => $companyBuyers->perPage(),
+                'total' => $companyBuyers->total(),
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Error occurred while searching company buyers: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'An error occurred while searching for company buyers.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
+
+    public function searchSellers(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        try {
+            $searchQuery = $request->query('search_query', null);
+            $perPage = $request->query('per_page', 10);
+
+            $query = Seller::query();
+
+            if ($searchQuery !== null) {
+                $query->where(function ($q) use ($searchQuery) {
+                    $q->where('sellerID', $searchQuery)
+                      ->orWhere('name', 'like', '%' . $searchQuery . '%')
+                      ->orWhere('email', 'like', '%' . $searchQuery . '%')
+                      ->orWhere('phone', 'like', '%' . $searchQuery . '%');
+                });
+            }
+
+            $sellers = $query->paginate($perPage);
+
+            if ($sellers->isEmpty()) {
+                return response()->json([
+                    'message' => 'No sellers found matching the given criteria.',
+                    'data' => []
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => 'Sellers retrieved successfully.',
+                'data' => $sellers->items(),
+                'current_page' => $sellers->currentPage(),
+                'last_page' => $sellers->lastPage(),
+                'per_page' => $sellers->perPage(),
+                'total' => $sellers->total(),
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Error occurred while searching sellers: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'An error occurred while searching for sellers.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
+
+    public function searchCompanySellers(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        try {
+            $searchQuery = $request->query('search_query', null);
+            $perPage = $request->query('per_page', 10);
+
+            $query = CompanySeller::query();
+
+            if ($searchQuery !== null) {
+                $query->where(function ($q) use ($searchQuery) {
+                    $q->where('companySellerID', $searchQuery)
+                      ->orWhere('name', 'like', '%' . $searchQuery . '%')
+                      ->orWhere('email', 'like', '%' . $searchQuery . '%')
+                      ->orWhere('phone', 'like', '%' . $searchQuery . '%');
+                });
+            }
+
+            $companySellers = $query->paginate($perPage);
+
+            if ($companySellers->isEmpty()) {
+                return response()->json([
+                    'message' => 'No company sellers found matching the given criteria.',
+                    'data' => []
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => 'Company sellers retrieved successfully.',
+                'data' => $companySellers->items(),
+                'current_page' => $companySellers->currentPage(),
+                'last_page' => $companySellers->lastPage(),
+                'per_page' => $companySellers->perPage(),
+                'total' => $companySellers->total(),
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Error occurred while searching company sellers: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'An error occurred while searching for company sellers.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
     }
 
     public function searchOrders(Request $request)
@@ -737,33 +847,51 @@ public function editSeller(Request $request, $sellerId)
             return $this->unauthorizedResponse();
         }
 
-        $query = Order::query();
+        try {
+            $searchQuery = $request->query('search_query', null);
+            $perPage = $request->query('per_page', 10);
 
-        if ($request->has('orderId')) {
-            $query->where('orderID', $request->orderId);
-        }
-        if ($request->has('productName')) {
-            $query->whereHas('product', function ($q) use ($request) {
-                $q->where('name', 'LIKE', "%{$request->productName}%");
-            });
-        }
-        if ($request->has('productId')) {
-            $query->where('productID', $request->productId);
-        }
-        if ($request->has('sellerName')) {
-            $query->whereHas('seller', function ($q) use ($request) {
-                $q->where('name', 'LIKE', "%{$request->sellerName}%");
-            });
-        }
-        if ($request->has('sellerId')) {
-            $query->where('sellerID', $request->sellerId);
-        }
+            $query = Order::query();
 
-        $orders = $query->get();
+            if ($searchQuery !== null) {
+                $query->where(function ($q) use ($searchQuery) {
+                    $q->where('orderID', $searchQuery)
+                      ->orWhere('productID', $searchQuery)
+                      ->orWhere('sellerID', $searchQuery)
+                      ->orWhereHas('product', function ($subQ) use ($searchQuery) {
+                          $subQ->where('name', 'like', '%' . $searchQuery . '%');
+                      })
+                      ->orWhereHas('seller', function ($subQ) use ($searchQuery) {
+                          $subQ->where('name', 'like', '%' . $searchQuery . '%');
+                      });
+                });
+            }
 
-        return response()->json([
-            'orders' => $orders,
-        ]);
+            $orders = $query->paginate($perPage);
+
+            if ($orders->isEmpty()) {
+                return response()->json([
+                    'message' => 'No orders found matching the given criteria.',
+                    'data' => []
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => 'Orders retrieved successfully.',
+                'data' => $orders->items(),
+                'current_page' => $orders->currentPage(),
+                'last_page' => $orders->lastPage(),
+                'per_page' => $orders->perPage(),
+                'total' => $orders->total(),
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Error occurred while searching orders: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'An error occurred while searching for orders.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
     }
 
 

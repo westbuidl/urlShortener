@@ -243,6 +243,7 @@ Route::get('/search', [AdminController::class, 'search'])->name('search');
 //Admin Orders
 Route::get('/getAllOrders', [AdminController::class, 'getAllOrders'])->name('getAllOrders');
 Route::get('/getOrderDetails/{orderId}', [AdminController::class, 'getOrderDetails'])->name('getOrderDetails');
+Route::get('/searchOrders', [AdminController::class, 'searchOrders'])->name('searchOrders');
 Route::get('/admin/buyer-counts-by-category', [AdminController::class, 'getBuyerCountsByCategory']);
 
 
