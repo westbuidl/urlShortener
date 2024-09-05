@@ -80,7 +80,6 @@ class AdminController extends Controller
         // Check if the authenticated user is an admin
         if (!$this->isAdmin()) {
             return $this->unauthorizedResponse();
-        
         }
 
         try {
@@ -191,11 +190,11 @@ class AdminController extends Controller
             ], 500);
         }
     }
-//End edit buyer
+    //End edit buyer
 
-//Start delete buyer
+    //Start delete buyer
 
-public function deleteBuyer($buyerId)
+    public function deleteBuyer($buyerId)
     {
         if (!$this->isAdmin()) {
             return $this->unauthorizedResponse();
@@ -222,36 +221,36 @@ public function deleteBuyer($buyerId)
         }
     }
 
-//End Delete buyer
+    //End Delete buyer
 
-//Start get Buyer Details
-public function getBuyerDetails($buyerId)
-{
-    if (!$this->isAdmin()) {
-        return $this->unauthorizedResponse();
-    }
-
-    try {
-        $buyer = $this->findBuyer($buyerId);
-
-        if (!$buyer) {
-            return response()->json(['message' => 'Buyer not found'], 404);
+    //Start get Buyer Details
+    public function getBuyerDetails($buyerId)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
         }
 
-        return response()->json([
-            'message' => 'Buyer details retrieved successfully',
-            'data' => $buyer
-        ], 200);
-    } catch (\Exception $e) {
-        Log::error('Error occurred while fetching buyer details: ' . $e->getMessage());
-        return response()->json([
-            'message' => 'Error occurred while fetching buyer details.',
-            'error' => 'Something went wrong, please try again later.',
-        ], 500);
-    }
-}
+        try {
+            $buyer = $this->findBuyer($buyerId);
 
-public function editSeller(Request $request, $sellerId)
+            if (!$buyer) {
+                return response()->json(['message' => 'Buyer not found'], 404);
+            }
+
+            return response()->json([
+                'message' => 'Buyer details retrieved successfully',
+                'data' => $buyer
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while fetching buyer details: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while fetching buyer details.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
+
+    public function editSeller(Request $request, $sellerId)
     {
         if (!$this->isAdmin()) {
             return $this->unauthorizedResponse();
@@ -352,7 +351,7 @@ public function editSeller(Request $request, $sellerId)
 
             return response()->json([
                 'message' => 'Products retrieved successfully.',
-                'data' => [ 
+                'data' => [
                     'products' => $products,
                     'total_products' => $totalProducts,
                 ]
@@ -374,8 +373,8 @@ public function editSeller(Request $request, $sellerId)
 
         try {
             $product = Product::where('productID', $productId)
-                              ->with(['category', 'seller'])
-                              ->first();
+                ->with(['category', 'seller'])
+                ->first();
 
             if (!$product) {
                 return response()->json([
@@ -396,48 +395,114 @@ public function editSeller(Request $request, $sellerId)
         }
     }
 
-    public function editProduct(Request $request, $productId)
+    public function editProduct(Request $request, string $productId)
     {
+        // Check if the user is an admin
         if (!$this->isAdmin()) {
-            return $this->unauthorizedResponse();
+            return response()->json([
+                'message' => 'Unauthorized. Admin access required.',
+            ], 403);
         }
 
-        try {
-            $product = Product::find($productId);
+        // Find the product by its ID
+        $product = Product::where('productId', $productId)->first();
 
-            if (!$product) {
-                return response()->json(['message' => 'Product not found'], 404);
-            }
+        // Check if the product exists
+        if (!$product) {
+            return response()->json([
+                'message' => 'Product not found.',
+            ], 404);
+        }
 
-            $validatedData = $request->validate([
-                'name' => 'sometimes|string|max:255',
-                'description' => 'sometimes|string',
-                'price' => 'sometimes|numeric|min:0',
-                'categoryID' => 'sometimes|exists:categories,categoryID',
-                'images.*' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
-            ]);
+        // Validate the request data
+        $validator = Validator::make($request->all(), [
+            'product_name' => 'required|min:2|max:100',
+            'product_category' => 'required|min:2|max:100',
+            'selling_price' => 'required|numeric|min:0',
+            'cost_price' => 'required|numeric|min:0',
+            'quantityin_stock' => 'required|integer|min:0',
+            'productWeight' => 'required|numeric|min:0',
+            'unit' => 'required|min:2|max:100',
+            'product_description' => 'required|min:2',
+            'product_image' => 'array|min:2|max:5',
+            'product_image.*' => 'image|mimes:jpg,png,bmp',
+            //'sellerId' => 'required|exists:sellers,sellerId,companySellers,companySellerId'
+        ]);
 
-            $product->update($validatedData);
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation fails',
+                'error' => $validator->errors()
+            ], 422);
+        }
 
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $image) {
-                    $path = $image->store('product_images', 'public');
-                    $product->images()->create(['image_path' => $path]);
+        // Check if the category exists
+        $category = Category::where('categoryName', $request->product_category)->first();
+
+        if (!$category) {
+            return response()->json([
+                'message' => 'Category does not exist',
+            ], 404);
+        }
+
+        // Category exists, get its ID
+        $categoryID = $category->categoryID;
+
+        // Update product details
+        $data = [
+            'product_name' => $request->product_name,
+            'product_category' => $request->product_category,
+            'selling_price' => $request->selling_price,
+            'categoryID' => $categoryID,
+            'cost_price' => $request->cost_price,
+            'quantityin_stock' => $request->quantityin_stock,
+            'productWeight' => $request->productWeight,
+            'unit' => $request->unit,
+            'product_description' => $request->product_description,
+            //'sellerId' => $request->sellerId
+        ];
+
+        // Handle product image updates
+        if ($request->hasFile('product_image')) {
+            $imageName = '';
+            foreach ($request->file('product_image') as $product_image) {
+                $new_imageName = rand() . '.' . $product_image->getClientOriginalExtension();
+                if ($product->product_image) {
+                    // Delete the old product image file
+                    $old_images = explode(',', $product->product_image);
+                    foreach ($old_images as $old_image) {
+                        if (file_exists(public_path('uploads/product_images/' . $old_image))) {
+                            unlink(public_path('uploads/product_images/' . $old_image));
+                        }
+                    }
                 }
+                // Move and store the new product image file
+                $product_image->move(public_path('/uploads/product_images'), $new_imageName);
+                $imageName .= $new_imageName . ",";
             }
-
-            return response()->json([
-                'message' => 'Product updated successfully',
-                'data' => $product->load('images')
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Error occurred while editing product: ' . $e->getMessage());
-            return response()->json([
-                'message' => 'Error occurred while editing product.',
-                'error' => 'Something went wrong, please try again later.',
-            ], 500);
+            $data['product_image'] = rtrim($imageName, ',');
         }
+
+        // Update the product
+        $product->update($data);
+
+        // Fetch the updated product with image URLs
+        $product = Product::where('productId', $productId)->first();
+        $imageURLs = [];
+        foreach (explode(',', $product->product_image) as $image) {
+            if (!empty($image)) {
+                $imageURLs[] = asset('uploads/product_images/' . $image);
+            }
+        }
+        $product->image_urls = $imageURLs;
+
+        // Return success response with the updated product data
+        return response()->json([
+            'message' => 'Product updated successfully',
+            'data' => $product,
+        ], 200);
     }
+
 
     public function getAllOrders(Request $request)
     {
@@ -483,8 +548,8 @@ public function editSeller(Request $request, $sellerId)
 
         try {
             $order = Order::where('orderId', $orderId)
-                          //->with(['buyer', 'seller', 'product'])
-                          ->first();
+                //->with(['buyer', 'seller', 'product'])
+                ->first();
 
             if (!$order) {
                 return response()->json([
@@ -505,7 +570,7 @@ public function editSeller(Request $request, $sellerId)
         }
     }
 
-    
+
 
 
 
@@ -607,9 +672,9 @@ public function editSeller(Request $request, $sellerId)
             if ($searchQuery !== null) {
                 $query->where(function ($q) use ($searchQuery) {
                     $q->where('buyerID', $searchQuery)
-                      ->orWhere('name', 'like', '%' . $searchQuery . '%')
-                      ->orWhere('email', 'like', '%' . $searchQuery . '%')
-                      ->orWhere('phone', 'like', '%' . $searchQuery . '%');
+                        ->orWhere('name', 'like', '%' . $searchQuery . '%')
+                        ->orWhere('email', 'like', '%' . $searchQuery . '%')
+                        ->orWhere('phone', 'like', '%' . $searchQuery . '%');
                 });
             }
 
@@ -630,7 +695,6 @@ public function editSeller(Request $request, $sellerId)
                 'per_page' => $buyers->perPage(),
                 'total' => $buyers->total(),
             ], 200);
-
         } catch (\Exception $e) {
             Log::error('Error occurred while searching buyers: ' . $e->getMessage());
             return response()->json([
@@ -655,7 +719,7 @@ public function editSeller(Request $request, $sellerId)
             if ($searchQuery !== null) {
                 $query->where(function ($q) use ($searchQuery) {
                     $q->where('productID', $searchQuery)
-                      ->orWhere('name', 'like', '%' . $searchQuery . '%');
+                        ->orWhere('name', 'like', '%' . $searchQuery . '%');
                 });
             }
 
@@ -686,7 +750,6 @@ public function editSeller(Request $request, $sellerId)
                 'per_page' => $products->perPage(),
                 'total' => $products->total(),
             ], 200);
-
         } catch (\Exception $e) {
             Log::error('Error occurred while searching products: ' . $e->getMessage());
             return response()->json([
@@ -712,9 +775,9 @@ public function editSeller(Request $request, $sellerId)
             if ($searchQuery !== null) {
                 $query->where(function ($q) use ($searchQuery) {
                     $q->where('companyBuyerID', $searchQuery)
-                      ->orWhere('name', 'like', '%' . $searchQuery . '%')
-                      ->orWhere('email', 'like', '%' . $searchQuery . '%')
-                      ->orWhere('phone', 'like', '%' . $searchQuery . '%');
+                        ->orWhere('name', 'like', '%' . $searchQuery . '%')
+                        ->orWhere('email', 'like', '%' . $searchQuery . '%')
+                        ->orWhere('phone', 'like', '%' . $searchQuery . '%');
                 });
             }
 
@@ -735,7 +798,6 @@ public function editSeller(Request $request, $sellerId)
                 'per_page' => $companyBuyers->perPage(),
                 'total' => $companyBuyers->total(),
             ], 200);
-
         } catch (\Exception $e) {
             Log::error('Error occurred while searching company buyers: ' . $e->getMessage());
             return response()->json([
@@ -760,9 +822,9 @@ public function editSeller(Request $request, $sellerId)
             if ($searchQuery !== null) {
                 $query->where(function ($q) use ($searchQuery) {
                     $q->where('sellerID', $searchQuery)
-                      ->orWhere('name', 'like', '%' . $searchQuery . '%')
-                      ->orWhere('email', 'like', '%' . $searchQuery . '%')
-                      ->orWhere('phone', 'like', '%' . $searchQuery . '%');
+                        ->orWhere('name', 'like', '%' . $searchQuery . '%')
+                        ->orWhere('email', 'like', '%' . $searchQuery . '%')
+                        ->orWhere('phone', 'like', '%' . $searchQuery . '%');
                 });
             }
 
@@ -783,7 +845,6 @@ public function editSeller(Request $request, $sellerId)
                 'per_page' => $sellers->perPage(),
                 'total' => $sellers->total(),
             ], 200);
-
         } catch (\Exception $e) {
             Log::error('Error occurred while searching sellers: ' . $e->getMessage());
             return response()->json([
@@ -808,9 +869,9 @@ public function editSeller(Request $request, $sellerId)
             if ($searchQuery !== null) {
                 $query->where(function ($q) use ($searchQuery) {
                     $q->where('companySellerID', $searchQuery)
-                      ->orWhere('name', 'like', '%' . $searchQuery . '%')
-                      ->orWhere('email', 'like', '%' . $searchQuery . '%')
-                      ->orWhere('phone', 'like', '%' . $searchQuery . '%');
+                        ->orWhere('name', 'like', '%' . $searchQuery . '%')
+                        ->orWhere('email', 'like', '%' . $searchQuery . '%')
+                        ->orWhere('phone', 'like', '%' . $searchQuery . '%');
                 });
             }
 
@@ -831,7 +892,6 @@ public function editSeller(Request $request, $sellerId)
                 'per_page' => $companySellers->perPage(),
                 'total' => $companySellers->total(),
             ], 200);
-
         } catch (\Exception $e) {
             Log::error('Error occurred while searching company sellers: ' . $e->getMessage());
             return response()->json([
@@ -856,14 +916,14 @@ public function editSeller(Request $request, $sellerId)
             if ($searchQuery !== null) {
                 $query->where(function ($q) use ($searchQuery) {
                     $q->where('orderID', $searchQuery)
-                      ->orWhere('productID', $searchQuery)
-                      ->orWhere('sellerID', $searchQuery)
-                      ->orWhereHas('product', function ($subQ) use ($searchQuery) {
-                          $subQ->where('name', 'like', '%' . $searchQuery . '%');
-                      })
-                      ->orWhereHas('seller', function ($subQ) use ($searchQuery) {
-                          $subQ->where('name', 'like', '%' . $searchQuery . '%');
-                      });
+                        ->orWhere('productID', $searchQuery)
+                        ->orWhere('sellerID', $searchQuery)
+                        ->orWhereHas('product', function ($subQ) use ($searchQuery) {
+                            $subQ->where('name', 'like', '%' . $searchQuery . '%');
+                        })
+                        ->orWhereHas('seller', function ($subQ) use ($searchQuery) {
+                            $subQ->where('name', 'like', '%' . $searchQuery . '%');
+                        });
                 });
             }
 
@@ -884,7 +944,6 @@ public function editSeller(Request $request, $sellerId)
                 'per_page' => $orders->perPage(),
                 'total' => $orders->total(),
             ], 200);
-
         } catch (\Exception $e) {
             Log::error('Error occurred while searching orders: ' . $e->getMessage());
             return response()->json([
