@@ -89,7 +89,8 @@ Route::get('/totalOrder', [SellerProfileController::class, 'totalOrder'])->middl
 Route::get('/totalReturn', [SellerProfileController::class, 'totalReturn'])->middleware(('auth:sanctum')) ->name('totalReturn');//get Total Sales
 Route::get('/getSaleDetails/{orderId}', [SellerProfileController::class, 'getSaleDetails'])->middleware('auth:sanctum')->name('getSaleDetails/{orderId}');
 Route::get('/deleteSellerAccount/{sellerId}', [SellerProfileController::class, 'deleteSellerAccount'])->middleware('auth:sanctum')->name('deleteSellerAccount/{sellerId}');
-
+Route::post('/initiateWithdrawal', [SellerProfileController::class, 'initiateWithdrawal'])->middleware('auth:sanctum')->name('initiateWithdrawal');//profile update endpointupdate for 
+Route::post('/confirmWithdrawal', [SellerProfileController::class, 'confirmWithdrawal'])->middleware('auth:sanctum')->name('confirmWithdrawal');//profile update endpointupdate for 
 //End Api routes for Buyer account
 
 
@@ -237,7 +238,7 @@ Route::get('/searchSellers', [AdminController::class, 'searchSellers'])->name('s
 Route::get('/getAllProducts', [AdminController::class, 'getAllProducts'])->name('getAllProducts');
 Route::get('/getProductDetails/{productId}', [AdminController::class, 'getProductDetails'])->name('getProductDetails');
 Route::post('/editProduct/{productId}', [AdminController::class, 'editProduct'])->name('editProduct');
-Route::get('/deleteProduct/{productId}', [AdminController::class, 'deleteProduct'])->name('deleteProduct');
+Route::delete('/adminDeleteProduct/{productId}', [AdminController::class, 'adminDeleteProduct'])->name('adminDeleteProduct');
 Route::get('/search', [AdminController::class, 'search'])->name('search');
 
 //Admin Orders

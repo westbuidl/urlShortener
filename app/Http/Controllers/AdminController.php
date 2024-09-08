@@ -15,6 +15,7 @@ use App\Models\CompanySeller;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Validator;
@@ -758,6 +759,61 @@ class AdminController extends Controller
             ], 500);
         }
     }
+
+    public function adminDeleteProduct(string $productId, Request $request)
+{
+    try {
+        // Check if the user is an admin
+        if (!$this->isAdmin()) {
+            return response()->json([
+                'message' => 'Unauthorized. Admin access required.',
+            ], 403);
+        }
+
+        // Find the product in the database
+        $product = Product::where('productId', $productId)->first();
+
+        // Check if the product exists
+        if (!$product) {
+            return response()->json([
+                'message' => 'Product not found',
+            ], 404);
+        }
+
+        // Check if the product has associated images
+        if (!empty($product->product_image)) {
+            // Split the comma-separated image filenames into an array
+            $imageFilenames = explode(',', $product->product_image);
+
+            // Delete associated images from the filesystem
+            foreach ($imageFilenames as $filename) {
+                // Assuming images are stored in a folder named 'product_images'
+                $imagePath = public_path('/uploads/product_images/' . $filename);
+                if (File::exists($imagePath)) {
+                    File::delete($imagePath);
+                }
+            }
+        }
+
+        // Delete the product
+        $product->delete();
+
+        // Log the deletion action
+        $adminId = $request->user() ? $request->user()->id : 'Unknown';
+        Log::info("Admin (ID: {$adminId}) deleted product: {$productId}");
+
+        return response()->json([
+            'message' => 'Product Deleted Successfully',
+        ], 200);
+    } catch (\Exception $e) {
+        // Handle any exceptions that occur during the deletion process
+        Log::error("Error deleting product {$productId}: " . $e->getMessage());
+        return response()->json([
+            'message' => 'Error deleting product',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
 
 
     public function searchCompanyBuyers(Request $request)
