@@ -530,6 +530,9 @@ class SellerProfileController extends Controller
         ->limit(5)
         ->get();
 
+    // Fetch total sales in last 7 days
+    $salesLast7Days = $this->getSalesLast7Days($authenticatedUser->sellerId);
+
     return response()->json([
         'message' => 'All sales found.',
         'data' => [
@@ -541,10 +544,19 @@ class SellerProfileController extends Controller
             'completed_sales' => $completedSales,
             'pending_sales' => $pendingSales,
             'top_categories' => $topCategories,
+            'sales_last_7_days' => $salesLast7Days,
         ]
     ], 200);
 }
+
+private function getSalesLast7Days($sellerId)
+{
+    $sevenDaysAgo = now()->subDays(7)->startOfDay();
     
+    return Order::where('sellerId', $sellerId)
+        ->where('created_at', '>=', $sevenDaysAgo)
+        ->sum('grand_price');
+}
 
 
 
@@ -748,9 +760,81 @@ class SellerProfileController extends Controller
 
 
 
+    public function walletBalance()
+    {
+        $seller = $this->getAuthenticatedSeller();
 
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
 
+        return response()->json([
+            'balance' => $seller->accrued_profit,
+        ], 200);
+    }
 
+    public function getWithdrawals(Request $request)
+    {
+        $seller = $this->getAuthenticatedSeller();
+
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        $withdrawals = Withdrawal::where('seller_id', $seller->getId())
+            ->where('seller_type', $seller->getType())
+            ->orderBy('completed_at', 'desc')
+            ->paginate($request->get('per_page', 10));
+
+        return response()->json($withdrawals, 200);
+    }
+
+    public function getWithdrawalDetails($withdrawalId)
+    {
+        $seller = $this->getAuthenticatedSeller();
+
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        $withdrawal = Withdrawal::where('withdrawal_id', $withdrawalId)
+            ->where('seller_id', $seller->getId())
+            ->where('seller_type', $seller->getType())
+            ->first();
+
+        if (!$withdrawal) {
+            return response()->json([
+                'message' => 'Withdrawal not found.',
+            ], 404);
+        }
+
+        return response()->json($withdrawal, 200);
+    }
+
+    private function getAuthenticatedSeller()
+    {
+        $user = Auth::user();
+        
+        $seller = Seller::where('sellerId', $user->sellerId)->first();
+        if ($seller) {
+            $seller->setType('individual');
+            return $seller;
+        }
+
+        $companySeller = CompanySeller::where('companySellerId', $user->companySellerId)->first();
+        if ($companySeller) {
+            $companySeller->setType('company');
+            return $companySeller;
+        }
+
+        return null;
+    }
 
 
 
