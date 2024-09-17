@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Wallet;
 use App\Models\Seller;
+use App\Models\Wallet;
+use App\Models\Withdrawal;
+use App\Mail\WithdrawalOTP;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 use App\Models\CompanySeller;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\WithdrawalOTP;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 
 class WalletController extends Controller
 {
@@ -130,4 +131,86 @@ class WalletController extends Controller
             'new_balance' => $wallet->balance,
         ], 200);
     }
+
+    public function getAllWithdrawals(Request $request)
+    {
+        $seller = $this->getAuthenticatedSeller();
+
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        $withdrawals = Withdrawal::where('seller_id', $seller->getId())
+            ->where('seller_type', $seller->getType())
+            ->where('status', 'completed')
+            ->orderBy('completed_at', 'desc')
+            ->paginate($request->get('per_page', 10));
+
+        return response()->json($withdrawals, 200);
+    }
+
+    public function getAllWithdrawalRequests(Request $request)
+    {
+        $seller = $this->getAuthenticatedSeller();
+
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        $withdrawalRequests = Withdrawal::where('seller_id', $seller->getId())
+            ->where('seller_type', $seller->getType())
+            ->whereIn('status', ['pending', 'processing'])
+            ->orderBy('initiated_at', 'desc')
+            ->paginate($request->get('per_page', 10));
+
+        return response()->json($withdrawalRequests, 200);
+    }
+
+    public function getWithdrawalDetails($withdrawalId)
+    {
+        $seller = $this->getAuthenticatedSeller();
+
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        $withdrawal = Withdrawal::where('withdrawal_id', $withdrawalId)
+            ->where('seller_id', $seller->getId())
+            ->where('seller_type', $seller->getType())
+            ->first();
+
+        if (!$withdrawal) {
+            return response()->json([
+                'message' => 'Withdrawal not found.',
+            ], 404);
+        }
+
+        return response()->json($withdrawal, 200);
+    }
+
+    private function getAuthenticatedSeller()
+    {
+        $user = Auth::user();
+        
+        $seller = Seller::where('sellerId', $user->sellerId)->first();
+        if ($seller) {
+            $seller->setType('individual');
+            return $seller;
+        }
+
+        $companySeller = CompanySeller::where('companySellerId', $user->companySellerId)->first();
+        if ($companySeller) {
+            $companySeller->setType('company');
+            return $companySeller;
+        }
+
+        return null;
+    }
+
 }

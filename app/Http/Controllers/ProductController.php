@@ -321,8 +321,11 @@ class ProductController extends Controller
             // Extract image URLs for the product
             $imageURLs = [];
             if (!empty($product->product_image)) {
-                foreach (explode(',', $product->product_image) as $image) {
-                    $imageURLs[] = asset('uploads/product_images/' . $image);
+                $images = array_filter(explode(',', $product->product_image));
+                foreach ($images as $image) {
+                    if (!empty(trim($image))) {
+                        $imageURLs[] = asset('uploads/product_images/' . trim($image));
+                    }
                 }
             }
 
@@ -788,7 +791,7 @@ class ProductController extends Controller
 
             $popularProducts->each(function ($product) {
                 $product->image_urls = $product->product_image
-                    ? array_map(fn ($image) => asset('uploads/product_images/' . $image), explode(',', $product->product_image))
+                    ? array_map(fn($image) => asset('uploads/product_images/' . $image), explode(',', $product->product_image))
                     : [];
             });
 
@@ -842,8 +845,4 @@ class ProductController extends Controller
             ]
         ], 200);
     }
-
-   
-
-
 }

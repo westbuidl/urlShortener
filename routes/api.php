@@ -91,9 +91,9 @@ Route::get('/getSaleDetails/{orderId}', [SellerProfileController::class, 'getSal
 Route::get('/deleteSellerAccount/{sellerId}', [SellerProfileController::class, 'deleteSellerAccount'])->middleware('auth:sanctum')->name('deleteSellerAccount/{sellerId}');
 Route::post('/initiateWithdrawal', [SellerProfileController::class, 'initiateWithdrawal'])->middleware('auth:sanctum')->name('initiateWithdrawal');//profile update endpointupdate for 
 Route::post('/confirmWithdrawal', [SellerProfileController::class, 'confirmWithdrawal'])->middleware('auth:sanctum')->name('confirmWithdrawal');//profile update endpointupdate for 
-Route::post('/walletBalance', [SellerProfileController::class, 'walletBalance'])->middleware('auth:sanctum')->name('walletBalance');//profile update endpointupdate for 
-Route::post('/getWithdrawals', [SellerProfileController::class, 'getWithdrawals'])->middleware('auth:sanctum')->name('getWithdrawals');//profile update endpointupdate for 
-Route::post('/getWithdrawal/{withdrawalId}', [SellerProfileController::class, 'getWithdrawalDetails'])->middleware('auth:sanctum')->name('getWithdrawalDetails');//profile update endpointupdate for 
+Route::get('/getBalance', [SellerProfileController::class, 'getBalance'])->middleware('auth:sanctum')->name('getBalance');//profile update endpointupdate for 
+Route::get('/getWithdrawals', [SellerProfileController::class, 'getWithdrawals'])->middleware('auth:sanctum')->name('getWithdrawals');//profile update endpointupdate for 
+Route::get('/getWithdrawalDetails/{withdrawalId}', [SellerProfileController::class, 'getWithdrawalDetails'])->middleware('auth:sanctum')->name('getWithdrawalDetails');//profile update endpointupdate for 
 //End Api routes for Buyer account
 
 

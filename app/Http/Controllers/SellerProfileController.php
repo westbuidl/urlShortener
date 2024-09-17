@@ -77,37 +77,37 @@ class SellerProfileController extends Controller
         if (!$seller) {
             $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
         }
-    
+
         // Ensure the seller exists
         if (!$seller) {
             return response()->json([
                 'message' => 'Seller not found',
             ], 404);
         }
-    
-            if ($request->hasFile('profile_photo')) {
-                if ($seller->profile_photo) {
-                    $old_path = public_path() . '/uploads/profile_images/' . $seller->profile_photo;
-                    if (File::exists($old_path)) {
-                        File::delete($old_path);
-                    }
+
+        if ($request->hasFile('profile_photo')) {
+            if ($seller->profile_photo) {
+                $old_path = public_path() . '/uploads/profile_images/' . $seller->profile_photo;
+                if (File::exists($old_path)) {
+                    File::delete($old_path);
                 }
-                $image_name = 'profile-image-' . time() . '.' . $request->profile_photo->extension();
-        $request->profile_photo->move(public_path('/uploads/profile_images'), $image_name);
+            }
+            $image_name = 'profile-image-' . time() . '.' . $request->profile_photo->extension();
+            $request->profile_photo->move(public_path('/uploads/profile_images'), $image_name);
 
-        // Update the seller's profile photo
-        $seller->profile_photo = $image_name;
-        $seller->save();
+            // Update the seller's profile photo
+            $seller->profile_photo = $image_name;
+            $seller->save();
 
-        return response()->json([
-            'message' => 'Profile Picture successfully updated',
-        ], 200);
-    } else {
-        return response()->json([
-            'message' => 'No profile photo uploaded',
-        ], 400);
+            return response()->json([
+                'message' => 'Profile Picture successfully updated',
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'No profile photo uploaded',
+            ], 400);
+        }
     }
-}
 
     //Begin update account settings function
     public function updateSellerAccountDetails(Request $request)
@@ -196,55 +196,55 @@ class SellerProfileController extends Controller
 
             $authenticatedUser = $request->user();
 
-        // Determine if the authenticated user is an individual seller or a company seller
-        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
-        if (!$seller) {
-            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
-        }
-
-        // Ensure the authenticated user is the owner of the account being modified
-        if ($authenticatedUser->sellerId != $sellerId && $authenticatedUser->companySellerId != $sellerId) {
-            return response()->json([
-                'message' => 'Unauthorized access.',
-            ], 403);
-        }
-
-        // Ensure the seller exists
-        if (!$seller) {
-            return response()->json([
-                'message' => 'Seller not found.',
-            ], 404);
-        }
-
-        // Check if the seller has a profile picture
-        if (!empty($seller->profile_photo)) {
-            // Delete the profile picture from the filesystem
-            $imagePath = public_path('/uploads/profile_images/' . $seller->profile_photo);
-            if (File::exists($imagePath)) {
-                File::delete($imagePath);
+            // Determine if the authenticated user is an individual seller or a company seller
+            $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+            if (!$seller) {
+                $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
             }
 
-                    // Update the buyer's profile picture field to null
-                    $seller->profile_photo = null;
-                    $seller->save();
-
-
-                    return response()->json([
-                        'message' => 'Profile picture deleted successfully.',
-                    ], 200);
-                } else {
-                    return response()->json([
-                        'message' => 'No profile picture found for this seller.',
-                    ], 400);
-                }
-            } catch (\Exception $e) {
-                // Handle any exceptions that occur during the deletion process
+            // Ensure the authenticated user is the owner of the account being modified
+            if ($authenticatedUser->sellerId != $sellerId && $authenticatedUser->companySellerId != $sellerId) {
                 return response()->json([
-                    'message' => 'Error deleting profile picture.',
-                    'error' => $e->getMessage(), // Include the error message for debugging
-                ], 500);
+                    'message' => 'Unauthorized access.',
+                ], 403);
             }
+
+            // Ensure the seller exists
+            if (!$seller) {
+                return response()->json([
+                    'message' => 'Seller not found.',
+                ], 404);
+            }
+
+            // Check if the seller has a profile picture
+            if (!empty($seller->profile_photo)) {
+                // Delete the profile picture from the filesystem
+                $imagePath = public_path('/uploads/profile_images/' . $seller->profile_photo);
+                if (File::exists($imagePath)) {
+                    File::delete($imagePath);
+                }
+
+                // Update the buyer's profile picture field to null
+                $seller->profile_photo = null;
+                $seller->save();
+
+
+                return response()->json([
+                    'message' => 'Profile picture deleted successfully.',
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'No profile picture found for this seller.',
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            // Handle any exceptions that occur during the deletion process
+            return response()->json([
+                'message' => 'Error deleting profile picture.',
+                'error' => $e->getMessage(), // Include the error message for debugging
+            ], 500);
         }
+    }
 
     public function getSellerProfile(Request $request, $sellerId)
     {
@@ -462,379 +462,384 @@ class SellerProfileController extends Controller
 
 
     public function getAllSales(Request $request)
-{
-    // Get the authenticated seller
-    $authenticatedUser = auth()->user();
+    {
+        // Get the authenticated seller
+        $authenticatedUser = auth()->user();
 
-    // Determine if the user is an individual seller or a company seller
-    $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
-    if (!$seller) {
-        $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
-    }
-
-    // Ensure the seller exists
-    if (!$seller) {
-        return response()->json([
-            'message' => 'Seller not found.',
-        ], 404);
-    }
-
-    // Fetch all sales for the authenticated seller
-    $allSales = Order::where('sellerId', $authenticatedUser->sellerId)
-        ->orderBy('created_at', 'desc')
-        ->get();
-
-    $totalOrders = $allSales->count();
-    $totalVolume = $allSales->sum('grand_price');
-    $totalProfit = $totalVolume * (1 - 0.08);
-
-    // Calculate completed and pending sales
-    $completedSales = $allSales->where('order_status', 'success')->count();
-    $pendingSales = $allSales->where('status', 'pending')->count();
-
-    // Fetch the total number of products uploaded by the seller
-    $totalProducts = Product::where('sellerId', $authenticatedUser->sellerId)
-                        ->count();
-
-    // Prepare the sales data with product images
-    $salesData = $allSales->map(function ($order) {
-        $firstProductImage = null;
-        $productImages = explode(',', $order->productImage);
-        if (!empty($productImages) && isset($productImages[0]) && $productImages[0] !== '') {
-            $firstProductImage = asset('uploads/product_images/' . $productImages[0]);
+        // Determine if the user is an individual seller or a company seller
+        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+        if (!$seller) {
+            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
         }
 
-        return [
-            'order_id' => $order->orderId,
-            'product_id' => $order->productId,
-            'product_name' => $order->productName,
-            'product_image' => $firstProductImage,
-            'quantity' => $order->quantity,
-            'total_price' => $order->grand_price,
-            'order_date' => $order->created_at,
-        ];
-    });
+        // Ensure the seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
 
-    // Fetch top-selling categories with product count
-    $topCategories = Order::where('orders.sellerId', $authenticatedUser->sellerId)
-        ->join('products', 'orders.productId', '=', 'products.productId')
-        ->join('categories', 'products.categoryID', '=', 'categories.categoryID')
-        ->select(
-            'categories.categoryName',
-            DB::raw('COUNT(DISTINCT orders.productId) as sales_count'),
-            DB::raw('SUM(orders.grand_price) as total_revenue'),
-            DB::raw('COUNT(DISTINCT products.productId) as product_count')
-        )
-        ->groupBy('categories.categoryID', 'categories.categoryName')
-        ->orderByDesc('sales_count')
-        ->limit(5)
-        ->get();
+        // Fetch all sales for the authenticated seller
+        $allSales = Order::where('sellerId', $authenticatedUser->sellerId)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-    // Fetch total sales in last 7 days
-    $salesLast7Days = $this->getSalesLast7Days($authenticatedUser->sellerId);
+        $totalOrders = $allSales->count();
+        $totalVolume = $allSales->sum('grand_price');
+        $totalProfit = $totalVolume * (1 - 0.08);
 
-    return response()->json([
-        'message' => 'All sales found.',
-        'data' => [
-            'all_sales' => $salesData,
-            'total_orders' => $totalOrders,
-            'total_volume' => $totalVolume,
-            'total_profit' => $totalProfit,
-            'total_products' => $totalProducts,
-            'completed_sales' => $completedSales,
-            'pending_sales' => $pendingSales,
-            'top_categories' => $topCategories,
-            'sales_last_7_days' => $salesLast7Days,
-        ]
-    ], 200);
-}
+        // Calculate completed and pending sales
+        $completedSales = $allSales->where('order_status', 'success')->count();
+        $pendingSales = $allSales->where('status', 'pending')->count();
 
-private function getSalesLast7Days($sellerId)
-{
-    $sevenDaysAgo = now()->subDays(7)->startOfDay();
-    
-    return Order::where('sellerId', $sellerId)
-        ->where('created_at', '>=', $sevenDaysAgo)
-        ->sum('grand_price');
-}
+        // Fetch the total number of products uploaded by the seller
+        $totalProducts = Product::where('sellerId', $authenticatedUser->sellerId)
+            ->count();
+
+        // Prepare the sales data with product images
+        $salesData = $allSales->map(function ($order) {
+            $firstProductImage = null;
+            $productImages = explode(',', $order->productImage);
+            if (!empty($productImages) && isset($productImages[0]) && $productImages[0] !== '') {
+                $firstProductImage = asset('uploads/product_images/' . $productImages[0]);
+            }
+
+            return [
+                'order_id' => $order->orderId,
+                'product_id' => $order->productId,
+                'product_name' => $order->productName,
+                'product_image' => $firstProductImage,
+                'quantity' => $order->quantity,
+                'total_price' => $order->grand_price,
+                'order_date' => $order->created_at,
+            ];
+        });
+
+        // Fetch top-selling categories with product count
+        $topCategories = Order::where('orders.sellerId', $authenticatedUser->sellerId)
+            ->join('products', 'orders.productId', '=', 'products.productId')
+            ->join('categories', 'products.categoryID', '=', 'categories.categoryID')
+            ->select(
+                'categories.categoryName',
+                DB::raw('COUNT(DISTINCT orders.productId) as sales_count'),
+                DB::raw('SUM(orders.grand_price) as total_revenue'),
+                DB::raw('COUNT(DISTINCT products.productId) as product_count')
+            )
+            ->groupBy('categories.categoryID', 'categories.categoryName')
+            ->orderByDesc('sales_count')
+            ->limit(5)
+            ->get();
+
+        // Fetch total sales in last 7 days
+        $salesLast7Days = $this->getSalesLast7Days($authenticatedUser->sellerId);
+
+        return response()->json([
+            'message' => 'All sales found.',
+            'data' => [
+                'all_sales' => $salesData,
+                'total_orders' => $totalOrders,
+                'total_volume' => $totalVolume,
+                'total_profit' => $totalProfit,
+                'total_products' => $totalProducts,
+                'completed_sales' => $completedSales,
+                'pending_sales' => $pendingSales,
+                'top_categories' => $topCategories,
+                'sales_last_7_days' => $salesLast7Days,
+            ]
+        ], 200);
+    }
+
+    private function getSalesLast7Days($sellerId)
+    {
+        $sevenDaysAgo = now()->subDays(7)->startOfDay();
+
+        return Order::where('sellerId', $sellerId)
+            ->where('created_at', '>=', $sevenDaysAgo)
+            ->sum('grand_price');
+    }
 
 
 
 
     public function getTopSellingProducts(Request $request)
-{
-    // Get the authenticated seller
-    $authenticatedUser = auth()->user();
+    {
+        // Get the authenticated seller
+        $authenticatedUser = auth()->user();
 
-    // Determine if the user is an individual seller or a company seller
-    $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
-    if (!$seller) {
-        $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+        // Determine if the user is an individual seller or a company seller
+        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+        if (!$seller) {
+            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+        }
+
+        // Ensure the seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        // Use the sellerId for querying orders
+        $sellerId = $authenticatedUser->sellerId;
+
+        // Aggregate sales data based on products
+        $topSellingProducts = Order::where('sellerId', $sellerId)
+            ->select('productId', 'productName', 'productImage', DB::raw('SUM(quantity) as total_quantity'))
+            ->groupBy('productId', 'productName', 'productImage')
+            ->orderByDesc('total_quantity')
+            ->take(10)
+            ->get();
+
+        // Check if there are any top selling products
+        if ($topSellingProducts->isEmpty()) {
+            return response()->json([
+                'message' => 'No top selling products found.',
+                'data' => [
+                    'top_selling_products' => [],
+                ]
+            ], 200);
+        }
+
+        // Prepare the product details along with total quantity sold
+        $productDetails = $topSellingProducts->map(function ($product) {
+            return [
+                'product_id' => $product->productId,
+                'product_name' => $product->productName,
+                'product_image' => $product->productImage ? asset('uploads/product_images/' . $product->productImage) : null,
+                'total_quantity_sold' => $product->total_quantity,
+            ];
+        });
+
+        return response()->json([
+            'message' => 'Top selling products found.',
+            'data' => [
+                'top_selling_products' => $productDetails,
+            ]
+        ], 200);
     }
 
-    // Ensure the seller exists
+
+    //Begin Seller Wallet Withdrawal
+    public function initiateWithdrawal(Request $request)
+    {
+        // Validate the request
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+        ]);
+
+        // Get the authenticated seller
+        $authenticatedUser = auth()->user();
+
+        // Determine if the user is an individual seller or a company seller
+        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+        $isCompany = false;
+        if (!$seller) {
+            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+            $isCompany = true;
+        }
+
+        // Ensure the seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        $firstname = $isCompany ? $seller->companyname : $seller->firstname;
+        $email = $isCompany ? $seller->companyemail : $seller->email;
+
+        // Check if the seller has sufficient balance
+        if ($seller->accrued_profit < $request->amount) {
+            return response()->json([
+                'message' => 'Insufficient funds in the account.',
+            ], 400);
+        }
+
+        // Generate OTP
+        $otp = Str::random(6);
+
+        // Generate a unique withdrawal ID
+        $withdrawalId = Str::uuid();
+
+        // Store OTP and withdrawal details in cache for 10 minutes
+        $cacheKey = $isCompany ? 'withdrawal_' . $seller->companySellerId : 'withdrawal_' . $seller->sellerId;
+        Cache::put($cacheKey, [
+            'otp' => $otp,
+            'withdrawal_id' => $withdrawalId,
+            'amount' => $request->amount,
+            'seller_id' => $isCompany ? $seller->companySellerId : $seller->sellerId,
+            'seller_type' => $isCompany ? 'company' : 'individual',
+        ], 600);
+
+        // Send OTP to seller's email
+        Mail::to($email)->send(new WithdrawalOTP($otp, $firstname, $request->amount));
+
+        return response()->json([
+            'message' => 'Withdrawal initiated. Please check your email for the OTP.',
+            'withdrawal_id' => $withdrawalId,
+        ], 200);
+    }
+
+    public function confirmWithdrawal(Request $request)
+    {
+        // Validate the request
+        $request->validate([
+            'otp' => 'required|string|size:6',
+        ]);
+
+        // Get the authenticated seller
+        $authenticatedUser = auth()->user();
+
+        // Determine if the user is an individual seller or a company seller
+        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+        $isCompany = false;
+        if (!$seller) {
+            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+            $isCompany = true;
+        }
+
+        // Ensure the seller exists
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Seller not found.',
+            ], 404);
+        }
+
+        $firstname = $isCompany ? $seller->companyname : $seller->firstname;
+        $email = $isCompany ? $seller->companyemail : $seller->email;
+
+        // Retrieve withdrawal details from cache
+        $cacheKey = $isCompany ? 'withdrawal_' . $seller->companySellerId : 'withdrawal_' . $seller->sellerId;
+        $withdrawalDetails = Cache::get($cacheKey);
+
+        if (!$withdrawalDetails || $withdrawalDetails['otp'] !== $request->otp) {
+            return response()->json([
+                'message' => 'Invalid or expired OTP.',
+            ], 400);
+        }
+
+        // Check if the seller still has sufficient balance
+        if ($seller->accrued_profit < $withdrawalDetails['amount']) {
+            return response()->json([
+                'message' => 'Insufficient funds in the account.',
+            ], 400);
+        }
+
+        // Process the withdrawal
+        $seller->accrued_profit -= $withdrawalDetails['amount'];
+        $seller->save();
+
+        // Store the withdrawal request in the withdrawals database
+        $withdrawal = new Withdrawal();
+        $withdrawal->withdrawal_id = $withdrawalDetails['withdrawal_id'];
+        $withdrawal->seller_id = $withdrawalDetails['seller_id'];
+        $withdrawal->seller_type = $withdrawalDetails['seller_type'];
+        $withdrawal->amount = $withdrawalDetails['amount'];
+        $withdrawal->status = 'submitted';
+        $withdrawal->initiated_at = now()->subMinutes(10); // Assuming it was initiated 10 minutes ago
+        $withdrawal->completed_at = now();
+        $withdrawal->save();
+
+        // Clear the withdrawal details from cache
+        Cache::forget($cacheKey);
+
+        Mail::to($email)->send(new WithdrawalConfirmation($firstname, $withdrawalDetails['amount']));
+
+        // Send notification email to admin
+        $adminEmail = 'westwizo@yahoo.com'; // Assuming you have this set in your config
+        Mail::to($adminEmail)->send(new AdminWithdrawalNotification($withdrawal));
+
+        return response()->json([
+            'message' => 'Withdrawal successful.',
+            'new_balance' => $seller->accrued_profit,
+            'withdrawal_record_id' => $withdrawal->id,
+        ], 200);
+    }
+
+    //End
+
+
+
+    public function getBalance()
+{
+    $seller = $this->getAuthenticatedSeller();
+
     if (!$seller) {
         return response()->json([
             'message' => 'Seller not found.',
         ], 404);
     }
 
-    // Use the sellerId for querying orders
-    $sellerId = $authenticatedUser->sellerId;
-
-    // Aggregate sales data based on products
-    $topSellingProducts = Order::where('sellerId', $sellerId)
-        ->select('productId', 'productName', 'productImage', DB::raw('SUM(quantity) as total_quantity'))
-        ->groupBy('productId', 'productName', 'productImage')
-        ->orderByDesc('total_quantity')
-        ->take(10)
-        ->get();
-
-    // Check if there are any top selling products
-    if ($topSellingProducts->isEmpty()) {
-        return response()->json([
-            'message' => 'No top selling products found.',
-            'data' => [
-                'top_selling_products' => [],
-            ]
-        ], 200);
-    }
-
-    // Prepare the product details along with total quantity sold
-    $productDetails = $topSellingProducts->map(function ($product) {
-        return [
-            'product_id' => $product->productId,
-            'product_name' => $product->productName,
-            'product_image' => $product->productImage ? asset('uploads/product_images/' . $product->productImage) : null,
-            'total_quantity_sold' => $product->total_quantity,
-        ];
-    });
-
     return response()->json([
-        'message' => 'Top selling products found.',
+        'message' => 'Balance retrieved successfully.',
         'data' => [
-            'top_selling_products' => $productDetails,
+            'balance' => $seller->accrued_profit,
         ]
     ], 200);
 }
 
+public function getWithdrawals(Request $request)
+{
+    $seller = $this->getAuthenticatedSeller();
 
-            //Begin Seller Wallet Withdrawal
-            public function initiateWithdrawal(Request $request)
-            {
-                // Validate the request
-                $request->validate([
-                    'amount' => 'required|numeric|min:0.01',
-                ]);
-        
-                // Get the authenticated seller
-                $authenticatedUser = auth()->user();
-        
-                // Determine if the user is an individual seller or a company seller
-                $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
-                $isCompany = false;
-                if (!$seller) {
-                    $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
-                    $isCompany = true;
-                }
-        
-                // Ensure the seller exists
-                if (!$seller) {
-                    return response()->json([
-                        'message' => 'Seller not found.',
-                    ], 404);
-                }
-        
-                $firstname = $isCompany ? $seller->companyname : $seller->firstname;
-                $email = $isCompany ? $seller->companyemail : $seller->email;
-        
-                // Check if the seller has sufficient balance
-                if ($seller->accrued_profit < $request->amount) {
-                    return response()->json([
-                        'message' => 'Insufficient funds in the account.',
-                    ], 400);
-                }
-        
-                // Generate OTP
-                $otp = Str::random(6);
-        
-                // Generate a unique withdrawal ID
-                $withdrawalId = Str::uuid();
-        
-                // Store OTP and withdrawal details in cache for 10 minutes
-                $cacheKey = $isCompany ? 'withdrawal_' . $seller->companySellerId : 'withdrawal_' . $seller->sellerId;
-                Cache::put($cacheKey, [
-                    'otp' => $otp,
-                    'withdrawal_id' => $withdrawalId,
-                    'amount' => $request->amount,
-                    'seller_id' => $isCompany ? $seller->companySellerId : $seller->sellerId,
-                    'seller_type' => $isCompany ? 'company' : 'individual',
-                ], 600);
-        
-                // Send OTP to seller's email
-                Mail::to($email)->send(new WithdrawalOTP($otp, $firstname, $request->amount));
-        
-                return response()->json([
-                    'message' => 'Withdrawal initiated. Please check your email for the OTP.',
-                    'withdrawal_id' => $withdrawalId,
-                ], 200);
-            }
-
-            public function confirmWithdrawal(Request $request)
-            {
-                // Validate the request
-                $request->validate([
-                    'otp' => 'required|string|size:6',
-                ]);
-        
-                // Get the authenticated seller
-                $authenticatedUser = auth()->user();
-        
-                // Determine if the user is an individual seller or a company seller
-                $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
-                $isCompany = false;
-                if (!$seller) {
-                    $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
-                    $isCompany = true;
-                }
-        
-                // Ensure the seller exists
-                if (!$seller) {
-                    return response()->json([
-                        'message' => 'Seller not found.',
-                    ], 404);
-                }
-        
-                $firstname = $isCompany ? $seller->companyname : $seller->firstname;
-                $email = $isCompany ? $seller->companyemail : $seller->email;
-        
-                // Retrieve withdrawal details from cache
-                $cacheKey = $isCompany ? 'withdrawal_' . $seller->companySellerId : 'withdrawal_' . $seller->sellerId;
-                $withdrawalDetails = Cache::get($cacheKey);
-        
-                if (!$withdrawalDetails || $withdrawalDetails['otp'] !== $request->otp) {
-                    return response()->json([
-                        'message' => 'Invalid or expired OTP.',
-                    ], 400);
-                }
-        
-                // Check if the seller still has sufficient balance
-                if ($seller->accrued_profit < $withdrawalDetails['amount']) {
-                    return response()->json([
-                        'message' => 'Insufficient funds in the account.',
-                    ], 400);
-                }
-        
-                // Process the withdrawal
-                $seller->accrued_profit -= $withdrawalDetails['amount'];
-                $seller->save();
-        
-                // Store the withdrawal request in the withdrawals database
-                $withdrawal = new Withdrawal();
-                $withdrawal->withdrawal_id = $withdrawalDetails['withdrawal_id'];
-                $withdrawal->seller_id = $withdrawalDetails['seller_id'];
-                $withdrawal->seller_type = $withdrawalDetails['seller_type'];
-                $withdrawal->amount = $withdrawalDetails['amount'];
-                $withdrawal->status = 'submitted';
-                $withdrawal->initiated_at = now()->subMinutes(10); // Assuming it was initiated 10 minutes ago
-                $withdrawal->completed_at = now();
-                $withdrawal->save();
-        
-                // Clear the withdrawal details from cache
-                Cache::forget($cacheKey);
-        
-                Mail::to($email)->send(new WithdrawalConfirmation($firstname, $withdrawalDetails['amount']));
-
-                // Send notification email to admin
-                $adminEmail = 'westwizo@yahoo.com'; // Assuming you have this set in your config
-                Mail::to($adminEmail)->send(new AdminWithdrawalNotification($withdrawal));
-                
-                return response()->json([
-                    'message' => 'Withdrawal successful.',
-                    'new_balance' => $seller->accrued_profit,
-                    'withdrawal_record_id' => $withdrawal->id,
-                ], 200);
-            }
-
-    //End
-
-
-
-    public function walletBalance()
-    {
-        $seller = $this->getAuthenticatedSeller();
-
-        if (!$seller) {
-            return response()->json([
-                'message' => 'Seller not found.',
-            ], 404);
-        }
-
+    if (!$seller) {
         return response()->json([
-            'balance' => $seller->accrued_profit,
-        ], 200);
+            'message' => 'Seller not found.',
+        ], 404);
     }
 
-    public function getWithdrawals(Request $request)
-    {
-        $seller = $this->getAuthenticatedSeller();
+    $withdrawals = Withdrawal::where('seller_id', $seller instanceof Seller ? $seller->sellerId : $seller->companySellerId)
+        ->where('seller_type', $seller instanceof Seller ? 'individual' : 'company')
+        ->orderBy('completed_at', 'desc')
+        ->paginate($request->get('per_page', 10));
 
-        if (!$seller) {
-            return response()->json([
-                'message' => 'Seller not found.',
-            ], 404);
-        }
+    return response()->json([
+        'message' => 'Withdrawals retrieved successfully.',
+        'data' => $withdrawals
+    ], 200);
+}
 
-        $withdrawals = Withdrawal::where('seller_id', $seller->getId())
-            ->where('seller_type', $seller->getType())
-            ->orderBy('completed_at', 'desc')
-            ->paginate($request->get('per_page', 10));
+public function getWithdrawalDetails($withdrawalId)
+{
+    $seller = $this->getAuthenticatedSeller();
 
-        return response()->json($withdrawals, 200);
+    if (!$seller) {
+        return response()->json([
+            'message' => 'Seller not found.',
+        ], 404);
     }
 
-    public function getWithdrawalDetails($withdrawalId)
-    {
-        $seller = $this->getAuthenticatedSeller();
+    $withdrawal = Withdrawal::where('withdrawal_id', $withdrawalId)
+        ->where('seller_id', $seller instanceof Seller ? $seller->sellerId : $seller->companySellerId)
+        ->where('seller_type', $seller instanceof Seller ? 'individual' : 'company')
+        ->first();
 
-        if (!$seller) {
-            return response()->json([
-                'message' => 'Seller not found.',
-            ], 404);
-        }
-
-        $withdrawal = Withdrawal::where('withdrawal_id', $withdrawalId)
-            ->where('seller_id', $seller->getId())
-            ->where('seller_type', $seller->getType())
-            ->first();
-
-        if (!$withdrawal) {
-            return response()->json([
-                'message' => 'Withdrawal not found.',
-            ], 404);
-        }
-
-        return response()->json($withdrawal, 200);
+    if (!$withdrawal) {
+        return response()->json([
+            'message' => 'Withdrawal not found.',
+        ], 404);
     }
 
-    private function getAuthenticatedSeller()
-    {
-        $user = Auth::user();
-        
-        $seller = Seller::where('sellerId', $user->sellerId)->first();
-        if ($seller) {
-            $seller->setType('individual');
-            return $seller;
-        }
+    return response()->json([
+        'message' => 'Withdrawal details retrieved successfully.',
+        'data' => $withdrawal
+    ], 200);
+}
 
-        $companySeller = CompanySeller::where('companySellerId', $user->companySellerId)->first();
-        if ($companySeller) {
-            $companySeller->setType('company');
-            return $companySeller;
-        }
+private function getAuthenticatedSeller()
+{
+    $user = Auth::user();
 
-        return null;
+    if ($user->sellerId) {
+        return Seller::where('sellerId', $user->sellerId)->first();
     }
+
+    if ($user->companySellerId) {
+        return CompanySeller::where('companySellerId', $user->companySellerId)->first();
+    }
+
+    return null;
+}
 
 
 

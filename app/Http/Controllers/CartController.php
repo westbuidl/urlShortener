@@ -208,7 +208,7 @@ class CartController extends Controller
             $totalPrice = 0; // Initialize total price variable
             $totalQuantity = 0; // Initialize total quantity variable
             $totalWeight = 0; // Initialize total weight variable
-            $feePerKg = 100; // Define the fee per kg
+            $feePerKg = 130; // Define the fee per kg
 
             // Calculate total price, total quantity, and total weight
             foreach ($cartItems as $item) {
@@ -550,7 +550,7 @@ class CartController extends Controller
 
             // Calculate the shipping fee
             $shippingFee = 0;
-            $feePerKg = 100;
+            $feePerKg = 130;
             foreach ($cartItems as $cartItem) {
                 $weight = $cartItem->productWeight;
                 $quantity = $cartItem->quantity;
