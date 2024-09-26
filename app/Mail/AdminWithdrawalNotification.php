@@ -15,10 +15,12 @@ class AdminWithdrawalNotification extends Mailable
     use Queueable, SerializesModels;
 
     public $withdrawal;
+    public $sellerDetails;
 
-    public function __construct(Withdrawal $withdrawal)
+    public function __construct(Withdrawal $withdrawal, $sellerDetails)
     {
         $this->withdrawal = $withdrawal;
+        $this->sellerDetails = $sellerDetails;
     }
 
     /**

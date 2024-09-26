@@ -15,18 +15,20 @@ class WithdrawalOTP extends Mailable
     public $amount;
     public $otp;
     public $firstname;
+    public $withdrawalId;
     
 
 
     /**
      * Create a new message instance.
      */
-    public function __construct($otp, $firstname,$amount)
+    public function __construct($otp, $firstname,$amount,$withdrawalId)
     {
        // $this->seller = $seller;
         $this->otp = $otp;
         $this->firstname = $firstname;
         $this->amount = $amount;
+        $this->withdrawalId = $withdrawalId;
         //
     }
 

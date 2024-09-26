@@ -16,18 +16,22 @@ class WithdrawalConfirmation extends Mailable
    // public $otp;
     public $firstname;
     public $amount;
+    public $withdrawalId;
+    //public $initiated_at;
     
 
 
     /**
      * Create a new message instance.
      */
-    public function __construct($firstname, $amount)
+    public function __construct($firstname, $amount, $withdrawalId)
     {
        // $this->seller = $seller;
         //$this->otp = $otp;
         $this->firstname = $firstname;
         $this->amount = $amount;
+        $this->withdrawalId = $withdrawalId;
+        //$this->initiated_at = $initiated_at;
         //
     }
 

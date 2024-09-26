@@ -686,7 +686,7 @@ class SellerProfileController extends Controller
     ], 600);
 
     // Send OTP to seller's email
-    Mail::to($email)->send(new WithdrawalOTP($otp, $firstname, $request->amount));
+    Mail::to($email)->send(new WithdrawalOTP($otp, $firstname, $request->amount,$withdrawalId ));
 
     return response()->json([
         'message' => 'Withdrawal initiated. Please check your email for the OTP.',
@@ -754,14 +754,32 @@ class SellerProfileController extends Controller
         $withdrawal->completed_at = now();
         $withdrawal->save();
 
+
+
+        // Fetch additional seller details
+    $sellerDetails = [
+        'fullname' => $isCompany ? $seller->companyname : $seller->firstname . ' ' . $seller->lastname,
+        'email' => $isCompany ? $seller->companyemail : $seller->email,
+        'account_name' => $seller->account_name,
+        'bank_name' => $seller->bank_name,
+        'account_number' => $seller->account_number,
+    ];
+
         // Clear the withdrawal details from cache
         Cache::forget($cacheKey);
 
-        Mail::to($email)->send(new WithdrawalConfirmation($firstname, $withdrawalDetails['amount']));
+        Mail::to($email)->send(new WithdrawalConfirmation($firstname, $withdrawalDetails['amount'],$withdrawalDetails['withdrawal_id']));
 
         // Send notification email to admin
-        $adminEmail = 'westwizo@yahoo.com'; // Assuming you have this set in your config
-        Mail::to($adminEmail)->send(new AdminWithdrawalNotification($withdrawal));
+        $adminEmail = [
+            //'hyacinth@agroease.ng',
+            'larryo@agroease.ng',
+            'kpakpando@agroease.ng',
+            'sandra@agroease.ng'
+        ];
+
+        //$adminEmail = 'westwizo@yahoo.com'; // Assuming you have this set in your config
+        Mail::to($adminEmail)->send(new AdminWithdrawalNotification($withdrawal, $sellerDetails));
 
         return response()->json([
             'message' => 'Withdrawal successful.',
