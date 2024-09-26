@@ -479,14 +479,19 @@ class SellerProfileController extends Controller
             ], 404);
         }
 
+
+        // Fetch total profit from the accrued_profit column
+    $totalProfit = $seller->accrued_profit;
+
+
         // Fetch all sales for the authenticated seller
         $allSales = Order::where('sellerId', $authenticatedUser->sellerId)
             ->orderBy('created_at', 'desc')
             ->get();
 
         $totalOrders = $allSales->count();
-        $totalVolume = $allSales->sum('grand_price');
-        $totalProfit = $totalVolume * (1 - 0.08);
+        $totalVolume = $totalProfit;
+        //$totalProfit = $totalVolume * (1 - 0.08);
 
         // Calculate completed and pending sales
         $completedSales = $allSales->where('order_status', 'success')->count();
@@ -531,7 +536,8 @@ class SellerProfileController extends Controller
             ->get();
 
         // Fetch total sales in last 7 days
-        $salesLast7Days = $this->getSalesLast7Days($authenticatedUser->sellerId);
+        //$salesLast7Days = $this->getSalesLast7Days($authenticatedUser->sellerId);
+        $salesLast7Days = $this->getSalesLast7Days($seller->sellerId ?? $seller->companySellerId);
 
         return response()->json([
             'message' => 'All sales found.',
@@ -621,64 +627,72 @@ class SellerProfileController extends Controller
 
     //Begin Seller Wallet Withdrawal
     public function initiateWithdrawal(Request $request)
-    {
-        // Validate the request
-        $request->validate([
-            'amount' => 'required|numeric|min:0.01',
-        ]);
+{
+    // Get the authenticated seller
+    $authenticatedUser = auth()->user();
 
-        // Get the authenticated seller
-        $authenticatedUser = auth()->user();
-
-        // Determine if the user is an individual seller or a company seller
-        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
-        $isCompany = false;
-        if (!$seller) {
-            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
-            $isCompany = true;
-        }
-
-        // Ensure the seller exists
-        if (!$seller) {
-            return response()->json([
-                'message' => 'Seller not found.',
-            ], 404);
-        }
-
-        $firstname = $isCompany ? $seller->companyname : $seller->firstname;
-        $email = $isCompany ? $seller->companyemail : $seller->email;
-
-        // Check if the seller has sufficient balance
-        if ($seller->accrued_profit < $request->amount) {
-            return response()->json([
-                'message' => 'Insufficient funds in the account.',
-            ], 400);
-        }
-
-        // Generate OTP
-        $otp = Str::random(6);
-
-        // Generate a unique withdrawal ID
-        $withdrawalId = Str::uuid();
-
-        // Store OTP and withdrawal details in cache for 10 minutes
-        $cacheKey = $isCompany ? 'withdrawal_' . $seller->companySellerId : 'withdrawal_' . $seller->sellerId;
-        Cache::put($cacheKey, [
-            'otp' => $otp,
-            'withdrawal_id' => $withdrawalId,
-            'amount' => $request->amount,
-            'seller_id' => $isCompany ? $seller->companySellerId : $seller->sellerId,
-            'seller_type' => $isCompany ? 'company' : 'individual',
-        ], 600);
-
-        // Send OTP to seller's email
-        Mail::to($email)->send(new WithdrawalOTP($otp, $firstname, $request->amount));
-
-        return response()->json([
-            'message' => 'Withdrawal initiated. Please check your email for the OTP.',
-            'withdrawal_id' => $withdrawalId,
-        ], 200);
+    // Determine if the user is an individual seller or a company seller
+    $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+    $isCompany = false;
+    if (!$seller) {
+        $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+        $isCompany = true;
     }
+
+    // Ensure the seller exists
+    if (!$seller) {
+        return response()->json([
+            'message' => 'Seller not found.',
+        ], 404);
+    }
+
+    // Check if the seller has saved bank account information
+    $hasBankInfo = !empty($seller->bank_name) && !empty($seller->account_number);
+    if (!$hasBankInfo) {
+        return response()->json([
+            'message' => 'No bank account information found. Please add your bank details before initiating a withdrawal.',
+        ], 400);
+    }
+
+    // Validate the request
+    $request->validate([
+        'amount' => 'required|numeric|min:0.01',
+    ]);
+
+    $firstname = $isCompany ? $seller->companyname : $seller->firstname;
+    $email = $isCompany ? $seller->companyemail : $seller->email;
+
+    // Check if the seller has sufficient balance
+    if ($seller->accrued_profit < $request->amount) {
+        return response()->json([
+            'message' => 'Insufficient funds in the account.',
+        ], 400);
+    }
+
+    // Generate OTP
+    $otp = Str::random(6);
+
+    // Generate a unique withdrawal ID
+    $withdrawalId = Str::uuid();
+
+    // Store OTP and withdrawal details in cache for 10 minutes
+    $cacheKey = $isCompany ? 'withdrawal_' . $seller->companySellerId : 'withdrawal_' . $seller->sellerId;
+    Cache::put($cacheKey, [
+        'otp' => $otp,
+        'withdrawal_id' => $withdrawalId,
+        'amount' => $request->amount,
+        'seller_id' => $isCompany ? $seller->companySellerId : $seller->sellerId,
+        'seller_type' => $isCompany ? 'company' : 'individual',
+    ], 600);
+
+    // Send OTP to seller's email
+    Mail::to($email)->send(new WithdrawalOTP($otp, $firstname, $request->amount));
+
+    return response()->json([
+        'message' => 'Withdrawal initiated. Please check your email for the OTP.',
+        'withdrawal_id' => $withdrawalId,
+    ], 200);
+}
 
     public function confirmWithdrawal(Request $request)
     {
@@ -791,7 +805,7 @@ public function getWithdrawals(Request $request)
     $withdrawals = Withdrawal::where('seller_id', $seller instanceof Seller ? $seller->sellerId : $seller->companySellerId)
         ->where('seller_type', $seller instanceof Seller ? 'individual' : 'company')
         ->orderBy('completed_at', 'desc')
-        ->paginate($request->get('per_page', 10));
+        ->get();
 
     return response()->json([
         'message' => 'Withdrawals retrieved successfully.',
