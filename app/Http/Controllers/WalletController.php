@@ -69,68 +69,94 @@ class WalletController extends Controller
     }
 
     public function confirmWithdrawal(Request $request)
-    {
-        // Validate the request
-        $request->validate([
-            'withdrawal_id' => 'required|string',
-            'amount' => 'required|numeric|min:0.01',
-            'otp' => 'required|string|size:6',
-        ]);
+{
+    // Validate the request
+    $request->validate([
+        'withdrawal_id' => 'required|string',
+        'amount' => 'required|numeric|min:0.01',
+        'otp' => 'required|string|size:6',
+    ]);
 
-        // Get the authenticated seller
-        $authenticatedUser = auth()->user();
+    // Get the authenticated seller
+    $authenticatedUser = auth()->user();
 
-        // Determine if the user is an individual seller or a company seller
-        $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
-        if (!$seller) {
-            $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
-        }
+    // Determine if the user is an individual seller or a company seller
+    $seller = Seller::where('sellerId', $authenticatedUser->sellerId)->first();
+    $isCompany = false;
 
-        // Ensure the seller exists
-        if (!$seller) {
-            return response()->json([
-                'message' => 'Seller not found.',
-            ], 404);
-        }
-
-        // Verify OTP
-        $cachedOTP = Cache::get('withdrawal_otp_' . $seller->sellerId);
-        if (!$cachedOTP || $cachedOTP !== $request->otp) {
-            return response()->json([
-                'message' => 'Invalid or expired OTP.',
-            ], 400);
-        }
-
-        // Get the seller's wallet
-        $wallet = Wallet::where('sellerId', $seller->sellerId)->first();
-
-        if (!$wallet) {
-            return response()->json([
-                'message' => 'Wallet not found for this seller.',
-            ], 404);
-        }
-
-        // Check if the seller has sufficient balance
-        if ($wallet->balance < $request->amount) {
-            return response()->json([
-                'message' => 'Insufficient funds in the wallet.',
-            ], 400);
-        }
-
-        // Process the withdrawal
-        $wallet->balance -= $request->amount;
-        $wallet->save();
-
-        // Clear the OTP from cache
-        Cache::forget('withdrawal_otp_' . $seller->sellerId);
-
-        // TODO: Implement the actual transfer of funds to the seller's bank account
-
-        return response()->json([
-            'message' => 'Withdrawal successful.',
-            'new_balance' => $wallet->balance,
-        ], 200);
+    if (!$seller) {
+        $seller = CompanySeller::where('companySellerId', $authenticatedUser->companySellerId)->first();
+        $isCompany = true;
     }
+
+    // Ensure the seller exists
+    if (!$seller) {
+        return response()->json([
+            'message' => 'Seller not found.',
+        ], 404);
+    }
+
+    // Verify OTP
+    $cacheKey = $isCompany ? 'withdrawal_otp_' . $seller->companySellerId : 'withdrawal_otp_' . $seller->sellerId;
+    $cachedOTP = Cache::get($cacheKey);
+    if (!$cachedOTP || $cachedOTP !== $request->otp) {
+        return response()->json([
+            'message' => 'Invalid or expired OTP.',
+        ], 400);
+    }
+
+    // Get the seller's wallet
+    $wallet = Wallet::where($isCompany ? 'companySellerId' : 'sellerId', $isCompany ? $seller->companySellerId : $seller->sellerId)->first();
+    if (!$wallet) {
+        return response()->json([
+            'message' => 'Wallet not found for this seller.',
+        ], 404);
+    }
+
+    // Check if the seller has sufficient balance
+    if ($wallet->balance < $request->amount) {
+        return response()->json([
+            'message' => 'Insufficient funds in the wallet.',
+        ], 400);
+    }
+
+    
+
+    // Process the withdrawal
+    $wallet->balance -= $request->amount;
+    $wallet->save();
+
+    // Create a new withdrawal record
+    $withdrawal = new Withdrawal();
+    $withdrawal->withdrawal_id = $request->withdrawal_id;
+    $withdrawal->seller_id = $isCompany ? $seller->companySellerId : $seller->sellerId;
+    $withdrawal->seller_type = $isCompany ? 'company' : 'individual';
+    $withdrawal->amount = $request->amount;
+    $withdrawal->status = 'processing';
+    $withdrawal->bank_name = $seller->bank_name ?? 'Not provided';
+    $withdrawal->account_name = $seller->account_name ?? 'Not provided';
+    $withdrawal->account_number = $seller->account_number ?? 'Not provided';
+    $withdrawal->initiated_at = now();
+    $withdrawal->created_at = now();
+    $withdrawal->updated_at = now();
+
+    $withdrawal->save();
+
+    // Clear the OTP from cache
+    Cache::forget($cacheKey);
+
+    // TODO: Implement the actual transfer of funds to the seller's bank account
+
+    return response()->json([
+        'message' => 'Withdrawal request processed successfully.',
+        'data' => [
+            'withdrawal_id' => $withdrawal->withdrawal_id,
+            'amount' => $withdrawal->amount,
+            'new_balance' => $wallet->balance,
+            'status' => $withdrawal->status,
+        ]
+    ], 200);
+}
 
     public function getAllWithdrawals(Request $request)
     {
@@ -197,7 +223,7 @@ class WalletController extends Controller
     private function getAuthenticatedSeller()
     {
         $user = Auth::user();
-        
+
         $seller = Seller::where('sellerId', $user->sellerId)->first();
         if ($seller) {
             $seller->setType('individual');
@@ -212,5 +238,4 @@ class WalletController extends Controller
 
         return null;
     }
-
 }

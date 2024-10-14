@@ -17,6 +17,9 @@ return new class extends Migration
             $table->string('withdrawal_id');
             $table->string('seller_id');
             $table->string('amount');
+            $table->string('bank_name');
+            $table->string('account_name');
+            $table->string('account_number');
             $table->string('status');
             $table->string('initiated_at');
             $table->string('completed_at');

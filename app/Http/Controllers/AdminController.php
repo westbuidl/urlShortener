@@ -396,7 +396,7 @@ class AdminController extends Controller
         }
     }
 
-    public function editProduct(Request $request, string $productId)
+    public function editProducts(Request $request, string $productId)
     {
         // Check if the user is an admin
         if (!$this->isAdmin()) {

@@ -240,7 +240,7 @@ Route::get('/searchSellers', [AdminController::class, 'searchSellers'])->name('s
 //Admin Products
 Route::get('/getAllProducts', [AdminController::class, 'getAllProducts'])->name('getAllProducts');
 Route::get('/getProductDetails/{productId}', [AdminController::class, 'getProductDetails'])->name('getProductDetails');
-Route::post('/editProduct/{productId}', [AdminController::class, 'editProduct'])->name('editProduct');
+Route::post('/editProducts/{productId}', [AdminController::class, 'editProducts'])->name('editProducts');
 Route::delete('/adminDeleteProduct/{productId}', [AdminController::class, 'adminDeleteProduct'])->name('adminDeleteProduct');
 Route::get('/search', [AdminController::class, 'search'])->name('search');
 
