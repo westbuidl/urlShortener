@@ -52,7 +52,7 @@
         </div>
         <div class="total-transaction">
             <p>Total Transactions</p>
-            <h5>{{  '₦' . number_format($data['amount'], 2) }}</h5>
+            <h5>{{  '$' . number_format($data['amount'], 2) }}</h5>
         </div>
         <button class="button">Continue Shopping</button>
 

@@ -8,14 +8,13 @@ use App\Models\Buyer;
 use App\Models\Order;
 use App\Models\Seller;
 use App\Models\Product;
-use Stripe\StripeClient;
 use App\Models\CompanyBuyer;
 use Illuminate\Http\Request;
 use App\Models\CompanySeller;
 use App\Mail\productSoldEmail;
 use App\Mail\OrderConfirmationMail;
-//use Unicodeveloper\Paystack\Paystack;
 use App\Mail\SaleConfirmationEmail;
+//use Unicodeveloper\Paystack\Paystack;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -571,9 +570,9 @@ class CartController extends Controller
             if ($paymentMethod === 'paystack') {
                 // Initialize payment using Paystack
                 $initializeResponse = $this->initialize_paystack($cartItems, $paymentMethod, $buyerId, $shipping_address, $shippingFee, $buyerFirstName, $buyerLastName, $billing_address, $phone_number, $email);
-            } elseif ($paymentMethod === 'stripe') {
+            } elseif ($paymentMethod === 'flutterwave') {
                 // Initialize payment using PayPal (you would implement this method)
-                $initializeResponse = $this->initialize_stripe($cartItems, $paymentMethod, $buyerId, $shipping_address, $shippingFee, $buyerFirstName, $buyerLastName, $billing_address, $phone_number, $email);
+                $initializeResponse = $this->initialize_payOnDelivery($cartItems, $paymentMethod, $buyerId, $shipping_address, $buyerFirstName, $buyerLastName, $billing_address);
             } else {
                 return response()->json([
                     'status' => false,
@@ -595,19 +594,195 @@ class CartController extends Controller
         }
     }
 
+    
+
+
+    /*public function paymentCallback(Request $request)
+    {
+        $payLoad = Paystack::getPaymentData();
+        //$reference = $request->query('reference');
+
+        try {
+            $buyerId = $payLoad['data']['metadata']['buyerId'];
+            $shippingFee = $payLoad['data']['metadata']['shippingFee'];
+
+            //$reference = $request->input('reference');
+            //$reference = $payLoad['data']['reference']; // Use the reference from the payload
+
+            $reference = $request->input('reference');
+        if (!$reference) {
+            throw new \Exception('No reference provided in the callback');
+        }
+            $paymentMethod = request('paymentMethod');
+            $customer_email = $payLoad['data']['customer']['email'];
+            $paymentInfo = $payLoad['data']['id'];
+
+            //$paymentResponse = $this->paymentSuccess($paymentInfo);
+            //$response = json_decode($this->verifyPayment($reference), true);
+
+
+            $verificationResponse = $this->verifyPayment($reference);
+            $paymentData = json_decode($verificationResponse, true);
+
+            \Log::info('Payment Verification Response', ['response' => $paymentData]);
+
+
+            if ($verificationResponse && isset($verificationResponse['status']) && $verificationResponse['status']) {
+                $data = $verificationResponse['data'];
+
+                if ($payLoad['data']['status'] === 'success') {
+                    $orderId = rand(1000000000, 9999999999);
+                    $cartItems = Cart::where('buyerId', $buyerId)->get();
+
+                    if ($cartItems->isEmpty()) {
+                        return redirect()->route('cart')->withError('Cart is empty. Please add items to the cart first.');
+                    }
+
+                    $orders = [];
+                    $totalAmount = $data['amount'] / 100;
+                    $grandPrice = $totalAmount;
+
+                    $sellerTotals = [];
+
+                    foreach ($cartItems as $cartItem) {
+                        $product = Product::where('productId', $cartItem->productId)->first();
+
+                        if ($product) {
+                            $sellerId = $product->sellerId;
+                            $itemTotal = $cartItem->selling_price * $cartItem->quantity;
+                            $itemPlatformFee = $itemTotal * 0.08;
+                            $itemAccruedProfit = $itemTotal - $itemPlatformFee;
+
+                            // Check if the seller is an individual or a company
+                            $isSeller = Seller::where('sellerId', $product->sellerId)->first();
+                            if ($isSeller) {
+                                // Update individual seller's accrued profit and platform fee
+                                $currentAccruedProfit = floatval($isSeller->accrued_profit);
+                                $currentPlatformFee = floatval($isSeller->platform_fee);
+
+                                $isSeller->accrued_profit = $currentAccruedProfit + $itemAccruedProfit;
+                                $isSeller->platform_fee = $currentPlatformFee + $itemPlatformFee;
+                                $isSeller->save();
+
+                                // Fetch seller details
+                                $sellerFirstName = $isSeller->firstname;
+                                $sellerLastName = $isSeller->lastname;
+                                $sellerFullName = $sellerFirstName . ' ' . $sellerLastName;
+                                $sellerEmail = $isSeller->email;
+                                $sellerPhone = $isSeller->phone;
+
+                                $sellerDetails[$isSeller->sellerId] = [
+                                    'firstname' => $sellerFirstName,
+                                    'email' => $sellerEmail,
+                                    'phone' => $sellerPhone,
+                                    'is_company' => false,
+                                ];
+                            } else {
+                                $companySeller = CompanySeller::where('companySellerId', $product->sellerId)->first();
+                                if ($companySeller) {
+                                    // Update company seller's accrued profit and platform fee
+                                    $companySeller->accrued_profit += $itemAccruedProfit;
+                                    $companySeller->platform_fee += $itemPlatformFee;
+                                    $companySeller->save();
+
+                                    // Fetch seller details
+                                    $sellerFirstName = $companySeller->companyname;
+                                    $sellerEmail = $companySeller->companyemail;
+                                    $sellerPhone = $companySeller->companyphone;
+
+                                    $sellerDetails[$companySeller->sellerId] = [
+                                        'firstname' => $sellerFirstName,
+                                        'email' => $sellerEmail,
+                                        'phone' => $sellerPhone,
+                                        'is_company' => true,
+                                    ];
+                                }
+                            }
+
+                            $product->quantityin_stock -= $cartItem->quantity;
+                            $product->quantity_sold += $cartItem->quantity;
+                            $product->save();
+                        }
+
+                        $order = new Order();
+                        $order->buyerId = $buyerId;
+                        $order->productId = $cartItem->productId;
+                        $order->orderId = $orderId;
+                        $order->productName = $cartItem->product_name;
+                        $order->productImage = $cartItem->product_image;
+                        $order->amount = $cartItem->selling_price;
+                        $order->quantity = $cartItem->quantity;
+                        $order->paymentMethod = $payLoad['data']['metadata']['paymentMethod'];
+                        $order->paymentReference = $reference;
+                        $order->Discount = null;
+                        $order->shippingFee = $payLoad['data']['metadata']['shippingFee'];
+                        $order->order_status = $payLoad['data']['status'];
+                        $order->currency = $payLoad['data']['currency'];
+                        $order->channel = $payLoad['data']['channel'];
+                        $order->payment_id = $payLoad['data']['id'];
+                        $order->country_code = $payLoad['data']['authorization']['country_code'];
+                        $order->customer_email = $payLoad['data']['customer']['email'];
+                        $order->shipping_address = $payLoad['data']['metadata']['shipping_address'];
+                        $order->billing_address = $payLoad['data']['metadata']['billing_address'];
+                        $order->firstname = $payLoad['data']['metadata']['firstname'];
+                        $order->lastname = $payLoad['data']['metadata']['lastname'];
+                        $order->phone_number = $payLoad['data']['metadata']['phone_number'];
+                        $order->grand_price = $grandPrice;
+                        $order->sellerId = $product->sellerId;
+                        $order->sellerFullname = $sellerFirstName;
+                        $order->sellerEmail = $sellerEmail;
+                        $order->sellerPhone = $sellerPhone;
+                        $order->save();
+                        $orders[] = $order;
+                    }
+
+                    Cart::where('buyerId', $buyerId)->delete();
+
+                    $adminEmail1 = 'hyacinth@agroease.ng';
+                    //$adminEmail2 = 'larryo@agroease.ng';
+                    //$adminEmail3 = 'kpakpando@agroease.ng';
+
+                    Mail::to($customer_email)->send(new OrderConfirmationMail($orders));
+                    Mail::to($adminEmail1)
+                    //Mail::to($adminEmail3)
+                       // ->cc($adminEmail2)
+                       // ->cc($adminEmail1)
+                    ->send(new SaleConfirmationEmail($orders));
+
+                    return view('payment.callback-successful')->with(compact('data'));
+                } else {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Payment was not successful' . $data['message'],
+                    ], 500);
+                }
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Something went wrong' . $e->getMessage(),
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            \Log::error('An error occurred during payment callback: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'An error occurred during payment callback' . $e->getMessage(),
+            ], 500);
+        }
+    }*/
 
     private function createOrder($paymentData, $buyerId, $shippingFee)
     {
         $orderId = rand(1000000000, 9999999999);
         $cartItems = Cart::where('buyerId', $buyerId)->get();
-
+    
         if ($cartItems->isEmpty()) {
             throw new \Exception('Cart is empty. Unable to create order.');
         }
-
+    
         $totalAmount = $paymentData['amount'] / 100;
         $grandPrice = $totalAmount;
-
+    
         foreach ($cartItems as $cartItem) {
             $product = Product::where('productId', $cartItem->productId)->first();
 
@@ -667,13 +842,13 @@ class CartController extends Controller
                 $product->quantity_sold += $cartItem->quantity;
                 $product->save();
             }
-
+    
             if (!$product) {
                 throw new \Exception("Product not found: {$cartItem->productId}");
             }
-
-
-
+    
+            
+    
             // Create order
             $order = new Order([
                 'buyerId' => $buyerId,
@@ -704,22 +879,22 @@ class CartController extends Controller
                 'sellerPhone' => $sellerPhone,
                 // Add seller details here
             ]);
-
+    
             $order->save();
         }
-
+    
         // Clear the cart
         Cart::where('buyerId', $buyerId)->delete();
-
+    
         // Send emails
         $this->sendOrderConfirmationEmails($orderId);
-
+    
         return $orderId;
     }
-
+    
     private function sendOrderConfirmationEmails($orderId)
 
-
+    
     {
         $adminEmails = [
             'hyacinth@agroease.ng',
@@ -727,65 +902,65 @@ class CartController extends Controller
             'kpakpando@agroease.ng',
             'sandra@agroease.ng'
         ];
-
+        
         $orders = Order::where('orderId', $orderId)->get();
         $customerEmail = $orders->first()->customer_email;
-
+    
         Mail::to($customerEmail)->send(new OrderConfirmationMail($orders));
         // Send email to all admin emails
-        Mail::to($adminEmails[0])
-            ->cc(array_slice($adminEmails, 1))
-            ->send(new SaleConfirmationEmail($orders));
+            Mail::to($adminEmails[0])
+             ->cc(array_slice($adminEmails, 1))
+             ->send(new SaleConfirmationEmail($orders));
     }
-
-
+    
+    
 
 
 
 
     public function paymentCallback(Request $request)
-    {
-        \Log::info('Paystack Callback Received', ['request' => $request->all()]);
+{
+    \Log::info('Paystack Callback Received', ['request' => $request->all()]);
 
-        try {
-            $reference = $request->input('reference');
-            if (!$reference) {
-                throw new \Exception('No reference provided in the callback');
-            }
-
-            $verificationResponse = $this->verifyPayment($reference);
-            $paymentData = json_decode($verificationResponse, true);
-
-            \Log::info('Payment Verification Response', ['response' => $paymentData]);
-
-            if (!isset($paymentData['status']) || $paymentData['status'] !== true) {
-                throw new \Exception('Payment verification failed: ' . ($paymentData['message'] ?? 'Unknown error'));
-            }
-
-            $data = $paymentData['data'];
-
-            if ($data['status'] === 'success') {
-                $buyerId = $data['metadata']['buyerId'] ?? null;
-                $shippingFee = $data['metadata']['shippingFee'] ?? 0;
-
-                if (!$buyerId) {
-                    throw new \Exception('Buyer ID not found in payment metadata');
-                }
-
-                $orderId = $this->createOrder($data, $buyerId, $shippingFee);
-
-                return view('payment.callback-successful')->with(compact('data', 'orderId'));
-            } else {
-                throw new \Exception('Payment was not successful: ' . $data['gateway_response']);
-            }
-        } catch (\Exception $e) {
-            \Log::error('An error occurred during payment callback: ' . $e->getMessage());
-            return response()->json([
-                'status' => false,
-                'message' => 'An error occurred during payment callback: ' . $e->getMessage(),
-            ], 500);
+    try {
+        $reference = $request->input('reference');
+        if (!$reference) {
+            throw new \Exception('No reference provided in the callback');
         }
+
+        $verificationResponse = $this->verifyPayment($reference);
+        $paymentData = json_decode($verificationResponse, true);
+
+        \Log::info('Payment Verification Response', ['response' => $paymentData]);
+
+        if (!isset($paymentData['status']) || $paymentData['status'] !== true) {
+            throw new \Exception('Payment verification failed: ' . ($paymentData['message'] ?? 'Unknown error'));
+        }
+
+        $data = $paymentData['data'];
+
+        if ($data['status'] === 'success') {
+            $buyerId = $data['metadata']['buyerId'] ?? null;
+            $shippingFee = $data['metadata']['shippingFee'] ?? 0;
+
+            if (!$buyerId) {
+                throw new \Exception('Buyer ID not found in payment metadata');
+            }
+
+            $orderId = $this->createOrder($data, $buyerId, $shippingFee);
+
+            return view('payment.callback-successful')->with(compact('data', 'orderId'));
+        } else {
+            throw new \Exception('Payment was not successful: ' . $data['gateway_response']);
+        }
+    } catch (\Exception $e) {
+        \Log::error('An error occurred during payment callback: ' . $e->getMessage());
+        return response()->json([
+            'status' => false,
+            'message' => 'An error occurred during payment callback: ' . $e->getMessage(),
+        ], 500);
     }
+}
 
 
     private $initialize_url = "https://api.paystack.co/transaction/initialize";
@@ -855,10 +1030,6 @@ class CartController extends Controller
     }
 
 
-
-
-
-
     public function verifyPayment($reference)
     {
 
@@ -881,7 +1052,7 @@ class CartController extends Controller
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => "GET",
                 CURLOPT_HTTPHEADER => array(
-                    "Authorization: Bearer " . $secretKey,
+                    "Authorization: Bearer " .$secretKey,
                     //"Authorization: Bearer " . env('PAYSTACK_SECRET_KEY'),
                     "Cache-Control: no-cache",
 
@@ -948,158 +1119,6 @@ class CartController extends Controller
 
         return  $paymentResponse;
     }
-
-
-    //Stripe payment initialize
-
-    public function initialize_stripe($cartItems, $paymentMethod, $buyerId, $shipping_address, $shippingFee, $buyerFirstName, $buyerLastName, $billing_address, $phone_number, $email)
-    {
-        $stripe = new StripeClient(config('stripe.stripe_sk'));
-    
-        $line_items = [];
-        $totalPrice = 0;
-    
-        foreach ($cartItems as $cartItem) {
-            $line_items[] = [
-                'price_data' => [
-                    'currency' => 'USD',
-                    'product_data' => [
-                        'name' => $cartItem->product_name,
-                    ],
-                    'unit_amount' => (int) ($cartItem->selling_price * 100), // Convert to cents
-                ],
-                'quantity' => $cartItem->quantity,
-            ];
-            $totalPrice += $cartItem->selling_price * $cartItem->quantity;
-        }
-    
-        // Add shipping fee as a separate line item
-        $line_items[] = [
-            'price_data' => [
-                'currency' => 'USD',
-                'product_data' => [
-                    'name' => 'Shipping Fee',
-                ],
-                'unit_amount' => (int) ($shippingFee * 100), // Convert to cents
-            ],
-            'quantity' => 1,
-        ];
-    
-        $totalPrice += $shippingFee;
-    
-        $checkoutSession = $stripe->checkout->sessions->create([
-            'payment_method_types' => ['card'],
-            'line_items' => $line_items,
-            'mode' => 'payment',
-            'success_url' => $this->getStripeSuccessUrl($buyerId),
-            'cancel_url' => route('stripePaymentCancel'),
-            'customer_email' => $email,
-            'metadata' => [
-                'buyerId' => $buyerId,
-                'shipping_address' => $shipping_address,
-                'billing_address' => $billing_address,
-                'phone_number' => $phone_number,
-                'firstname' => $buyerFirstName,
-                'lastname' => $buyerLastName,
-                'shippingFee' => $shippingFee,
-                'paymentMethod' => $paymentMethod
-            ],
-        ]);
-    
-        return response()->json([
-            'id' => $checkoutSession->id,
-            'url' => $checkoutSession->url,
-            'metadata' => [
-                'payment_for' => 'product_purchase',
-                'paymentMethod' => $paymentMethod,
-                'buyerId' => $buyerId,
-                'shippingFee' => $shippingFee
-            ]
-        ]);
-    }
-    
-    private function getStripeSuccessUrl($buyerId)
-    {
-        // Get the base success URL
-        $baseUrl = route('stripePaymentSuccess', ['buyerId' => $buyerId]);
-        
-        // Append the session ID placeholder
-        return $baseUrl . (parse_url($baseUrl, PHP_URL_QUERY) ? '&' : '?') . 
-               'session_id={CHECKOUT_SESSION_ID}';
-    }
-    
-    public function handleStripePaymentSuccess(Request $request)
-{
-    try {
-        if (!$request->session_id) {
-            throw new \Exception('No session ID provided');
-        }
-
-        $stripe = new StripeClient(config('stripe.stripe_sk'));
-        $session = $stripe->checkout->sessions->retrieve($request->session_id);
-        
-        if ($session->payment_status === 'paid') {
-            $payment = $stripe->paymentIntents->retrieve($session->payment_intent);
-            
-            // Format payment data for internal processing
-            $paymentData = [
-                'status' => 'success',
-                'reference' => $payment->id,
-                'amount' => $payment->amount,
-                'channel' => 'stripe',
-                'currency' => $payment->currency,
-                'id' => $payment->id,
-                'authorization' => [
-                    'country_code' => $payment->charges->data[0]->payment_method_details->card->country ?? null,
-                ],
-                'customer' => [
-                    'email' => $session->customer_email,
-                ],
-                'metadata' => $session->metadata->toArray()
-            ];
-
-            $buyerId = $session->metadata->buyerId;
-            $shippingFee = $session->metadata->shippingFee;
-
-            // Create order and get orderId
-            $orderId = $this->createOrder($paymentData, $buyerId, $shippingFee);
-
-            // Format data for the view to maintain consistency with other payment methods
-            $data = [
-                'status' => 'Success', // Capitalizing for display purposes
-                'id' => $orderId,
-                'reference' => $payment->id,
-                'amount' => $payment->amount / 100, // Convert from cents to actual amount
-                'currency' => strtoupper($payment->currency), // Assuming you want currency in uppercase
-                'payment_method' => 'Stripe',
-                'customer_email' => $session->customer_email,
-                // Add any other fields that your view might need to maintain consistency
-            ];
-
-            return view('payment.callback-successful')->with(compact('data'));
-        }
-
-        throw new \Exception('Payment was not successful');
-        
-    } catch (\Exception $e) {
-        \Log::error('An error occurred during Stripe payment callback: ' . $e->getMessage());
-        return response()->json([
-            'status' => false,
-            'message' => 'An error occurred during payment callback: ' . $e->getMessage(),
-        ], 500);
-    }
-}
-    
-    public function handleStripePaymentCancel(Request $request)
-    {
-        return response()->json([
-            'status' => false,
-            'message' => 'Payment was cancelled.',
-        ], 400);
-    }
-
-
-
 
 
     public function getOrders()

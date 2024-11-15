@@ -11,10 +11,10 @@ use Laravel\Sanctum\HasApiTokens;
 class Product extends Model
 {
     //use HasFactory;
-    
 
-    use HasFactory,HasApiTokens, Notifiable;
-    
+
+    use HasFactory, HasApiTokens, Notifiable;
+
 
     protected $fillable = [
         'productId',
@@ -33,18 +33,21 @@ class Product extends Model
         'categoryID'
 
 
-        
+
     ];
 
-    public function sellers(){
+    public function sellers()
+    {
         return $this->belongsTo(Seller::class);
     }
 
-    public function business(){
+    public function business()
+    {
         return $this->belongsTo(BusinessAccount::class);
     }
 
-    public function products(){
+    public function products()
+    {
         return $this->belongsTo(Product::class);
     }
     public function images()
@@ -61,14 +64,18 @@ class Product extends Model
     }
     public function Seller()
     {
-    return $this->belongsTo(Seller::class, 'sellerId', 'sellerId');
+        return $this->belongsTo(Seller::class, 'sellerId', 'sellerId');
     }
     public function orders()
     {
-    return $this->belongsTo(Order::class, 'sellerId', 'sellerId');
+        return $this->belongsTo(Order::class, 'sellerId', 'sellerId');
     }
     public function wishlistItems()
     {
         return $this->hasMany(Wishlist::class, 'productId', 'productId');
+    }
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'id');
     }
 }

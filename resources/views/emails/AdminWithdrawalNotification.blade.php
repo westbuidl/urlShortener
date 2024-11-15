@@ -41,7 +41,7 @@
                                             <li>Email: {{ $sellerDetails['email'] }}</li> <br></h1><br>
 
                                             <h1 style="color:#1a1a1a; font-weight:500; margin-top:2px;font-size:15px;font-family:'Gilroy',sans-serif;text-align:justify; line-height:22px"><strong>Withdrawal Details:</strong> <br><br>
-                                                <li>Amount:  ₦{{ number_format($withdrawal->amount, 2) }}</li><br>
+                                                <li>Amount:  ${{ number_format($withdrawal->amount, 2) }}</li><br>
                                                 <li>Date: {{ $withdrawal->initiated_at->format('Y-m-d H:i:s') }}</li><br>
                                                 <li>Transaction ID:{{ $withdrawal->withdrawal_id }}</li> <br></h1><br>
 

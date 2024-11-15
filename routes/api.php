@@ -17,6 +17,7 @@ use App\Http\Controllers\BuyerProfileController;
 use App\Http\Controllers\CompanyBuyerController;
 use App\Http\Controllers\CompanySellerController;
 use App\Http\Controllers\SellerProfileController;
+use App\Http\Controllers\StripePaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -240,7 +241,7 @@ Route::get('/searchSellers', [AdminController::class, 'searchSellers'])->name('s
 //Admin Products
 Route::get('/getAllProducts', [AdminController::class, 'getAllProducts'])->name('getAllProducts');
 Route::get('/getProductDetails/{productId}', [AdminController::class, 'getProductDetails'])->name('getProductDetails');
-Route::post('/editProducts/{productId}', [AdminController::class, 'editProducts'])->name('editProducts');
+Route::post('/adminEditProduct/{productId}', [AdminController::class, 'adminEditProduct'])->name('adminEditProduct');
 Route::delete('/adminDeleteProduct/{productId}', [AdminController::class, 'adminDeleteProduct'])->name('adminDeleteProduct');
 Route::get('/search', [AdminController::class, 'search'])->name('search');
 
@@ -250,5 +251,20 @@ Route::get('/getOrderDetails/{orderId}', [AdminController::class, 'getOrderDetai
 Route::get('/searchOrders', [AdminController::class, 'searchOrders'])->name('searchOrders');
 Route::get('/admin/buyer-counts-by-category', [AdminController::class, 'getBuyerCountsByCategory']);
 
+//Currency
+Route::post('/addCurrency', [AdminController::class, 'addCurrency'])->name('addCurrency');
+Route::post('/editCurrency/{currencyId}', [AdminController::class, 'editCurrency'])->name('editCurrency');
+Route::get('/getAllCurrencies', [AdminController::class, 'getAllCurrencies'])->name('getAllCurrencies');
+Route::delete('/deleteCurrency/{currencyId}', [AdminController::class, 'deleteCurrency']);
+
 
 //--End of Buyer Admin API--//
+//Stripe
+//Route::post('stripe', [StripePaymentController::class], 'stripePost');
+Route::post('/stripe', [StripePaymentController::class, 'stripe'])->name('stripe');
+Route::get('success', [StripePaymentController::class, 'success'])->name('success');
+Route::get('cancel', [StripePaymentController::class, 'cancel'])->name('cancel');
+Route::get('/stripe/payment/success', [CartController::class, 'handleStripePaymentSuccess'])->name('stripePaymentSuccess');
+Route::get('/stripe/payment/cancel', [CartController::class, 'handleStripePaymentCancel'])->name('stripePaymentCancel');
+//Route::get('/stripe/payment/success', 'PaymentController@handleStripePaymentSuccess')->name('stripePaymentSuccess');
+//Route::get('/stripe/payment/cancel', 'PaymentController@handleStripePaymentCancel')->name('stripePaymentCancel');

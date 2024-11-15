@@ -4,15 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Cart;
 use App\Models\Order;
-use App\Models\Product;
 use App\Models\Seller;
+use App\Models\Product;
 use App\Models\Category;
+use App\Models\Currency;
 use Illuminate\Http\Request;
 use App\Mail\ProductAddEmail;
+use App\Models\CompanySeller;
 use App\Mail\productRestockEmail;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Models\CompanySeller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
@@ -303,47 +304,57 @@ class ProductController extends Controller
     // Function to fetch all products
     // Function to fetch all products
     public function allProducts(Request $request)
-    {
+{
+    $perPage = $request->query('per_page', 10);
+    $requestedCurrency = $request->query('currency', 'USD'); // Default to USD if not specified
 
-        $perPage = $request->query('per_page', 10);
-        // Retrieve all products from the database
-        $products = Product::orderByDesc('id')->paginate($perPage);
+    // Retrieve all products from the database
+    $products = Product::orderByDesc('id')->paginate($perPage);
 
-        // Check if any products exist
-        if ($products->isEmpty()) {
-            return response()->json([
-                'message' => 'No products found.',
-            ], 404);
-        }
+    // Check if any products exist
+    if ($products->isEmpty()) {
+        return response()->json([
+            'message' => 'No products found.',
+        ], 404);
+    }
 
-        // Iterate through each product to fetch its images
-        foreach ($products as $product) {
-            // Extract image URLs for the product
-            $imageURLs = [];
-            if (!empty($product->product_image)) {
-                $images = array_filter(explode(',', $product->product_image));
-                foreach ($images as $image) {
-                    if (!empty(trim($image))) {
-                        $imageURLs[] = asset('uploads/product_images/' . trim($image));
-                    }
+    // Get the requested currency rate
+    $currencyRate = Currency::where('currency', strtoupper($requestedCurrency))->value('rate') ?? 1;
+
+    // Iterate through each product to fetch its images and convert price
+    foreach ($products as $product) {
+        // Convert selling price based on currency rate
+        $product->original_price = $product->selling_price;
+        $product->selling_price = $product->selling_price / $currencyRate;
+
+        // Extract image URLs for the product
+        $imageURLs = [];
+        if (!empty($product->product_image)) {
+            $images = array_filter(explode(',', $product->product_image));
+            foreach ($images as $image) {
+                if (!empty(trim($image))) {
+                    $imageURLs[] = asset('uploads/product_images/' . trim($image));
                 }
             }
-
-            // Add image URLs to the product object
-            $product->image_urls = $imageURLs;
         }
 
-        return response()->json([
-            'message' => 'All products fetched successfully.',
-            'data' => [
-                'products' => $products->items(),
-                'current_page' => $products->currentPage(),
-                'last_page' => $products->lastPage(),
-                'per_page' => $products->perPage(),
-                'total' => $products->total(),
-            ]
-        ], 200);
+        // Add image URLs to the product object
+        $product->image_urls = $imageURLs;
     }
+
+    return response()->json([
+        'message' => 'All products fetched successfully.',
+        'data' => [
+            'products' => $products->items(),
+            'current_page' => $products->currentPage(),
+            'last_page' => $products->lastPage(),
+            'per_page' => $products->perPage(),
+            'total' => $products->total(),
+            'currency' => $requestedCurrency,
+            'rate' => $currencyRate
+        ]
+    ], 200);
+}
 
 
 

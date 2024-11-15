@@ -9,6 +9,7 @@ use App\Models\Seller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\CompanyBuyer;
+use App\Models\Currency;
 //use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\CompanySeller;
@@ -396,7 +397,7 @@ class AdminController extends Controller
         }
     }
 
-    public function editProducts(Request $request, string $productId)
+    public function adminEditProduct(Request $request, string $productId)
     {
         // Check if the user is an admin
         if (!$this->isAdmin()) {
@@ -761,59 +762,59 @@ class AdminController extends Controller
     }
 
     public function adminDeleteProduct(string $productId, Request $request)
-{
-    try {
-        // Check if the user is an admin
-        if (!$this->isAdmin()) {
-            return response()->json([
-                'message' => 'Unauthorized. Admin access required.',
-            ], 403);
-        }
+    {
+        try {
+            // Check if the user is an admin
+            if (!$this->isAdmin()) {
+                return response()->json([
+                    'message' => 'Unauthorized. Admin access required.',
+                ], 403);
+            }
 
-        // Find the product in the database
-        $product = Product::where('productId', $productId)->first();
+            // Find the product in the database
+            $product = Product::where('productId', $productId)->first();
 
-        // Check if the product exists
-        if (!$product) {
-            return response()->json([
-                'message' => 'Product not found',
-            ], 404);
-        }
+            // Check if the product exists
+            if (!$product) {
+                return response()->json([
+                    'message' => 'Product not found',
+                ], 404);
+            }
 
-        // Check if the product has associated images
-        if (!empty($product->product_image)) {
-            // Split the comma-separated image filenames into an array
-            $imageFilenames = explode(',', $product->product_image);
+            // Check if the product has associated images
+            if (!empty($product->product_image)) {
+                // Split the comma-separated image filenames into an array
+                $imageFilenames = explode(',', $product->product_image);
 
-            // Delete associated images from the filesystem
-            foreach ($imageFilenames as $filename) {
-                // Assuming images are stored in a folder named 'product_images'
-                $imagePath = public_path('/uploads/product_images/' . $filename);
-                if (File::exists($imagePath)) {
-                    File::delete($imagePath);
+                // Delete associated images from the filesystem
+                foreach ($imageFilenames as $filename) {
+                    // Assuming images are stored in a folder named 'product_images'
+                    $imagePath = public_path('/uploads/product_images/' . $filename);
+                    if (File::exists($imagePath)) {
+                        File::delete($imagePath);
+                    }
                 }
             }
+
+            // Delete the product
+            $product->delete();
+
+            // Log the deletion action
+            $adminId = $request->user() ? $request->user()->id : 'Unknown';
+            Log::info("Admin (ID: {$adminId}) deleted product: {$productId}");
+
+            return response()->json([
+                'message' => 'Product Deleted Successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            // Handle any exceptions that occur during the deletion process
+            Log::error("Error deleting product {$productId}: " . $e->getMessage());
+            return response()->json([
+                'message' => 'Error deleting product',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        // Delete the product
-        $product->delete();
-
-        // Log the deletion action
-        $adminId = $request->user() ? $request->user()->id : 'Unknown';
-        Log::info("Admin (ID: {$adminId}) deleted product: {$productId}");
-
-        return response()->json([
-            'message' => 'Product Deleted Successfully',
-        ], 200);
-    } catch (\Exception $e) {
-        // Handle any exceptions that occur during the deletion process
-        Log::error("Error deleting product {$productId}: " . $e->getMessage());
-        return response()->json([
-            'message' => 'Error deleting product',
-            'error' => $e->getMessage(),
-        ], 500);
     }
-}
 
 
     public function searchCompanyBuyers(Request $request)
@@ -1008,6 +1009,165 @@ class AdminController extends Controller
             ], 500);
         }
     }
+
+
+    // Add these functions to the AdminController class
+
+    /**
+     * Add a new currency
+     */
+    public function addCurrency(Request $request)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        try {
+            // Validate the request
+            $validator = Validator::make($request->all(), [
+                'currency' => 'required|string|unique:currency,currency|max:10',
+                'rate' => 'required|numeric|min:0'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Create new currency
+            $currency = Currency::create([
+                'currency' => strtoupper($request->currency),
+                'rate' => $request->rate
+            ]);
+
+            return response()->json([
+                'message' => 'Currency added successfully.',
+                'data' => $currency
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while adding currency: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while adding currency.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Edit existing currency
+     */
+    public function editCurrency(Request $request, $id)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        try {
+            // Find the currency
+            $currency = Currency::find($id);
+
+            if (!$currency) {
+                return response()->json([
+                    'message' => 'Currency not found.'
+                ], 404);
+            }
+
+            // Validate the request
+            $validator = Validator::make($request->all(), [
+                'currency' => 'required|string|max:10|unique:currency,currency,' . $id,
+                'rate' => 'required|numeric|min:0'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Update the currency
+            $currency->update([
+                'currency' => strtoupper($request->currency),
+                'rate' => $request->rate
+            ]);
+
+            return response()->json([
+                'message' => 'Currency updated successfully.',
+                'data' => $currency
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while updating currency: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while updating currency.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
+
+    /**
+     * List all currencies
+     */
+    public function getAllCurrencies()
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        try {
+            $currencies = Currency::all();
+
+            return response()->json([
+                'message' => 'Currencies retrieved successfully.',
+                'data' => $currencies
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while fetching currencies: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while fetching currencies.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a currency
+     */
+    public function deleteCurrency($id)
+    {
+        if (!$this->isAdmin()) {
+            return $this->unauthorizedResponse();
+        }
+
+        try {
+            $currency = Currency::find($id);
+
+            if (!$currency) {
+                return response()->json([
+                    'message' => 'Currency not found.'
+                ], 404);
+            }
+
+            $currency->delete();
+
+            return response()->json([
+                'message' => 'Currency deleted successfully.'
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error occurred while deleting currency: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error occurred while deleting currency.',
+                'error' => 'Something went wrong, please try again later.',
+            ], 500);
+        }
+    }
+
+
+
+
+
+
 
 
 
