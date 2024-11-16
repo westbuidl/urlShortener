@@ -13,6 +13,7 @@ use App\Models\CompanyBuyer;
 use Illuminate\Http\Request;
 use App\Models\CompanySeller;
 use App\Mail\productSoldEmail;
+use App\Models\Currency;
 use App\Mail\OrderConfirmationMail;
 //use Unicodeveloper\Paystack\Paystack;
 use App\Mail\SaleConfirmationEmail;
@@ -209,7 +210,7 @@ class CartController extends Controller
             $totalPrice = 0; // Initialize total price variable
             $totalQuantity = 0; // Initialize total quantity variable
             $totalWeight = 0; // Initialize total weight variable
-            $feePerKg = 130; // Define the fee per kg
+            $feePerKg = 24; // Define the fee per kg
 
             // Calculate total price, total quantity, and total weight
             foreach ($cartItems as $item) {
@@ -551,7 +552,7 @@ class CartController extends Controller
 
             // Calculate the shipping fee
             $shippingFee = 0;
-            $feePerKg = 130;
+            $feePerKg = 24;
             foreach ($cartItems as $cartItem) {
                 $weight = $cartItem->productWeight;
                 $quantity = $cartItem->quantity;
@@ -744,7 +745,10 @@ class CartController extends Controller
 
 
     public function paymentCallback(Request $request)
+
+
     {
+        
         \Log::info('Paystack Callback Received', ['request' => $request->all()]);
 
         try {
@@ -813,7 +817,7 @@ class CartController extends Controller
         ];
         $data = array(
             'email' => $email,
-            'amount' => $totalPrice * 100, // Convert to kobo
+            'amount' => $totalPrice * 100 * $currencyRate, // Convert to kobo
             'currency' => 'NGN',
             'metadata' => json_encode($metadata),
             'callback_url' => route('paymentCallback'), // This is the route where the Paystack webhook will be sent
@@ -954,11 +958,15 @@ class CartController extends Controller
 
     public function initialize_stripe($cartItems, $paymentMethod, $buyerId, $shipping_address, $shippingFee, $buyerFirstName, $buyerLastName, $billing_address, $phone_number, $email)
     {
-        $stripe = new StripeClient(config('stripe.stripe_sk'));
-    
+        $stripe_config = [
+            'stripe_pk' => config('stripe.stripe_pk'),
+            'stripe_sk' => config('stripe.stripe_sk'),
+        ];
+        $stripe = new StripeClient($stripe_config);
+
         $line_items = [];
         $totalPrice = 0;
-    
+
         foreach ($cartItems as $cartItem) {
             $line_items[] = [
                 'price_data' => [
@@ -972,7 +980,7 @@ class CartController extends Controller
             ];
             $totalPrice += $cartItem->selling_price * $cartItem->quantity;
         }
-    
+
         // Add shipping fee as a separate line item
         $line_items[] = [
             'price_data' => [
@@ -984,9 +992,9 @@ class CartController extends Controller
             ],
             'quantity' => 1,
         ];
-    
+
         $totalPrice += $shippingFee;
-    
+
         $checkoutSession = $stripe->checkout->sessions->create([
             'payment_method_types' => ['card'],
             'line_items' => $line_items,
@@ -1005,7 +1013,7 @@ class CartController extends Controller
                 'paymentMethod' => $paymentMethod
             ],
         ]);
-    
+
         return response()->json([
             'id' => $checkoutSession->id,
             'url' => $checkoutSession->url,
@@ -1017,79 +1025,78 @@ class CartController extends Controller
             ]
         ]);
     }
-    
+
     private function getStripeSuccessUrl($buyerId)
     {
         // Get the base success URL
         $baseUrl = route('stripePaymentSuccess', ['buyerId' => $buyerId]);
-        
+
         // Append the session ID placeholder
-        return $baseUrl . (parse_url($baseUrl, PHP_URL_QUERY) ? '&' : '?') . 
-               'session_id={CHECKOUT_SESSION_ID}';
+        return $baseUrl . (parse_url($baseUrl, PHP_URL_QUERY) ? '&' : '?') .
+            'session_id={CHECKOUT_SESSION_ID}';
     }
-    
+
     public function handleStripePaymentSuccess(Request $request)
-{
-    try {
-        if (!$request->session_id) {
-            throw new \Exception('No session ID provided');
+    {
+        try {
+            if (!$request->session_id) {
+                throw new \Exception('No session ID provided');
+            }
+
+            $stripe = new StripeClient(config('stripe.stripe_sk'));
+            $session = $stripe->checkout->sessions->retrieve($request->session_id);
+
+            if ($session->payment_status === 'paid') {
+                $payment = $stripe->paymentIntents->retrieve($session->payment_intent);
+
+                // Format payment data for internal processing
+                $paymentData = [
+                    'status' => 'success',
+                    'reference' => $payment->id,
+                    'amount' => $payment->amount,
+                    'channel' => 'stripe',
+                    'currency' => $payment->currency,
+                    'id' => $payment->id,
+                    'authorization' => [
+                        'country_code' => $payment->charges->data[0]->payment_method_details->card->country ?? null,
+                    ],
+                    'customer' => [
+                        'email' => $session->customer_email,
+                    ],
+                    'metadata' => $session->metadata->toArray()
+                ];
+
+                $buyerId = $session->metadata->buyerId;
+                $shippingFee = $session->metadata->shippingFee;
+
+                // Create order and get orderId
+                $orderId = $this->createOrder($paymentData, $buyerId, $shippingFee);
+
+                // Format data for the view to maintain consistency with other payment methods
+                $data = [
+                    'status' => 'Success', // Capitalizing for display purposes
+                    'id' => $orderId,
+                    'reference' => $payment->id,
+                    'amount' => $payment->amount / 100, // Convert from cents to actual amount
+                    'currency' => strtoupper($payment->currency), // Assuming you want currency in uppercase
+                    'payment_method' => 'Stripe',
+                    'customer_email' => $session->customer_email,
+                    // Add any other fields that your view might need to maintain consistency
+                ];
+
+                return view('payment.callback-successful')->with(compact('data'));
+            }
+
+            throw new \Exception('Payment was not successful');
+        } catch (\Exception $e) {
+            \Log::error('An error occurred during Stripe payment callback: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'An error occurred during payment callback: ' . $e->getMessage(),
+            ], 500);
         }
-
-        $stripe = new StripeClient(config('stripe.stripe_sk'));
-        $session = $stripe->checkout->sessions->retrieve($request->session_id);
-        
-        if ($session->payment_status === 'paid') {
-            $payment = $stripe->paymentIntents->retrieve($session->payment_intent);
-            
-            // Format payment data for internal processing
-            $paymentData = [
-                'status' => 'success',
-                'reference' => $payment->id,
-                'amount' => $payment->amount,
-                'channel' => 'stripe',
-                'currency' => $payment->currency,
-                'id' => $payment->id,
-                'authorization' => [
-                    'country_code' => $payment->charges->data[0]->payment_method_details->card->country ?? null,
-                ],
-                'customer' => [
-                    'email' => $session->customer_email,
-                ],
-                'metadata' => $session->metadata->toArray()
-            ];
-
-            $buyerId = $session->metadata->buyerId;
-            $shippingFee = $session->metadata->shippingFee;
-
-            // Create order and get orderId
-            $orderId = $this->createOrder($paymentData, $buyerId, $shippingFee);
-
-            // Format data for the view to maintain consistency with other payment methods
-            $data = [
-                'status' => 'Success', // Capitalizing for display purposes
-                'id' => $orderId,
-                'reference' => $payment->id,
-                'amount' => $payment->amount / 100, // Convert from cents to actual amount
-                'currency' => strtoupper($payment->currency), // Assuming you want currency in uppercase
-                'payment_method' => 'Stripe',
-                'customer_email' => $session->customer_email,
-                // Add any other fields that your view might need to maintain consistency
-            ];
-
-            return view('payment.callback-successful')->with(compact('data'));
-        }
-
-        throw new \Exception('Payment was not successful');
-        
-    } catch (\Exception $e) {
-        \Log::error('An error occurred during Stripe payment callback: ' . $e->getMessage());
-        return response()->json([
-            'status' => false,
-            'message' => 'An error occurred during payment callback: ' . $e->getMessage(),
-        ], 500);
     }
-}
-    
+
     public function handleStripePaymentCancel(Request $request)
     {
         return response()->json([

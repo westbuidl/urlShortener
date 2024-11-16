@@ -303,7 +303,7 @@ class ProductController extends Controller
 
     // Function to fetch all products
     // Function to fetch all products
-    public function allProducts(Request $request)
+    /*public function allProducts(Request $request)
 {
     $perPage = $request->query('per_page', 10);
     $requestedCurrency = $request->query('currency', 'USD'); // Default to USD if not specified
@@ -354,7 +354,51 @@ class ProductController extends Controller
             'rate' => $currencyRate
         ]
     ], 200);
+}*/
+
+public function allProducts(Request $request)
+{
+
+    $perPage = $request->query('per_page', 10);
+    // Retrieve all products from the database
+    $products = Product::orderByDesc('id')->paginate($perPage);
+
+    // Check if any products exist
+    if ($products->isEmpty()) {
+        return response()->json([
+            'message' => 'No products found.',
+        ], 404);
+    }
+
+    // Iterate through each product to fetch its images
+    foreach ($products as $product) {
+        // Extract image URLs for the product
+        $imageURLs = [];
+        if (!empty($product->product_image)) {
+            $images = array_filter(explode(',', $product->product_image));
+            foreach ($images as $image) {
+                if (!empty(trim($image))) {
+                    $imageURLs[] = asset('uploads/product_images/' . trim($image));
+                }
+            }
+        }
+
+        // Add image URLs to the product object
+        $product->image_urls = $imageURLs;
+    }
+
+    return response()->json([
+        'message' => 'All products fetched successfully.',
+        'data' => [
+            'products' => $products->items(),
+            'current_page' => $products->currentPage(),
+            'last_page' => $products->lastPage(),
+            'per_page' => $products->perPage(),
+            'total' => $products->total(),
+        ]
+    ], 200);
 }
+
 
 
 
