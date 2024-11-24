@@ -210,7 +210,7 @@ class CartController extends Controller
             $totalPrice = 0; // Initialize total price variable
             $totalQuantity = 0; // Initialize total quantity variable
             $totalWeight = 0; // Initialize total weight variable
-            $feePerKg = 24; // Define the fee per kg
+            $feePerKg = 20; // Define the fee per kg
 
             // Calculate total price, total quantity, and total weight
             foreach ($cartItems as $item) {
@@ -552,7 +552,7 @@ class CartController extends Controller
 
             // Calculate the shipping fee
             $shippingFee = 0;
-            $feePerKg = 24;
+            $feePerKg = 20;
             foreach ($cartItems as $cartItem) {
                 $weight = $cartItem->productWeight;
                 $quantity = $cartItem->quantity;
@@ -817,7 +817,7 @@ class CartController extends Controller
         ];
         $data = array(
             'email' => $email,
-            'amount' => $totalPrice * 100 * $currencyRate, // Convert to kobo
+            'amount' => $totalPrice * 100, //* $currencyRate, // Convert to kobo
             'currency' => 'NGN',
             'metadata' => json_encode($metadata),
             'callback_url' => route('paymentCallback'), // This is the route where the Paystack webhook will be sent
@@ -958,11 +958,13 @@ class CartController extends Controller
 
     public function initialize_stripe($cartItems, $paymentMethod, $buyerId, $shipping_address, $shippingFee, $buyerFirstName, $buyerLastName, $billing_address, $phone_number, $email)
     {
-        $stripe_config = [
+       /* $stripe_config = [
             'stripe_pk' => config('stripe.stripe_pk'),
             'stripe_sk' => config('stripe.stripe_sk'),
         ];
-        $stripe = new StripeClient($stripe_config);
+        $stripe = new StripeClient($stripe_config);*/
+
+        $stripe = new StripeClient(config('stripe.stripe_sk'));
 
         $line_items = [];
         $totalPrice = 0;
@@ -1084,7 +1086,7 @@ class CartController extends Controller
                     // Add any other fields that your view might need to maintain consistency
                 ];
 
-                return view('payment.callback-successful')->with(compact('data'));
+                return view('payment.callback-successful-stripe')->with(compact('data'));
             }
 
             throw new \Exception('Payment was not successful');
@@ -1099,10 +1101,11 @@ class CartController extends Controller
 
     public function handleStripePaymentCancel(Request $request)
     {
-        return response()->json([
+        /*return response()->json([
             'status' => false,
             'message' => 'Payment was cancelled.',
-        ], 400);
+        ], 400);*/
+        return view('payment.callback-cancelled')->with(compact('data'));
     }
 
 
