@@ -210,7 +210,7 @@ class CartController extends Controller
             $totalPrice = 0; // Initialize total price variable
             $totalQuantity = 0; // Initialize total quantity variable
             $totalWeight = 0; // Initialize total weight variable
-            $feePerKg = 20; // Define the fee per kg
+            $feePerKg = 15; // Define the fee per kg
 
             // Calculate total price, total quantity, and total weight
             foreach ($cartItems as $item) {
@@ -552,7 +552,7 @@ class CartController extends Controller
 
             // Calculate the shipping fee
             $shippingFee = 0;
-            $feePerKg = 20;
+            $feePerKg = 15;
             foreach ($cartItems as $cartItem) {
                 $weight = $cartItem->productWeight;
                 $quantity = $cartItem->quantity;
@@ -1101,11 +1101,10 @@ class CartController extends Controller
 
     public function handleStripePaymentCancel(Request $request)
     {
-        /*return response()->json([
-            'status' => false,
-            'message' => 'Payment was cancelled.',
-        ], 400);*/
-        return view('payment.callback-cancelled')->with(compact('data'));
+        //https://agroease.trade/checkout
+
+        return redirect()->away('https://agroease.trade/checkout');
+        //return redirect()->route('checkout');
     }
 
 
