@@ -1209,122 +1209,122 @@ class AdminController extends Controller
 
     //Fetch product feedback
     public function getProductFeedbacks(Request $request, $productId)
-    {
-        try {
-            // Validate the product ID
-            if (empty($productId)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Product ID is required.',
-                ], 400);
-            }
-    
-            // Check if the product exists
-            $product = Product::where('id', $productId)->first();
-            
-            if (!$product) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Product not found with ID: ' . $productId,
-                ], 404);
-            }
-    
-            // Fetch all feedbacks for the product with buyer information
-            $feedbacks = ProductFeedback::where('productId', $productId)
-                ->with('buyer:id,firstname,lastname,profile_image')
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
-            
-            // Check if no reviews were found
-            if ($feedbacks->isEmpty()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'No reviews found for this product.',
-                    'product' => [
-                        'id' => $product->id,
-                        'name' => $product->name,
-                        'average_rating' => 0,
-                        'total_reviews' => 0,
-                    ],
-                    'stats' => [
-                        'average_rating' => 0,
-                        'total_reviews' => 0,
-                        'rating_breakdown' => [
-                            5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0
-                        ],
-                    ],
-                    'feedbacks' => [
-                        'data' => [],
-                        'current_page' => 1,
-                        'last_page' => 1,
-                        'per_page' => 10,
-                        'total' => 0,
-                    ],
-                ], 200);
-            }
-            
-            // Transform the data to explicitly include buyer name
-            $transformedFeedbacks = $feedbacks->map(function ($feedback) {
-                $buyerName = isset($feedback->buyer) ? 
-                    $feedback->buyer->firstname . ' ' . $feedback->buyer->lastname : 
-                    'Anonymous User';
-                
-                return [
-                    'id' => $feedback->id,
-                    'productId' => $feedback->productId,
-                    'rating' => $feedback->rating,
-                    'feedback' => $feedback->feedback,
-                    'created_at' => $feedback->created_at,
-                    'buyer' => [
-                        'id' => $feedback->buyer->id ?? null,
-                        'name' => $buyerName,
-                        'profile_image' => $feedback->buyer->profile_image ?? null,
-                    ],
-                ];
-            });
-            
-            // Get summary statistics
-            $stats = [
-                'average_rating' => ProductFeedback::where('productId', $productId)->avg('rating') ?? 0,
-                'total_reviews' => ProductFeedback::where('productId', $productId)->count(),
-                'rating_breakdown' => [
-                    5 => ProductFeedback::where('productId', $productId)->where('rating', 5)->count(),
-                    4 => ProductFeedback::where('productId', $productId)->where('rating', 4)->count(),
-                    3 => ProductFeedback::where('productId', $productId)->where('rating', 3)->count(),
-                    2 => ProductFeedback::where('productId', $productId)->where('rating', 2)->count(),
-                    1 => ProductFeedback::where('productId', $productId)->where('rating', 1)->count(),
-                ],
-            ];
-    
-            return response()->json([
-                'success' => true,
-                'message' => 'Product feedbacks retrieved successfully.',
-                'product' => [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'average_rating' => round($stats['average_rating'], 1),
-                    'total_reviews' => $stats['total_reviews'],
-                ],
-                'stats' => $stats,
-                'feedbacks' => [
-                    'data' => $transformedFeedbacks,
-                    'current_page' => $feedbacks->currentPage(),
-                    'last_page' => $feedbacks->lastPage(),
-                    'per_page' => $feedbacks->perPage(),
-                    'total' => $feedbacks->total(),
-                ],
-            ], 200);
-        } catch (\Exception $e) {
-            // Log the error
-            \Log::error('Error retrieving product feedbacks: ' . $e->getMessage());
-            
+{
+    try {
+        // Validate the product ID
+        if (empty($productId)) {
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred while retrieving product feedbacks.',
-                'error' => config('app.debug') ? $e->getMessage() : null,
-            ], 500);
+                'message' => 'Product ID is required.',
+            ], 400);
         }
+
+        // Check if the product exists - add ->first() to get the actual model
+        $product = Product::where('productId', $productId)->first();
+        
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found with ID: ' . $productId,
+            ], 404);
+        }
+
+        // Fetch all feedbacks for the product with buyer information
+        $feedbacks = ProductFeedback::where('productId', $productId)
+            ->with('buyer:id,firstname,lastname,profile_image')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+        
+        // Check if no reviews were found
+        if ($feedbacks->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'No reviews found for this product.',
+                'product' => [
+                    'productId' => $product->productId,
+                    'product_name' => $product->product_name,
+                    'average_rating' => 0,
+                    'total_reviews' => 0,
+                ],
+                'stats' => [
+                    'average_rating' => 0,
+                    'total_reviews' => 0,
+                    'rating_breakdown' => [
+                        5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0
+                    ],
+                ],
+                'feedbacks' => [
+                    'data' => [],
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => 10,
+                    'total' => 0,
+                ],
+            ], 200);
+        }
+        
+        // Transform the data to explicitly include buyer name
+        $transformedFeedbacks = $feedbacks->map(function ($feedback) {
+            $buyerName = isset($feedback->buyer) ? 
+                $feedback->buyer->firstname . ' ' . $feedback->buyer->lastname : 
+                'Anonymous User';
+            
+            return [
+                'id' => $feedback->id,
+                'productId' => $feedback->productId,
+                'rating' => $feedback->rating,
+                'feedback' => $feedback->feedback,
+                'created_at' => $feedback->created_at,
+                'buyer' => [
+                    'id' => $feedback->buyerId ?? null,
+                    'name' => $feedback->buyer_fullname,
+                    'profile_image' => $feedback->buyer->profile_image ?? null,
+                ],
+            ];
+        });
+        
+        // Get summary statistics
+        $stats = [
+            'average_rating' => ProductFeedback::where('productId', $productId)->avg('rating') ?? 0,
+            'total_reviews' => ProductFeedback::where('productId', $productId)->count(),
+            'rating_breakdown' => [
+                5 => ProductFeedback::where('productId', $productId)->where('rating', 5)->count(),
+                4 => ProductFeedback::where('productId', $productId)->where('rating', 4)->count(),
+                3 => ProductFeedback::where('productId', $productId)->where('rating', 3)->count(),
+                2 => ProductFeedback::where('productId', $productId)->where('rating', 2)->count(),
+                1 => ProductFeedback::where('productId', $productId)->where('rating', 1)->count(),
+            ],
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product feedbacks retrieved successfully.',
+            'product' => [
+                'productId' => $product->productId,
+                'product_name' => $product->product_name,
+                'average_rating' => round($stats['average_rating'], 1),
+                'total_reviews' => $stats['total_reviews'],
+            ],
+            'stats' => $stats,
+            'feedbacks' => [
+                'data' => $transformedFeedbacks,
+                'current_page' => $feedbacks->currentPage(),
+                'last_page' => $feedbacks->lastPage(),
+                'per_page' => $feedbacks->perPage(),
+                'total' => $feedbacks->total(),
+            ],
+        ], 200);
+    } catch (\Exception $e) {
+        // Log the error
+        \Log::error('Error retrieving product feedbacks: ' . $e->getMessage());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while retrieving product feedbacks.',
+            'error' => config('app.debug') ? $e->getMessage() : null,
+        ], 500);
     }
+}
 
 
 

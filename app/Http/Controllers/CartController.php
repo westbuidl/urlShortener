@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
+use App\Mail\ProductFeedbackNotification;
 use Illuminate\Support\Facades\Validator;
 use Unicodeveloper\Paystack\Facades\Paystack;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -1344,6 +1345,9 @@ class CartController extends Controller
         // Update product average rating
         $this->updateProductRating($validatedData['productId']);
 
+        // Send email notification to the seller
+        $this->sendFeedbackNotification($productFeedback, $product, $buyer);
+
         return response()->json([
             'message' => 'Thank you! Your feedback has been submitted successfully.',
             'feedback' => $productFeedback,
@@ -1361,5 +1365,50 @@ class CartController extends Controller
         $product = Product::where('productId', $productId)->first();
         $product->average_rating = round($averageRating, 1);
         $product->save();
+    }
+
+    /**
+     * Send email notification about the new feedback
+     */
+    private function sendFeedbackNotification($feedback, $product, $buyer)
+    {
+        // Get seller details
+        $seller = ProductFeedback::where('buyerId', $product->sellerId)->first();
+
+        if (!$seller || !$seller->email) {
+            // Log error if seller not found or has no email
+            \Log::error('Could not send feedback notification. Seller not found or has no email.', [
+                'sellerId' => $product->sellerId,
+                'productId' => $product->productId
+            ]);
+            return;
+        }
+
+        // Prepare data for the email
+        $emailData = [
+            'seller_name' => $seller->firstname ?? 'Seller',
+            'buyer_name' => $buyer->firstname ?? 'Customer',
+            'product_name' => $product->product_name,
+            'rating' => $feedback->rating,
+            'feedback' => $feedback->feedback,
+            'product_link' => config('app.url') . '/products/' . $product->productId,
+        ];
+
+        // Send the email
+        try {
+            Mail::to($seller->email)->send(new ProductFeedbackNotification($emailData));
+
+            // Optionally, send a copy to admin
+            if (config('app.env') !== 'testing') {
+                Mail::to(config('mail.admin_email'))->send(new ProductFeedbackNotification($emailData));
+            }
+        } catch (\Exception $e) {
+            // Log error but don't interrupt the process
+            \Log::error('Failed to send feedback notification email', [
+                'error' => $e->getMessage(),
+                'seller_email' => $seller->email,
+                'feedback_id' => $feedback->id
+            ]);
+        }
     }
 }
