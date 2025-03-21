@@ -1309,7 +1309,7 @@ class CartController extends Controller
         }
 
         // Check if buyer has already submitted feedback for this product
-        $existingFeedback = ProductFeedback::where('buyerId', $buyer->id)
+        $existingFeedback = ProductFeedback::where('buyerId', $buyer->buyerId)
             ->where('productId', $validatedData['productId'])
             ->first();
 
@@ -1332,7 +1332,7 @@ class CartController extends Controller
         $productFeedback = new ProductFeedback();
         $productFeedback->productId = $validatedData['productId'];
         $productFeedback->sellerId = $product->sellerId;
-        $productFeedback->product_name = $product->product_nameq;
+        $productFeedback->product_name = $product->product_name;
         $productFeedback->categoryId = $product->categoryID;
         $productFeedback->product_catogory = $product->product_category; // Assuming there's a category relationship
         $productFeedback->buyerId = $buyer->buyerId;
@@ -1358,7 +1358,7 @@ class CartController extends Controller
         $averageRating = ProductFeedback::where('productId', $productId)
             ->avg('rating');
 
-        $product = Product::where('id', $productId)->first();
+        $product = Product::where('productId', $productId)->first();
         $product->average_rating = round($averageRating, 1);
         $product->save();
     }
