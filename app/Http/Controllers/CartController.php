@@ -8,14 +8,15 @@ use App\Models\Buyer;
 use App\Models\Order;
 use App\Models\Seller;
 use App\Models\Product;
+use App\Models\Currency;
 use Stripe\StripeClient;
 use App\Models\CompanyBuyer;
 use Illuminate\Http\Request;
 use App\Models\CompanySeller;
 use App\Mail\productSoldEmail;
-use App\Models\Currency;
-use App\Mail\OrderConfirmationMail;
+use App\Models\ProductFeedback;
 //use Unicodeveloper\Paystack\Paystack;
+use App\Mail\OrderConfirmationMail;
 use App\Mail\SaleConfirmationEmail;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -748,7 +749,7 @@ class CartController extends Controller
 
 
     {
-        
+
         \Log::info('Paystack Callback Received', ['request' => $request->all()]);
 
         try {
@@ -958,7 +959,7 @@ class CartController extends Controller
 
     public function initialize_stripe($cartItems, $paymentMethod, $buyerId, $shipping_address, $shippingFee, $buyerFirstName, $buyerLastName, $billing_address, $phone_number, $email)
     {
-       /* $stripe_config = [
+        /* $stripe_config = [
             'stripe_pk' => config('stripe.stripe_pk'),
             'stripe_sk' => config('stripe.stripe_sk'),
         ];
@@ -1271,5 +1272,94 @@ class CartController extends Controller
                 'total' => $total
             ],
         ], 200);
+    }
+
+
+
+    public function submitProductFeedback(Request $request)
+    {
+        // Validate the request data
+        $validatedData = $request->validate([
+            'productId' => 'required|string',
+            'rating' => 'required|integer|min:1|max:5',
+            'feedback' => 'nullable|string|max:500',
+        ]);
+
+        // Get the authenticated buyer
+        $buyer = $request->user();
+
+        // Ensure that the user is logged in
+        if (!$buyer) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not authenticated.',
+            ], 401);
+        }
+
+        // Check if the buyer has purchased this product
+        $purchase = Order::where('buyerId', $buyer->buyerId)
+            ->where('productId', $validatedData['productId'])
+            ->where('order_status', 'success')
+            ->first();
+
+        if (!$purchase) {
+            return response()->json([
+                'message' => 'You can only provide feedback for products you have purchased.',
+            ], 403);
+        }
+
+        // Check if buyer has already submitted feedback for this product
+        $existingFeedback = ProductFeedback::where('buyerId', $buyer->id)
+            ->where('productId', $validatedData['productId'])
+            ->first();
+
+        if ($existingFeedback) {
+            return response()->json([
+                'message' => 'You have already submitted feedback for this product.',
+            ], 400);
+        }
+
+        // Get product details
+        $product = Product::where('productId', $validatedData['productId'])->first();
+
+        if (!$product) {
+            return response()->json([
+                'message' => 'Product not found.',
+            ], 404);
+        }
+
+        // Create new product feedback
+        $productFeedback = new ProductFeedback();
+        $productFeedback->productId = $validatedData['productId'];
+        $productFeedback->sellerId = $product->sellerId;
+        $productFeedback->product_name = $product->product_nameq;
+        $productFeedback->categoryId = $product->categoryID;
+        $productFeedback->product_catogory = $product->product_category; // Assuming there's a category relationship
+        $productFeedback->buyerId = $buyer->buyerId;
+        $productFeedback->buyer_fullname = $buyer->firstname;
+        $productFeedback->rating = $validatedData['rating'];
+        $productFeedback->feedback = $validatedData['feedback'] ?? null;
+        $productFeedback->save();
+
+        // Update product average rating
+        $this->updateProductRating($validatedData['productId']);
+
+        return response()->json([
+            'message' => 'Thank you! Your feedback has been submitted successfully.',
+            'feedback' => $productFeedback,
+        ], 201);
+    }
+
+    /**
+     * Helper function to update product's average rating
+     */
+    private function updateProductRating($productId)
+    {
+        $averageRating = ProductFeedback::where('productId', $productId)
+            ->avg('rating');
+
+        $product = Product::where('id', $productId)->first();
+        $product->average_rating = round($averageRating, 1);
+        $product->save();
     }
 }

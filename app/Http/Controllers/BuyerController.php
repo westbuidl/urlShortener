@@ -309,4 +309,8 @@ class BuyerController extends Controller
             'message' => 'Verification code sent to the provided email address.',
         ], 200);
     }
+
+    
+    
+
 }

@@ -62,5 +62,9 @@ public function buyer()
     {
         return $this->belongsTo(Product::class, 'productID');
     }
-   
+   /* public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class, 'order_id'); // Check if 'order_id' is correct
+    }*/
+    
 }

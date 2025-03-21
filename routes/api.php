@@ -258,6 +258,11 @@ Route::get('/getAllCurrencies', [AdminController::class, 'getAllCurrencies'])->n
 Route::delete('/deleteCurrency/{currencyId}', [AdminController::class, 'deleteCurrency']);
 
 
+//Feedback implementation began
+Route::get('/getProductFeedbacks/{productId}', [AdminController::class, 'getProductFeedbacks'])->name('getProductFeedbacks');
+Route::post('/submitProductFeedback', [CartController::class, 'submitProductFeedback'])->middleware('auth:sanctum')->name('submitProductFeedback');
+//Feedback implementation ends
+
 //--End of Buyer Admin API--//
 //Stripe
 //Route::post('stripe', [StripePaymentController::class], 'stripePost');
