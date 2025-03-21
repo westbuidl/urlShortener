@@ -1278,7 +1278,7 @@ class AdminController extends Controller
                 'buyer' => [
                     'id' => $feedback->buyerId ?? null,
                     'name' => $feedback->buyer_fullname,
-                    'profile_image' => $feedback->buyer->profile_image ?? null,
+                    'profile_image' => $feedback->buyer->profile_photo ?? null,
                 ],
             ];
         });

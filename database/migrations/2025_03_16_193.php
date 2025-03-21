@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('buyer_fullname');
             $table->string('rating');
             $table->string('feedback');
-            $table->timestamps('date');
+            $table->timestamps();
         });
     }
 
