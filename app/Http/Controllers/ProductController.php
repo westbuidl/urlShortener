@@ -11,6 +11,7 @@ use App\Models\Currency;
 use Illuminate\Http\Request;
 use App\Mail\ProductAddEmail;
 use App\Models\CompanySeller;
+use App\Models\ProductFeedback;
 use App\Mail\productRestockEmail;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -243,59 +244,77 @@ class ProductController extends Controller
 
     //view product details
     public function productDetails(Request $request, string $productId)
-    {
-        try {
-            // Find the product by its ID
-            $product = Product::where('productId', $productId)->first();
+{
+    try {
+        // Find the product by its ID
+        $product = Product::where('productId', $productId)->first();
 
-            // Check if the product exists
-            if ($product) {
-                // Find the category by categoryID from the product
-                $category = Category::where('categoryID', $product->categoryID)->first();
+        // Check if the product exists
+        if ($product) {
+            // Find the category by categoryID from the product
+            $category = Category::where('categoryID', $product->categoryID)->first();
 
-                // Extract image URLs for the product
-                $imageURLs = [];
-                foreach (explode(',', $product->product_image) as $image) {
-                    $imageURLs[] = asset('uploads/product_images/' . $image);
-                }
-
-                // Add image URLs and category name to the product object
-                $product->image_urls = $imageURLs;
-                $product->category_name = $category ? $category->categoryname : null;
-
-                // Fetch the seller's name and address
-                $seller = Seller::where('sellerId', $product->sellerId)->first();
-                if (!$seller) {
-                    $seller = CompanySeller::where('companySellerId', $product->sellerId)->first();
-                }
-
-                $sellerName = $seller ? $seller->firstname ?? $seller->companyname : null; // Adjust according to your Seller model
-                $sellerAddress = $seller ? $seller->state : null;  // Adjust according to your Seller model
-
-                return response()->json([
-                    'message' => 'Product found.',
-                    'data' => [
-                        'product' => $product,
-                        'seller Info' => [
-                            'name' => $sellerName,
-                            'address' => $sellerAddress,
-                        ]
-                    ]
-                ], 200);
-            } else {
-                // If the product is not found, return a 404 error message
-                return response()->json([
-                    'message' => 'Product not found.',
-                ], 404);
+            // Extract image URLs for the product
+            $imageURLs = [];
+            foreach (explode(',', $product->product_image) as $image) {
+                $imageURLs[] = asset('uploads/product_images/' . $image);
             }
-        } catch (\Exception $e) {
-            // Handle any exceptions
+
+            // Add image URLs and category name to the product object
+            $product->image_urls = $imageURLs;
+            $product->category_name = $category ? $category->categoryname : null;
+
+            // Fetch the seller's name and address
+            $seller = Seller::where('sellerId', $product->sellerId)->first();
+            if (!$seller) {
+                $seller = CompanySeller::where('companySellerId', $product->sellerId)->first();
+            }
+
+            $sellerName = $seller ? $seller->firstname ?? $seller->companyname : null; // Adjust according to your Seller model
+            $sellerAddress = $seller ? $seller->state : null;  // Adjust according to your Seller model
+
+            // Get review statistics for the product
+            $totalReviews = ProductFeedback::where('productId', $productId)->count();
+            $averageRating = ProductFeedback::where('productId', $productId)->avg('rating') ?? 0;
+            
+            // Get rating breakdown
+            $ratingBreakdown = [
+                5 => ProductFeedback::where('productId', $productId)->where('rating', 5)->count(),
+                4 => ProductFeedback::where('productId', $productId)->where('rating', 4)->count(),
+                3 => ProductFeedback::where('productId', $productId)->where('rating', 3)->count(),
+                2 => ProductFeedback::where('productId', $productId)->where('rating', 2)->count(),
+                1 => ProductFeedback::where('productId', $productId)->where('rating', 1)->count(),
+            ];
+
             return response()->json([
-                'message' => 'Error occurred while fetching product details.',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => 'Product found.',
+                'data' => [
+                    'product' => $product,
+                    'sellerInfo' => [
+                        'name' => $sellerName,
+                        'address' => $sellerAddress,
+                    ],
+                    'reviewStats' => [
+                        'average_rating' => round($averageRating, 1),
+                        'total_reviews' => $totalReviews,
+                        'rating_breakdown' => $ratingBreakdown
+                    ]
+                ]
+            ], 200);
+        } else {
+            // If the product is not found, return a 404 error message
+            return response()->json([
+                'message' => 'Product not found.',
+            ], 404);
         }
+    } catch (\Exception $e) {
+        // Handle any exceptions
+        return response()->json([
+            'message' => 'Error occurred while fetching product details.',
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
 
 
 
