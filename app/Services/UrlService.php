@@ -29,7 +29,7 @@ class UrlService
         $urlMap = Session::get($this->urlMapKey);
         foreach ($urlMap as $shortCode => $original) {
             if ($original === $longUrl) {
-                return "http://short.est/{$shortCode}";
+                return "http://tiny.test/{$shortCode}";
             }
         }
 
@@ -40,7 +40,7 @@ class UrlService
         $urlMap[$shortCode] = $longUrl;
         Session::put($this->urlMapKey, $urlMap);
 
-        return "http://tiny/{$shortCode}";
+        return "http://tiny.test/{$shortCode}";
     }
 
     public function decode($shortUrl)
