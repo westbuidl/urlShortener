@@ -15,8 +15,7 @@ A simple URL shortening service built with Laravel that converts long URLs into 
 
 - URL encoding: Convert long URLs into short URLs
 - URL decoding: Get the original URL from a short URL
-- Automatic redirection: Short URLs automatically redirect to the original URL
-- File-based storage: No database required
+- File-based storage
 
 ## Installation
 
