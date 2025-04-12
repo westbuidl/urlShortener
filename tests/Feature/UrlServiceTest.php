@@ -8,7 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 class UrlShortenerTest extends TestCase
 {
     /**
-     * Test encoding a valid URL
+     
      *
      * @return void
      */
@@ -25,17 +25,17 @@ class UrlShortenerTest extends TestCase
                      'short_code'
                  ]);
                  
-        // Verify the short code is alphanumeric and proper length
+        
         $shortCode = $response->json('short_code');
         $this->assertMatchesRegularExpression('/^[0-9A-Za-z]{6}$/', $shortCode);
         
-        // Verify the short URL has the correct format
+        
         $shortUrl = $response->json('short_url');
         $this->assertEquals("http://short.est/{$shortCode}", $shortUrl);
     }
 
     /**
-     * Test encoding different URLs produces different codes
+     
      *
      * @return void
      */
@@ -52,12 +52,12 @@ class UrlShortenerTest extends TestCase
         $shortCode1 = $response1->json('short_code');
         $shortCode2 = $response2->json('short_code');
         
-        // The short codes should be different for different URLs
+        
         $this->assertNotEquals($shortCode1, $shortCode2);
     }
 
     /**
-     * Test encoding an invalid URL
+     
      *
      * @return void
      */
@@ -71,13 +71,13 @@ class UrlShortenerTest extends TestCase
     }
 
     /**
-     * Test decoding a short URL
+     
      *
      * @return void
      */
     public function testDecodeUrl()
     {
-        // First encode a URL
+       
         $encodeResponse = $this->postJson('/encode', [
             'url' => 'https://example.com/test-decode'
         ]);
@@ -85,7 +85,7 @@ class UrlShortenerTest extends TestCase
         $shortUrl = $encodeResponse->json('short_url');
         $originalUrl = $encodeResponse->json('original_url');
         
-        // Now try to decode it
+       
         $decodeResponse = $this->postJson('/decode', [
             'url' => $shortUrl
         ]);
@@ -98,7 +98,7 @@ class UrlShortenerTest extends TestCase
     }
 
     /**
-     * Test decoding a non-existent short URL
+    
      *
      * @return void
      */

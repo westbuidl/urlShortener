@@ -17,7 +17,7 @@ class UrlController extends Controller
     }
 
     /**
-     * Encode a URL
+   
      *
      * @param Request $request
      * @return JsonResponse
@@ -32,12 +32,12 @@ class UrlController extends Controller
             $longUrl = $request->input('url');
             $shortUrl = $this->urlService->encode($longUrl);
             
-            // Extract the short code for display
+
             $shortCode = basename($shortUrl);
             
             return response()->json([
                 'original_url' => $longUrl,
-                'short_url' => $shortUrl,
+                //'short_url' => $shortUrl,
                 'short_code' => $shortCode
             ]);
         } catch (InvalidArgumentException $e) {
@@ -48,7 +48,7 @@ class UrlController extends Controller
     }
 
     /**
-     * Decode a URL
+
      *
      * @param Request $request
      * @return JsonResponse
@@ -66,7 +66,7 @@ class UrlController extends Controller
             
             return response()->json([
                 'short_url' => $shortUrl,
-                'short_code' => $shortCode,
+                //'short_code' => $shortCode,
                 'original_url' => $longUrl
             ]);
         } catch (InvalidArgumentException $e) {

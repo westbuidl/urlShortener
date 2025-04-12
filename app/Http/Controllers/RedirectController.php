@@ -15,7 +15,7 @@ class RedirectController extends Controller
     }
 
     /**
-     * Redirect short URL to original URL
+     
      *
      * @param string $shortCode
      * @return \Illuminate\Http\RedirectResponse
