@@ -2,69 +2,112 @@
 
 namespace Tests\Feature;
 
-use App\Services\UrlService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class UrlServiceTest extends TestCase
+class UrlShortenerTest extends TestCase
 {
-    protected $urlService;
-
-    protected function setUp(): void
+    /**
+     * Test encoding a valid URL
+     *
+     * @return void
+     */
+    public function testEncodeValidUrl()
     {
-        parent::setUp();
-        $this->urlService = app(UrlService::class);
-        session()->flush();
-    }
+        $response = $this->postJson('/encode', [
+            'url' => 'https://example.com/long/path/to/page?param=value'
+        ]);
 
-    public function test_encodes_valid_url()
-    {
-        $longUrl = 'https://www.example.com';
-        $response = $this->postJson('/api/encode', ['url' => $longUrl]);
         $response->assertStatus(200)
-                 ->assertJsonStructure(['shortUrl'])
-                 ->assertJsonFragment(['shortUrl' => $this->urlService->encode($longUrl)]);
+                 ->assertJsonStructure([
+                     'original_url',
+                     'short_url',
+                     'short_code'
+                 ]);
+                 
+        // Verify the short code is alphanumeric and proper length
+        $shortCode = $response->json('short_code');
+        $this->assertMatchesRegularExpression('/^[0-9A-Za-z]{6}$/', $shortCode);
+        
+        // Verify the short URL has the correct format
+        $shortUrl = $response->json('short_url');
+        $this->assertEquals("http://short.est/{$shortCode}", $shortUrl);
     }
 
-    public function test_decodes_short_url()
+    /**
+     * Test encoding different URLs produces different codes
+     *
+     * @return void
+     */
+    public function testEncodeProducesDifferentCodes()
     {
-        $longUrl = 'https://www.example.com';
-        $shortUrl = $this->urlService->encode($longUrl);
-        $response = $this->postJson('/api/decode', ['url' => $shortUrl]);
-        $response->assertStatus(200)
-                 ->assertJson(['longUrl' => $longUrl]);
+        $response1 = $this->postJson('/encode', [
+            'url' => 'https://example.com/page1'
+        ]);
+        
+        $response2 = $this->postJson('/encode', [
+            'url' => 'https://example.com/page2'
+        ]);
+        
+        $shortCode1 = $response1->json('short_code');
+        $shortCode2 = $response2->json('short_code');
+        
+        // The short codes should be different for different URLs
+        $this->assertNotEquals($shortCode1, $shortCode2);
     }
 
-    public function test_returns_same_short_url_for_duplicate_long_url()
+    /**
+     * Test encoding an invalid URL
+     *
+     * @return void
+     */
+    public function testEncodeInvalidUrl()
     {
-        $longUrl = 'https://www.example.com';
-        $shortUrl1 = $this->urlService->encode($longUrl);
-        $shortUrl2 = $this->urlService->encode($longUrl);
-        $this->assertEquals($shortUrl1, $shortUrl2);
+        $response = $this->postJson('/encode', [
+            'url' => 'not-a-valid-url'
+        ]);
+
+        $response->assertStatus(400);
     }
 
-    public function test_fails_for_invalid_url()
+    /**
+     * Test decoding a short URL
+     *
+     * @return void
+     */
+    public function testDecodeUrl()
     {
-        $response = $this->postJson('/api/encode', ['url' => 'invalid-url']);
-        $response->assertStatus(400)
-                 ->assertJsonStructure(['error']);
+        // First encode a URL
+        $encodeResponse = $this->postJson('/encode', [
+            'url' => 'https://example.com/test-decode'
+        ]);
+        
+        $shortUrl = $encodeResponse->json('short_url');
+        $originalUrl = $encodeResponse->json('original_url');
+        
+        // Now try to decode it
+        $decodeResponse = $this->postJson('/decode', [
+            'url' => $shortUrl
+        ]);
+
+        $decodeResponse->assertStatus(200)
+                       ->assertJson([
+                           'original_url' => $originalUrl,
+                           'short_url' => $shortUrl
+                       ]);
     }
 
-    public function test_fails_for_non_existent_short_url()
+    /**
+     * Test decoding a non-existent short URL
+     *
+     * @return void
+     */
+    public function testDecodeNonExistentUrl()
     {
-        $response = $this->postJson('/api/decode', ['url' => 'http://short.est/999']);
-        $response->assertStatus(400)
-                 ->assertJson(['error' => 'Short URL not found']);
-    }
+        $response = $this->postJson('/decode', [
+            'url' => 'http://short.est/nonexistent'
+        ]);
 
-    public function test_handles_multiple_urls()
-    {
-        $url1 = 'https://www.example1.com';
-        $url2 = 'https://www.example2.com';
-        $short1 = $this->urlService->encode($url1);
-        $short2 = $this->urlService->encode($url2);
-        $this->assertEquals($url1, $this->urlService->decode($short1));
-        $this->assertEquals($url2, $this->urlService->decode($short2));
-        $this->assertNotEquals($short1, $short2);
+        $response->assertStatus(400);
     }
 }

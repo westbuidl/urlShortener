@@ -16,6 +16,12 @@ class UrlController extends Controller
         $this->urlService = $urlService;
     }
 
+    /**
+     * Encode a URL
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function encode(Request $request): JsonResponse
     {
         try {
@@ -23,28 +29,50 @@ class UrlController extends Controller
                 'url' => 'required|url'
             ]);
 
-            $shortUrl = $this->urlService->encode($request->input('url'));
-            return response()->json(['shortUrl' => $shortUrl]);
+            $longUrl = $request->input('url');
+            $shortUrl = $this->urlService->encode($longUrl);
+            
+            // Extract the short code for display
+            $shortCode = basename($shortUrl);
+            
+            return response()->json([
+                'original_url' => $longUrl,
+                'short_url' => $shortUrl,
+                'short_code' => $shortCode
+            ]);
         } catch (InvalidArgumentException $e) {
             return response()->json(['error' => $e->getMessage()], 400);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Invalid URL'], 400);
+            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
 
+    /**
+     * Decode a URL
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function decode(Request $request): JsonResponse
     {
         try {
             $request->validate([
-                'url' => 'required|url'
+                'url' => 'required|string'
             ]);
 
-            $longUrl = $this->urlService->decode($request->input('url'));
-            return response()->json(['longUrl' => $longUrl]);
+            $shortUrl = $request->input('url');
+            $longUrl = $this->urlService->decode($shortUrl);
+            $shortCode = basename($shortUrl);
+            
+            return response()->json([
+                'short_url' => $shortUrl,
+                'short_code' => $shortCode,
+                'original_url' => $longUrl
+            ]);
         } catch (InvalidArgumentException $e) {
             return response()->json(['error' => $e->getMessage()], 400);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Invalid short URL'], 400);
+            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
 }
