@@ -37,8 +37,8 @@ class UrlController extends Controller
             
             return response()->json([
                 'original_url' => $longUrl,
-                //'short_url' => $shortUrl,
-                'short_code' => $shortCode
+                'short_url' => $shortUrl,
+                //'short_code' => $shortCode
             ]);
         } catch (InvalidArgumentException $e) {
             return response()->json(['error' => $e->getMessage()], 400);
